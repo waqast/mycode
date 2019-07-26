@@ -16,6 +16,13 @@ function getRandom(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+// ----------------------------------------------------------------------------------
+// Get Random Integer including Limits
+// ----------------------------------------------------------------------------------
+function getRandomInt(min, max) {
+  	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 // Flip 0 Based Index Number on canvas 
 function flipIndex(num, height){
 	return height - num - 1;
@@ -601,13 +608,6 @@ function zipWeave(weaveArray){
 }
 
 // ----------------------------------------------------------------------------------
-// Get Random Integer including Limits
-// ----------------------------------------------------------------------------------
-function getRandomInt(min, max) {
-  	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-// ----------------------------------------------------------------------------------
 // Get Difference of 2 Arrays as Array
 // ----------------------------------------------------------------------------------
 function getArrayDiff(arr1, arr2) {
@@ -1185,7 +1185,7 @@ function empty2DArray(ends, picks, filler = "") {
 }
 
 function newArray2D(w, h, filler = false){
-	var x;
+	var x, y;
 	var arr2D = [];
 	arr2D.length = w;
 	for (x = 0; x < w; ++x) {

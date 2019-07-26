@@ -1080,6 +1080,7 @@ function weave2DToWeave2D8(weave){
 }
 
 Array.prototype.clone2D8 = function(){
+	var x;
 	var w = this.length;
 	var h = this[0].length;
 	var res = newArray2D8(61, w, h);

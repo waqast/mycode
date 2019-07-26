@@ -3220,13 +3220,14 @@ $(document).ready ( function(){
 	});
 
 	function getPossibleSatinMoveNumbers(weaveH){
+		var i, n;
 		var satinPossibleMoves = [];
 		for (i = 1; i < weaveH-1; i++) {
 			satinPossibleMoves.push(i);
 		}
 		for (i = 2; i < weaveH-1; i++) {
 			if ( weaveH % i === 0){
-				var n = i;
+				n = i;
 				while(n < weaveH-1){
 					satinPossibleMoves = satinPossibleMoves.remove(n);
 					n = n+i;
@@ -5281,7 +5282,7 @@ $(document).ready ( function(){
 
 	function shiftWeave(arr, dir, amt){
 
-		var popped, modArr, i;
+		var popped, modArr, i, x;
 
 		modArr = arr.clone();
 
@@ -10933,9 +10934,9 @@ $(document).ready ( function(){
 				var arrH = this.height;
 
 				var ctx = g_artworkContext;
-				ctx.clearRect(0, 0, ctxW, ctxH);
 				var ctxW = ctx.canvas.clientWidth;
 				var ctxH = ctx.canvas.clientHeight;
+				ctx.clearRect(0, 0, ctxW, ctxH);
 
 				var scrollX = this.scrollX;
 				var scrollY = this.scrollY;
@@ -11005,9 +11006,9 @@ $(document).ready ( function(){
 				var [arrW, arrH] = arr8.get("wh");
 
 				var ctx = g_artworkContext;
-				ctx.clearRect(0, 0, ctxW, ctxH);
 				var ctxW = ctx.canvas.clientWidth;
 				var ctxH = ctx.canvas.clientHeight;
+				ctx.clearRect(0, 0, ctxW, ctxH);
 
 				var scrollX = this.scrollX;
 				var scrollY = this.scrollY;
@@ -11404,8 +11405,8 @@ $(document).ready ( function(){
 			}
 
 			var arr = this[graph+"2D"].clone();
-			var arrW = arr.length;
-			var arrH = arr[0].length;
+			var arrW = arr !== undefined ? arr.length : 0;
+			var arrH = arr !== undefined && arr[0] !== undefined ? arr[0].length : 0;
 
 			if ( arr == undefined || arrW == 0 || arrH == 0){
 				arr = [[1]];
@@ -11978,6 +11979,8 @@ $(document).ready ( function(){
 
 			//console.log([graph, colNum, rowNum]);
 
+			var i;
+
 			var seamlessX = false;
 			var seamlessY = false;
 			if ( graph == "weave" ){
@@ -12032,6 +12035,8 @@ $(document).ready ( function(){
 
 		renderGraphPoint8 : function(ctx, state, end, pick, scrollX = 0, scrollY = 0, drawStyle = "graph"){
 
+			var i;
+
 			var ctxW = ctx.canvas.clientWidth;
 			var ctxH = ctx.canvas.clientHeight;
 			var sx = (end-1) * g_pointPlusGrid + scrollX;
@@ -12046,6 +12051,8 @@ $(document).ready ( function(){
 		},
 
 		renderGraphPoint2D8 : function(ctx, state, end, pick, scrollX = 0, scrollY = 0, drawStyle = "graph"){
+
+			var i;
 
 			var ctxW = ctx.canvas.clientWidth;
 			var ctxH = ctx.canvas.clientHeight;
@@ -12292,8 +12299,6 @@ $(document).ready ( function(){
 				}
 			} else if ( data == 1){
 				this.tieup2D8[colNum-1][rowNum-1] = 1;
-			} else if ( data == 1){
-				this.tieup2D8[colNum-1][rowNum-1] = 1;
 			}
 
 			var treadleIndex = colNum-1;
@@ -12445,6 +12450,8 @@ $(document).ready ( function(){
 				globalWeave.set("weave", 17, newWeave, renderSimulation);
 			},
 			picks : function (startPick, lastPick, renderSimulation){
+
+				var x;
 				
 				var newWeave = globalWeave.weave2D;
 				if ( startPick > lastPick ){
@@ -13265,6 +13272,8 @@ $(document).ready ( function(){
 
 	function selectionLineOnBuffer(pixels, sx, sy, lx, ly, ctxW, ctxH, thick, selectionColor32){
 
+		var x, y;
+
 		[sx, lx] = sx > lx ? [lx, sx] : [sx, lx];
 		[sy, ly] = sy > ly ? [ly, sy] : [sy, ly];
 
@@ -14026,7 +14035,7 @@ $(document).ready ( function(){
 			} else if ( dir == "up" && globalTieup.scrollY > maxScrollY){
 				globalTieup.scrollY -= g_pointPlusGrid;
 				globalTieup.scrollY = Math.ceil(globalTieup.scrollY / g_pointPlusGrid) * g_pointPlusGrid;
-			} if ( dir == "left" && globalTieup.scrollX < minScrollY){
+			} else if ( dir == "left" && globalTieup.scrollX < minScrollY){
 				globalTieup.scrollX += g_pointPlusGrid;
 				globalTieup.scrollX = Math.floor(globalTieup.scrollX / g_pointPlusGrid) * g_pointPlusGrid;
 			} else if ( dir == "right" && globalTieup.scrollX > maxScrollX){
@@ -14060,7 +14069,7 @@ $(document).ready ( function(){
 			} else if ( dir == "up" && globalWeave.scrollY > maxScrollY){
 				globalWeave.scrollY -= g_pointPlusGrid;
 				globalWeave.scrollY = Math.ceil(globalWeave.scrollY / g_pointPlusGrid) * g_pointPlusGrid;
-			} if ( dir == "left" && globalWeave.scrollX < minScrollY){
+			} else if ( dir == "left" && globalWeave.scrollX < minScrollY){
 				globalWeave.scrollX += g_pointPlusGrid;
 				globalWeave.scrollX = Math.floor(globalWeave.scrollX / g_pointPlusGrid) * g_pointPlusGrid;
 			} else if ( dir == "right" && globalWeave.scrollX > maxScrollX){
