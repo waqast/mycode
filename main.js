@@ -9892,7 +9892,7 @@ $(document).ready ( function(){
 
 		set : function (instanceId, yarnSet, pattern, renderWeave = true, threadNum = 0, overflow = false, addHistory = true){
 
-			console.log(["globalPattern.set", instanceId]);
+			// console.log(["globalPattern.set", instanceId]);
 
 			pattern = Array.isArray(pattern) ? pattern : pattern.split("");
 
@@ -10162,13 +10162,9 @@ $(document).ready ( function(){
 
 		markChip : function(code){
 
-			console.log(["markChip", code]);
-
 			this.clearMarker();
 			$("#palette-chip-"+code).addClass('mark-chip');
 			this.marked = code;
-
-			console.log(this.marked);
 
 		},
 
@@ -11439,8 +11435,8 @@ $(document).ready ( function(){
 
 			var arrW = this[graph+"2D8"].length;
 			var arrH = this[graph+"2D8"][0].length;
-			x = end - 1;
-			y = pick - 1;
+			var x = end - 1;
+			var y = pick - 1;
 			if ( x >= 0 && x < arrW && y >= 0 && y < arrH){
 				return this[graph+"2D8"][x][y];
 			} else {
