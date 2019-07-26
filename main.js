@@ -7443,13 +7443,13 @@ $(document).ready ( function(){
 	function arrayTileFill(tile, canvasW, canvasH = false) {
 
 		var x, y, res;
-		var tileW = tile.length;
+		var tileW = tile !== undefined ? tile.length : 0;
 		
 		// if 2D Array
 		if(canvasH){
 
 			res = tile[0] !== undefined && tile[0] instanceof Uint8Array ? newArray2D8(14, canvasW, canvasH) : newArray2D(canvasW, canvasH);
-			var tileH = tile[0].length;
+			var tileH = tile[0] !== undefined ? tile[0].length : 0;
 			for (x = 0; x < canvasW; x++) {
 				for (y = 0; y < canvasH; y++) {
 					res[x][y] = tile[x % tileW][y % tileH];
@@ -12329,7 +12329,7 @@ $(document).ready ( function(){
 		},
 
 		setShaft : function ( shaftNum, endArray, render = true){
-			for ( x = 0; x < this.ends; x++) {
+			for ( var x = 0; x < this.ends; x++) {
 				if(this.draft2D8[x][shaftNum-1] == 1){
 					this.setEnd(x+1, endArray, render);
 				}
@@ -13825,10 +13825,10 @@ $(document).ready ( function(){
 			},
 			layout: {
 		    	hLineWidth: function(i, node) {
-		      		return (i === 0 || i === node.table.body.length) ? 0.1 : 0.1;
+		      		return (i === 0 || i === node.table.body.length) ? 0.1 : 0.2;
 		    	},
 		    	vLineWidth: function(i, node) {
-		      		return (i === 0 || i === node.table.widths.length) ? 0.1 : 0.1;
+		      		return (i === 0 || i === node.table.widths.length) ? 0.1 : 0.2;
 		    	}
 		  	},
 		  	defaultBorder: true
