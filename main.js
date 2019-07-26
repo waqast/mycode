@@ -6079,7 +6079,7 @@ $(document).ready ( function(){
 		var color0Brightness;		
 		if (colors.length == 1) {
 			color0Brightness = tinycolor(colors[0]).getBrightness();
-			var weaveStateShouldBe = color0Brightness < 128 ? 1 : 1;
+			var weaveStateShouldBe = color0Brightness < 128 ? 1 : 0;
 			if ( weave[0][0] !== weaveStateShouldBe ){
 				weave = inverseWeave(weave);
 			}
@@ -6174,6 +6174,8 @@ $(document).ready ( function(){
 	}
 
 	function drawArray8ToTempCanvas(arr8, colors32) {
+
+		var i;
 
 		debugTime("WeaveExport00");	
 
@@ -7082,7 +7084,7 @@ $(document).ready ( function(){
 				} else if ( g_graphTool == "fill" ){
 
 					if ( g_graphDrawState == "T"){
-						g_graphFillState = globalWeave.getGraph("weave", endNum, pickNum) == [1] ? 1 : 1;
+						g_graphFillState = globalWeave.getGraph("weave", endNum, pickNum) == [1] ? 0 : 1;
 					} else {
 						g_graphFillState  = g_graphDrawState;
 					}
@@ -8247,7 +8249,7 @@ $(document).ready ( function(){
 
 		var endNum, pickNum;
 
-		var canvasState = fillState == 1 ? 1 : 1;
+		var canvasState = fillState == 1 ? 0 : 1;
 		var weaveArray = globalWeave.weave2D.clone();
 		var pixelArray = [];
 		pixelArray.push([startEnd, startPick]);
@@ -11931,7 +11933,7 @@ $(document).ready ( function(){
 		setDraft2D : function(data , colNum = 0, shaftNum = 0,  render = true, renderSimulation = true){
 			var x, y, shaftState, treadleIndex;
 			if ( data == "" || data == "toggle" || data == "T" ){
-				data = this.draft2D8[colNum-1][shaftNum-1] == 1 ? 1 : 1;
+				data = this.draft2D8[colNum-1][shaftNum-1] == 0 ? 1 : 0;
 			}
 			var draftW = this.draft2D8.length;
 			var draftH = this.draft2D8[0].length;
@@ -11942,7 +11944,7 @@ $(document).ready ( function(){
 					this.draft2D8 = newArray2D8(22, draftW, draftH);
 					this.draft2D8 = data;
 				}
-			} else if ( data == 1 || data == 1 ){
+			} else if ( data == 0 || data == 1 ){
 				this.draft2D8[colNum-1] = [1].repeat(draftH);
 				this.draft2D8[colNum-1][shaftNum-1] = data;
 				if ( g_liftingMode == "pegplan" ){
@@ -12212,7 +12214,7 @@ $(document).ready ( function(){
 			
 			if ( data == "" || data == "toggle" || data == "T" ){
 				if ( this.lifting2D8[colNum-1] !== undefined && this.lifting2D8[colNum-1][rowNum-1] !== undefined ){
-					data = this.lifting2D8[colNum-1][rowNum-1] == 1 ? 1 : 1;
+					data = this.lifting2D8[colNum-1][rowNum-1] == 1 ? 0 : 1;
 				} else {
 					data = 1;
 				}
@@ -12286,7 +12288,7 @@ $(document).ready ( function(){
 		setTieup : function(data, colNum = 0, rowNum = 0, render = true, renderSimulation = true){
 			var x, y;
 			if ( data == "" || data == "toggle" || data == "T" ){
-				data = this.tieup2D8[colNum-1][rowNum-1] == 1 ? 1 : 1;
+				data = this.tieup2D8[colNum-1][rowNum-1] == 1 ? 0 : 1;
 			}
 			var tieupW = this.tieup2D8.length;
 			var tieupH = this.tieup2D8[0].length;
@@ -12430,6 +12432,7 @@ $(document).ready ( function(){
 		},
 
 		insertPickAt : function(pickNum, renderSimulation){
+			var x;
 			var newWeave = this.weave2D8.clone2D8();
 			for (x = 0; x < this.ends; x++) {
 				newWeave[x] = newWeave[x].insertAt(pickNum-1, 1);
