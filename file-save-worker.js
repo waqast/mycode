@@ -20,6 +20,8 @@ function convertNumberBase(number, src_base, dst_base){
 
 self.onmessage = function (e) {
 
+    var i;
+
 	var arr8 = e.data;
 	var arr8W = Number(convertNumberBase([arr8[0], arr8[1]], 256, 10).join(""));
 	var arr8H = (arr8.length - 2)/sw;

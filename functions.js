@@ -1774,7 +1774,7 @@ Array.prototype.tileFill = function(canvasW, canvasH = false, xOffset = 0, yOffs
 
 	var x, y, res;
 	var tile = this;
-	var tileW = this.length;
+	var tileW = tile !== undefined ? tile.length : 0;
 	var translatedx, translatedy;
 
 	// offsetx -1 will shift weave to left
@@ -1783,7 +1783,7 @@ Array.prototype.tileFill = function(canvasW, canvasH = false, xOffset = 0, yOffs
 	if(canvasH){
 
 		res = tile[0] !== undefined && tile[0] instanceof Uint8Array ? newArray2D8(35, canvasW, canvasH) : newArray2D(canvasW, canvasH);
-		var tileH = tile[0].length;
+		var tileH = tile[0] !== undefined ? tile[0].length : 0;
 		for (x = 0; x < canvasW; x++) {
 			for (y = 0; y < canvasH; y++) {
 				translatedx = loopNumber(x-xOffset, tileW);

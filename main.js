@@ -5225,7 +5225,7 @@ $(document).ready ( function(){
 		var ra = wa.clone();
 		for (var x = 0; x < wa.length; x++) {
 			for (var y = 0; y < wa[0].length; y++) {
-				ra[x][y] = wa[x][y] == 1 ? 1 : 1;
+				ra[x][y] = wa[x][y] == 1 ? 0 : 1;
 			}
 		}
 		return ra;
@@ -7484,12 +7484,6 @@ $(document).ready ( function(){
 
 		globalWeave.frameW = activeFrameW;
 		globalWeave.frameH = activeFrameH;
-
-		if ( globalArtwork == undefined ){
-
-			// console.log("globalArtwork is undefined");
-
-		}
 
 		globalArtwork.frameW = activeFrameW;
 		globalArtwork.frameH = activeFrameH;
