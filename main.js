@@ -2022,7 +2022,7 @@ $(document).ready ( function(){
 		//dhxMain.setText(g_appName + " v" + g_appVersion + " - " + text);
 
 		if (history) {
-			if ( g_projectName != oldProjectName){
+			if ( g_projectName !== oldProjectName){
 				globalHistory.addStep(1);
 			}
 		}
@@ -2601,7 +2601,7 @@ $(document).ready ( function(){
 
 			}
 
-			if (idChecked != idClicked) {
+			if (idChecked !== idClicked) {
 				updateSimulationSeamlessRepeat();
 			}
 
@@ -2617,7 +2617,7 @@ $(document).ready ( function(){
 
 			}
 
-			if (idChecked != idClicked) {
+			if (idChecked !== idClicked) {
 				createWeaveLayout(8);
 			}
 
@@ -2632,7 +2632,7 @@ $(document).ready ( function(){
 			} else if (idClicked == "weave-repeat-opasity-100") {
 				g_repeatOpasity = 1;
 			}
-			if (idChecked != idClicked) {
+			if (idChecked !== idClicked) {
 				globalWeave.render2D8(2);
 				globalPattern.render8(11);
 			}
@@ -2733,6 +2733,7 @@ $(document).ready ( function(){
 
 		} else if (id == 'toolbar-main-test-07') {
 			
+			console.log(["globalPalette", globalPalette.selected, globalPalette.rightClicked, globalPalette.marked]);
 
 		} else if (id == 'toolbar-main-test-08') {
 
@@ -2812,33 +2813,10 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 
 	$('#bgcolor-container').click(function() {
-		if (globalPalette.selected != "BL") {
+		if (globalPalette.selected !== "BL") {
 			setBackgroundColor(globalPalette.selected, true);
 		}
 	});
-
-	// Get Color Palette Array -------------------------------------
-	function getPaletteHexString() {
-		var paletteArray = [];
-		var paletteElements = $('#palette-chips > div').slice(1);
-		$.each(paletteElements, function(index) {
-			paletteArray.push(paletteElements.eq(index).attr('data-color-value').replace("#", ""));
-		});
-		return paletteArray.join("");
-	}
-
-	function paletteHexStringToArray(hexString){
-		return hexString.match(/.{1,6}/g);
-	}
-
-	// Get Color Palette Array -------------------------------------
-	function getYarnCountString() {
-		return ga_YarnCounts.join("-");
-	}
-
-	function getYarnCountArrayFromString(countString){
-		return countString.split("-");
-	}
 
 	function randomColors(count) {
 		var hue, saturation, luminosity, hueStep;
@@ -2859,90 +2837,46 @@ $(document).ready ( function(){
 		context: true,
 		xml: "xml/menu_palette.xml",
 		onload: function() {
-			paletteContextMenu.setItemDisabled('palette_context_paste');
-			paletteContextMenu.setItemDisabled('palette_context_swap');
-			paletteContextMenu.hideItem('palette_context_unstar');
-			paletteContextMenu.hideItem('palette_context_unlock');
-			paletteContextMenu.hideItem('palette_context_enable');
 			interfaceLoadCheck(8);
 		}
 	});
 
-	
+	paletteContextMenu.attachEvent("onBeforeContextMenu", function(zoneId, ev) {
+
+		var element = $("#palette-chip-"+globalPalette.rightClicked);
+		var isInPattern = element.find('.warpArrow').is(':visible') || element.find('.weftArrow').is(':visible');
+
+		if ( isInPattern ) {
+
+			paletteContextMenu.setItemEnabled('palette_context_swap');
+
+		} else {
+
+			paletteContextMenu.setItemDisabled('palette_context_swap');
+			
+		}
+
+		return true;
+
+	});
 
 	paletteContextMenu.attachEvent("onContextMenu", function(zoneId, ev) {
 
 
 	});
 
-	paletteContextMenu.attachEvent("onBeforeContextMenu", function(zoneId, ev) {
-
-		var element = $("#palette-chip-"+globalPalette.selected);
-
-		var isStar = element.find('.colorStarIcon').is(':visible');
-		var isLock = element.find('.colorLockIcon').is(':visible');
-		var isDisable = element.find('.colorCrossIcon').is(':visible');
-		var isValid = element.attr('id') != "color-0";
-		var isInPattern = element.find('.pwfda').is(':visible') || element.find('.pwpda').is(':visible');
-
-		if ( isValid ) {
-
-			if (isStar) {
-				paletteContextMenu.hideItem('palette_context_star');
-				paletteContextMenu.showItem('palette_context_unstar');
-			} else {
-				paletteContextMenu.showItem('palette_context_star');
-				paletteContextMenu.hideItem('palette_context_unstar');
-			}
-
-			if (isLock) {
-				//paletteContextMenu.hideItem('palette_context_lock');
-				paletteContextMenu.showItem('palette_context_unlock');
-			} else {
-				if (isInPattern) {
-					//paletteContextMenu.showItem('palette_context_lock');
-					paletteContextMenu.hideItem('palette_context_unlock');
-				} else {
-					//paletteContextMenu.hideItem('palette_context_lock');
-					paletteContextMenu.hideItem('palette_context_unlock');
-				}
-			}
-
-			if (isDisable) {
-				paletteContextMenu.hideItem('palette_context_disable');
-				paletteContextMenu.showItem('palette_context_enable');
-			} else {
-				paletteContextMenu.showItem('palette_context_disable');
-				paletteContextMenu.hideItem('palette_context_enable');
-			}
-
-			return true;
-
-		} else {
-
-			return false;
-		}
-
-	});
-
 	paletteContextMenu.addContextZone('palette-container');
 	paletteContextMenu.attachEvent("onClick", paletteContextMenuClick);
 	paletteContextMenu.attachEvent("onHide", function(id) {
-		if ( !globalPalette.marked ) {
-			globalPalette.clearSelection();
-		}
+		
 	});
 
 	$(document).on("mousedown", '.palette-chip', function(evt){
 		var code = $(this).attr("id").slice(-1);
-		globalPalette.clearSelection();
-
-		console.log(code);
-
 		if (evt.which === 1){
 			globalPalette.selectChip(code);
 		} else if (evt.which === 3) {
-			globalPalette.rightClickedChip = code;
+			globalPalette.rightClicked = code;
 		}
 	});
 
@@ -2950,26 +2884,6 @@ $(document).ready ( function(){
 		var code = $(this).attr("id").slice(-1);
 		globalPalette.showColorPicker(code);
 	});
-
-	function markPaletteChip(element) {
-
-		$('div.colorchip').find('span').css({
-			'font-weight': 'normal',
-			'color': '#999',
-			'background-color': '#EEE'
-		});
-
-		element.find('span').css({
-			'font-weight': 'bold',
-			'color': '#FFF',
-			'background-color': '#F00'
-		});
-
-		globalPalette.marked = element.attr('id');
-		paletteContextMenu.setItemEnabled('palette_context_paste');
-		paletteContextMenu.setItemEnabled('palette_context_swap');
-
-	}
 
 	// ----------------------------------------------------------------------------------
 	// Palette Color Actions ------------------------------------------------------------
@@ -2985,112 +2899,19 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Palette Interaction --------------------------------------------------------------
 	// ----------------------------------------------------------------------------------
-	function clearColorChipMarker() {
-
-		globalPalette.marked = '';
-
-	}
-
-	function selectPaletteChip(element) {
-
-		console.log("selectPaletteChip");
-
-		element.find('span').css({
-			'font-weight': 'bold',
-			'color': '#FFF',
-			'background-color': '#666'
-		});
-
-		globalPalette.selected = element.attr('data-color-code');
-
-	}
-
 	function paletteContextMenuClick(id) {
 
-		var element, code, eColor, srcElement, trgtEleCode, srcEleCode, srcWarpPattern,
-			srcWeftPattern, modWarpPattern, modWeftPattern;
+		var code = globalPalette.rightClicked;
 
-		code = globalPalette.rightClickedChip;
+		if (id == 'palette_context_swap') {
 
-		if (id == 'palette_context_mark') {
-
-			globalPalette.marked = code;
-
-		} else if (id == 'palette_context_paste') {
-
-			if ( globalPalette.marked ) {
-
-				trgtEleCode = code;
-
-				srcElement = $('#' + globalPalette.marked);
-
-				srcEleCode = globalPalette.marked;
-
-				srcWarpPattern = globalPattern.warp;
-				srcWeftPattern = globalPattern.weft;
-
-				modWarpPattern = srcWarpPattern.replaceAll(trgtEleCode, srcEleCode);
-
-				modWeftPattern = srcWeftPattern.replaceAll(trgtEleCode, srcEleCode);
-
-				globalPattern.set(17, 'warp', modWarpPattern, false);
-				globalPattern.set(18, 'weft', modWeftPattern, false);
-
-				clearColorChipMarker();
-
-				//validateSimulation(16);
-
-			}
-
-		} else if (id == 'palette_context_swap') {
-
-			if (globalPalette.marked !== '') {
-
-				trgtEleCode = element.attr('data-color-code');
-				srcElement = $('#' + globalPalette.marked);
-				srcEleCode = srcElement.attr('data-color-code');
-
-				if (g_enableWarp){
-					srcWarpPattern = globalPattern.warp;
-					modWarpPattern = srcWarpPattern.replaceAll(srcEleCode, 'FLAG1');
-					modWarpPattern = modWarpPattern.replaceAll(trgtEleCode, 'FLAG2');
-					modWarpPattern = modWarpPattern.replaceAll('FLAG2', srcEleCode);
-					modWarpPattern = modWarpPattern.replaceAll('FLAG1', trgtEleCode);
-					globalPattern.set(19, 'warp', modWarpPattern, false);
-				}
-
-				if (g_enableWeft){
-					srcWeftPattern = globalPattern.weft;
-					modWeftPattern = srcWeftPattern.replaceAll(srcEleCode, 'FLAG1');
-					modWeftPattern = modWeftPattern.replaceAll(trgtEleCode, 'FLAG2');
-					modWeftPattern = modWeftPattern.replaceAll('FLAG2', srcEleCode);
-					modWeftPattern = modWeftPattern.replaceAll('FLAG1', trgtEleCode);				
-					globalPattern.set(20, 'weft', modWeftPattern, false);
-				}
-				
-				clearColorChipMarker();
-
-				//validateSimulation(17);
-
-			}
+			globalPalette.markChip(code);
 
 		} else if (id == 'palette_context_edit') {
 
 			globalPalette.clearSelection();
-
-			clearColorChipMarker();
-
-			if (element.attr('data-color-code') != "BL") {
-
-				element.find('span').css({
-					'font-weight': 'bold',
-					'color': '#FFF',
-					'background-color': '#666'
-				});
-
-				showColorPickerPopup(element);
-			}
-
+			globalPalette.showColorPicker(code);
+				
 		}
 
 	}
@@ -3119,48 +2940,6 @@ $(document).ready ( function(){
 		}
 		return false;
 	});
-
-	function setYarnCount(code, count, renderSimulation = true){
-
-		var index = g_paletteCodes.indexOf(code);
-		ga_YarnCounts[index] = count;
-
-		if (renderSimulation) {
-			//validateSimulation(19);
-		}
-	}
-
-	function setYarnCounts(countArray, renderSimulation = true){
-
-		var paletteChipCodes = g_paletteCodes.split("");
-
-		$.each(countArray, function(i, v) {
-			setYarnCount(paletteChipCodes[i], v, false);
-		});
-
-		if (renderSimulation) {
-			//validateSimulation(20);
-		}
-	}
-
-	function getYarnCount(code){
-		var index = g_paletteCodes.indexOf(code);
-		return ga_YarnCounts[index];
-	}
-
-	function updateColorPicker(code){
-	}
-
-	function showColorPickerPopup(element){
-		selectPaletteChip(element);
-		colorPicker.setColor(globalPalette.colors[globalPalette.selected].hex);
-		var x = element.offset().left;
-		var y = element.offset().top;
-		var w = element.width();
-		var h = element.height();
-		colorPickerPopup.show(x,y,w,h);
-		updateColorPicker(globalPalette.colors[globalPalette.selected].hex);
-	}
 
 	// ----------------------------------------------------------------------------------
 	// Right Click Pattern Context Menu
@@ -4359,42 +4138,6 @@ $(document).ready ( function(){
 	}
 
 	// -------------------------------------------------------------
-	// Project Code for Advanced Simulation ------------------------
-	// -------------------------------------------------------------
-	function getSimulationCode() {
-
-		var warpPattern = zipPattern(globalPattern.warp);
-		var weftPattern = zipPattern(globalPattern.weft);
-		var weaveCode = zipWeave(globalWeave.weave2D);
-		var colorPalette = getPaletteHexString();
-		var yarnCounts = getYarnCountString();
-		var backgroundColor = g_backgroundColor;
-		var warpCount = g_warpCount;
-		var weftCount = g_weftCount;
-		var warpDensity = g_warpDensity;
-		var weftDensity = g_weftDensity;
-		var screenDPI = g_screenDPI;
-		var simulationZoom = g_simulationZoom;
-
-		var simulationObj = {
-		    "wpp": warpPattern, 
-		    "wfp": weftPattern,
-		    "wvc": weaveCode,
-		    "plt": colorPalette,
-		    "ync": yarnCounts,
-		    "bgc": backgroundColor,
-		    "wpc": warpCount,
-		    "wfc": weftCount,
-		    "wpd": warpDensity,
-		    "wfd": weftDensity,
-		    "scd": screenDPI,
-		    "szm": simulationZoom
-		};
-
-		return JSON.stringify(simulationObj);
-	}
-
-	// -------------------------------------------------------------
 	// Import Project with Code  -----------------------------------
 	// -------------------------------------------------------------
 	function validateProjectCode(code) {
@@ -5097,7 +4840,7 @@ $(document).ready ( function(){
 
 		globalPattern.render8(3);
 		globalPattern.updateStatusbar();
-		globalPalette.updatePaletteMarkers();
+		globalPalette.updateChipArrows();
 		globalHistory.addStep(4);
 
 	}
@@ -5351,7 +5094,7 @@ $(document).ready ( function(){
 
 		}
 
-		if (evenPattern && patternStyleNum != 6 && patternStyleNum !== 0 && patternStyleNum != 1) {
+		if (evenPattern && patternStyleNum !== 6 && patternStyleNum !== 0 && patternStyleNum !== 1) {
 
 			var reversePattern = pattern.clone();
 			reversePattern = reversePattern.reverse();
@@ -6336,7 +6079,7 @@ $(document).ready ( function(){
 		if (colors.length == 1) {
 			color0Brightness = tinycolor(colors[0]).getBrightness();
 			var weaveStateShouldBe = color0Brightness < 128 ? 1 : 1;
-			if ( weave[0][0] != weaveStateShouldBe ){
+			if ( weave[0][0] !== weaveStateShouldBe ){
 				weave = inverseWeave(weave);
 			}
 		} else if (colors.length == 2) {
@@ -8317,8 +8060,8 @@ $(document).ready ( function(){
 			var weftRepeatSize = [weavePicks, weftPatternSize].lcm();
 			if ( warpRepeatSize > g_repeatLimit ) errors.push('Warp Color Weave Repeat Exceeding Limit of ' + g_repeatLimit + ' Ends.');
 			if ( weftRepeatSize > g_repeatLimit ) errors.push('Weft Color Weave Repeat Exceeding Limit of ' + g_repeatLimit + ' Picks.');
-			if ( warpPatternArray.indexOf("BL") != -1 ) errors.push('Warp Pattern contains empty threads.');
-			if ( weftPatternArray.indexOf("BL") != -1 ) errors.push('Weft Pattern contains empty threads.');
+			if ( warpPatternArray.indexOf("BL") !== -1 ) errors.push('Warp Pattern contains empty threads.');
+			if ( weftPatternArray.indexOf("BL") !== -1 ) errors.push('Weft Pattern contains empty threads.');
 			if ( warpPatternSize === 0 ) errors.push('Warp Pattern is empty.'); 
 			if ( weftPatternSize === 0 ) errors.push('Weft Pattern is empty.');
 
@@ -8353,7 +8096,7 @@ $(document).ready ( function(){
 	var jsurl = $(location).attr('hostname');
 	var jsdomain = jsurl.replace("www.", "");
 
-	/*if (jsdomain != "weavedesigner.com" && jsdomain != "localhost") {
+	/*if (jsdomain !== "weavedesigner.com" && jsdomain !== "localhost") {
 		alert(jsdomain + " : Redirecting to " + "http://www.weavedesigner.com/zapp");
 		$(window).unbind('beforeunload');
 		window.location.href = "http://www.weavedesigner.com/zapp";
@@ -10190,7 +9933,7 @@ $(document).ready ( function(){
 			stripes.push(pattern[0]);
 			for (var i = 1; i < pattern.length; i++) {
 
-				if (pattern[i] != pattern[i - 1]) {
+				if (pattern[i] !== pattern[i - 1]) {
 					stripes.push(pattern[i]);
 				}
 
@@ -10210,7 +9953,7 @@ $(document).ready ( function(){
 
 		set : function (instanceId, yarnSet, pattern, renderWeave = true, threadNum = 0, overflow = false, addHistory = true){
 
-			// console.log(["globalPattern.set", instanceId]);
+			console.log(["globalPattern.set", instanceId]);
 
 			pattern = Array.isArray(pattern) ? pattern : pattern.split("");
 
@@ -10224,7 +9967,7 @@ $(document).ready ( function(){
 			this.render8(4, yarnSet);
 
 			globalPattern.updateStatusbar();
-			globalPalette.updatePaletteMarkers();
+			globalPalette.updateChipArrows();
 
 			if ( !pattern.length ){
 				globalWeave.setProps(7, "graphDrawStyle", "graph");
@@ -10254,7 +9997,7 @@ $(document).ready ( function(){
 				this.render8Set(g_weftContext, "weft", globalWeave.scrollY, this.seamlessWeft, g_origin);
 			}
 
-			globalPalette.updatePaletteMarkers();
+			globalPalette.updateChipArrows();
 
 		},
 
@@ -10377,6 +10120,7 @@ $(document).ready ( function(){
 		hexString : "edcd3ff7e8a18c6900e9bd5cbe9800b59663f67b2bff5100d36c5abc693c8e5b52661f2b862518b72a38b52d58cf2243dc3e42e81725ba88a7d1418ad4a8c3d271b4ae71b4754b9bb3a2d2d50773f27a9d7302380a609700719c516eb6375caf01aed687d1d300255708a68c9bc0e082c775cad400aab34d81a78506680d72732e485439503b18000000837a69ada498d1cfb5aeb7bff0e8c2ffffff",
 		selected : "a",
 		marked : false,
+		rightClicked : false,
 
 		defaults : {
 
@@ -10426,7 +10170,7 @@ $(document).ready ( function(){
 
 		},
 
-		updatePaletteMarkers : function(){
+		updateChipArrows : function(){
 
 			var warpColors = globalPattern.warp.filter(Boolean).unique();
 			var weftColors = globalPattern.weft.filter(Boolean).unique();
@@ -10445,17 +10189,58 @@ $(document).ready ( function(){
 
 		selectChip : function(code){
 
+			var codeA, codeB, newPattern;
+
+			if ( this.marked ) {
+
+				codeA = code;
+				codeB = this.marked;
+
+				if (g_enableWarp){
+					newPattern = globalPattern.warp.replaceAll(codeA, 'FLAG');
+					newPattern = newPattern.replaceAll(codeB, codeA);
+					newPattern = newPattern.replaceAll('FLAG', codeB);
+					globalPattern.set(19, 'warp', newPattern, false);
+				}
+
+				if (g_enableWeft){
+					newPattern = globalPattern.weft.replaceAll(codeA, 'FLAG');
+					newPattern = newPattern.replaceAll(codeB, codeA);
+					newPattern = newPattern.replaceAll('FLAG', codeB);
+					globalPattern.set(19, 'weft', newPattern, false);
+				}
+
+				renderAll();
+				
+			}
+
 			this.clearSelection();
+			this.clearMarker();
 			$("#palette-chip-"+code).addClass('highlight-chip');
 			this.selected = code;
 
 		},
 
+		markChip : function(code){
+
+			console.log(["markChip", code]);
+
+			this.clearMarker();
+			$("#palette-chip-"+code).addClass('mark-chip');
+			this.marked = code;
+
+			console.log(this.marked);
+
+		},
+
+		clearMarker : function(){
+			globalPalette.marked = false;
+			$(".palette-chip").removeClass('mark-chip');
+		},
+
 		clearSelection : function(){
 			globalPalette.marked = false;
 			$(".palette-chip").removeClass('highlight-chip');
-			paletteContextMenu.setItemDisabled('palette_context_paste');
-			paletteContextMenu.setItemDisabled('palette_context_swap');
 		},
 
 		compress: function(){
@@ -11091,7 +10876,7 @@ $(document).ready ( function(){
 			this.height = image.height;
 			this.blank(this.width, this.height);
 			g_artworkContext.drawImage( image, 0, 0 , this.width , this.height, 0, 0, this.width, this.height);
-			this.read();
+			this.read(image);
 			this.updateColorList();
 			this.status = true;
 			this.dataurl = this.getDataURL();
@@ -11338,7 +11123,7 @@ $(document).ready ( function(){
 
 		},
 
-		drawDataURL : function (dataurl ){
+		drawDataURL : function (dataurl){
 
 			this.dataurl = dataurl;
 			var image = new Image();
