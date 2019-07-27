@@ -1,9 +1,7 @@
-function addStyleClassToElement(id, className) {
-  var element, name, arr;
-  element = document.getElementById(id);
-  name = className;
-  arr = element.className.split(" ");
-  if (arr.indexOf(name) == -1) {
-    element.className += " " + name;
+function addStyleClassToElement(id, style) {
+  var e = document.getElementById(id);
+  var arr = e.className.split(" ");
+  if (arr.indexOf(style) === -1) {
+    e.className += " " + style;
   }
 }
