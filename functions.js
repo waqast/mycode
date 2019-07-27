@@ -184,9 +184,9 @@ Array.prototype.rotate2D = function(direction) {
 	for (x = 0; x < arrH; ++x){
 		rotated[x] = [];
 		for (y = 0; y < arrW; ++y){
-			if (direction == "anticlockwise"){
+			if (direction === "anticlockwise"){
 				rotated[x][y] = arr[y][arrH-x-1];
-			} else if (direction == "clockwise"){
+			} else if (direction === "clockwise"){
 				rotated[x][y] = arr[arrW-y-1][x];
 			}
 		}
@@ -935,7 +935,7 @@ function copy2D(canvas, startX, startY, lastX, lastY, overflowX = "trim", overfl
 	} else if ( overflowX == "extend" ){
 
 		resultW = lastX - startX + 1;
-		startX = limitNumber(startX, 0, canvasW);
+		//startX = limitNumber(startX, 0, canvasW);
 		lastX = limitNumber(lastX, 0, canvasW);
 		copyW = lastX + 1;
 		result = [blank].repeat(resultW);
