@@ -28,7 +28,7 @@ self.onmessage = function (e) {
 	var arr8Data = arr8.subarray(2);
 	var dataW = arr8Data.length;
 
-	g_tempContext = getCtx(4, 'temp-canvas', 'g_tempCanvas', w, h);
+	g_tempContext = getCtx(4, "temp-canvas", "g_tempCanvas", w, h);
 
 	var light32 = rgbaToColor32(255,255,255,255);
 	var dark32 = rgbaToColor32(0,0,255,255);

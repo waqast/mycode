@@ -1,7 +1,7 @@
 function compress1D_B(str){
 
 	console.log("Compress B Start");
-	logTime('Compress B End');
+	logTime("Compress B End");
 
 	console.log(str);
 	
@@ -13,7 +13,7 @@ function compress1D_B(str){
 
 	console.log("Compress B Cycles : "+cycles);
 
-	logTimeEnd('Compress B End');
+	logTimeEnd("Compress B End");
 
 	return outA;
 
@@ -131,7 +131,7 @@ function recursiveCompression(outA){
 
 function compress1D_A(str){
 	
-	logTime('Compress A');
+	logTime("Compress A");
 
 	str = Array.isArray(str) ? str.join("") : str;
 	var out = cleanPattern(str);
@@ -197,14 +197,14 @@ function compress1D_A(str){
 
 	console.log("A : "+cycles);
 
-	logTimeEnd('Compress A');
+	logTimeEnd("Compress A");
 
 	return outA;
 }
 
 function compress1D(str){
 
-	//logTime('Compress');
+	//logTime("Compress");
 
 	var strL = Array.isArray(str) ? str.join("").length : str.length;
 
@@ -217,7 +217,7 @@ function compress1D(str){
 	mid = "";
 
 	// find multiples of same letters individually
-	// if multiple is 1 then don't add digit to code
+	// if multiple is 1 then don"t add digit to code
 	var multiplesRegex = /([a-zA-Z])\1*/g;
 	while (match = multiplesRegex.exec(out) ) {
 		multiples = match[0].length;
@@ -239,7 +239,7 @@ function compress1D(str){
 		out = replaceFirstMatch(out, match[1], replacement);
 	}
 
-	//logTimeEnd('Compress');
+	//logTimeEnd("Compress");
 
 	return out;
 }
@@ -292,7 +292,7 @@ function decompress1D(str){
 	}
 
 	// remove any lone digit
-	out = out.replace(/\d+/g,'');
+	out = out.replace(/\d+/g,"");
 
 	return out;
 }

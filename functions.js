@@ -184,9 +184,9 @@ Array.prototype.rotate2D = function(direction) {
 	for (x = 0; x < arrH; ++x){
 		rotated[x] = [];
 		for (y = 0; y < arrW; ++y){
-			if (direction == 'anticlockwise'){
+			if (direction == "anticlockwise"){
 				rotated[x][y] = arr[y][arrH-x-1];
-			} else if (direction == 'clockwise'){
+			} else if (direction == "clockwise"){
 				rotated[x][y] = arr[arrW-y-1][x];
 			}
 		}
@@ -253,9 +253,9 @@ Array.prototype.copy2D8 = function(sx = 0, sy = 0, lx = 0, ly = 0, overflowX = "
 
 function recursiveDeepCopy(obj) {
 	var nObj, i;
-	if (typeof obj !== 'object') { return obj; }
+	if (typeof obj !== "object") { return obj; }
 	if (!obj) { return obj; }
-	if ('[object Array]' === Object.prototype.toString.apply(obj)) {
+	if ("[object Array]" === Object.prototype.toString.apply(obj)) {
 		nObj = [];
 		for (i = 0; i < obj.length; i += 1) { nObj[i] = recursiveDeepCopy(obj[i]); }
 		return nObj;
@@ -333,7 +333,7 @@ Array.prototype.replaceElements = function(whatArr, withArr) {
 // Get Sum of Array Elements -----------------------------------
 // -------------------------------------------------------------
 Array.prototype.sum = function(selector) {
-	if (typeof selector !== 'function') {
+	if (typeof selector !== "function") {
 		selector = function(item) {
 			return item;
 		};
@@ -415,7 +415,7 @@ Array.prototype.removeArray = function(toRemove) {
 function goodFileName(fileName, requireExt, AlternateName){
 
 	fileName = fileName.toLowerCase();
-	fileName = fileName.replace(/\s/g, '');	
+	fileName = fileName.replace(/\s/g, "");	
 	if (fileName === ""){
 		fileName = AlternateName + "-weavedesigner-" + $.now() + "." + requireExt;
 	}
@@ -588,7 +588,7 @@ Array.prototype.contains = function(obj) {
 // Download Text As File
 // ----------------------------------------------------------------------------------
 function downloadTextAsFile(text, filename) {
-	var blob = new Blob([text], { type: 'text/plain' });
+	var blob = new Blob([text], { type: "text/plain" });
 	var link = document.createElement("a");
 	link.download = filename;
 	link.href = window.URL.createObjectURL(blob);
@@ -720,9 +720,9 @@ function getDate(format){
 	var monthIndex = date.getMonth();
 	var year = date.getFullYear();
 	if ( format == "short"){
-		return monthNames[monthIndex].substring(0,3) + ' '+ day + ", " + year;
+		return monthNames[monthIndex].substring(0,3) + " "+ day + ", " + year;
 	} else {
-		return monthNames[monthIndex] + ' '+ day + ", " + year;
+		return monthNames[monthIndex] + " "+ day + ", " + year;
 	}
 	
 	
@@ -829,7 +829,7 @@ function hslToHex(h, s, l) {
   }
   const toHex = x => {
     const hex = Math.round(x * 255).toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
+    return hex.length === 1 ? "0" + hex : hex;
   };
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
@@ -840,7 +840,7 @@ function hslToHex(h, s, l) {
 function paste1D_old(source, target, pasteIndex, loop = true, blank = "") {
 
 	var x;
-	
+
 	source = source.clone();
 	target = target.clone();
 
@@ -938,7 +938,6 @@ function copy2D(canvas, startX, startY, lastX, lastY, overflowX = "trim", overfl
 		startX = limitNumber(startX, 0, canvasW);
 		lastX = limitNumber(lastX, 0, canvasW);
 		copyW = lastX + 1;
-		canvas = canvas.slice(startX, copyW);
 		result = [blank].repeat(resultW);
 
 	}
@@ -990,15 +989,13 @@ function paste1D8(tile, canvas, pasteX = 0, overflow = "trim", blank = "") {
 		for (x = 0; x < canvasW; ++x) {
 			result[x+canvasX] = canvas[x];
 		}
-		pasteW = tileW;
 		pasteX = pasteX >= 0 ? pasteX : 0;
-		for (x = 0; x < pasteW; x++) {
+		for (x = 0; x < tileW; x++) {
 			result[x+pasteX] = tile[x];
 		}
 
 	} else if ( overflow == "repeat" ){
 
-		pasteW = tileW;
 		result = result.shift1D8(-pasteX);
 		for (x = 0; x < resultW; ++x) {
 			result[x] = tile[loopNumber(x, tileW)];
@@ -1279,9 +1276,9 @@ function paste2D_old(tile, canvas, pasteX = 0, pasteY = 0, xOverflow = "trim", y
 }
 
 function getFnName(fn) {
-  var f = typeof fn == 'function';
-  var s = f && ((fn.name && ['', fn.name]) || fn.toString().match(/function ([^\(]+)/));
-  return (!f && 'not a function') || (s && s[1] || 'anonymous');
+  var f = typeof fn == "function";
+  var s = f && ((fn.name && ["", fn.name]) || fn.toString().match(/function ([^\(]+)/));
+  return (!f && "not a function") || (s && s[1] || "anonymous");
 }
 
 function strToArr(item){
@@ -1600,18 +1597,18 @@ function chunk(a, l) {
 function getCtx(instanceId, parentId, canvasId, canvasW, canvasH, visible = true){
 	var pixelRatio = 1;
 	var parent = $("#"+parentId);
-	if ( parent.has('#'+canvasId).length == 0 ){
-		$('<canvas/>', {'id':canvasId}).appendTo(parent);
+	if ( parent.has("#"+canvasId).length == 0 ){
+		$("<canvas/>", {"id":canvasId}).appendTo(parent);
 	}
 	var canvas = $("#"+canvasId);
-	var ctx = canvas[0].getContext('2d');
+	var ctx = canvas[0].getContext("2d");
 	window[canvasId] = document.getElementById(canvasId);
 	if ( visible ){
 		pixelRatio = getPixelRatio();
-		parent.addClass('graph-container');
-		canvas.addClass('graph-canvas');
-		canvas.width = canvasW + 'px';
-	    canvas.height = canvasH + 'px';
+		parent.addClass("graph-container");
+		canvas.addClass("graph-canvas");
+		canvas.width = canvasW + "px";
+	    canvas.height = canvasH + "px";
 	}
 	canvas[0].width = canvasW * pixelRatio;
 	canvas[0].height = canvasH * pixelRatio;
@@ -1620,7 +1617,7 @@ function getCtx(instanceId, parentId, canvasId, canvasW, canvasH, visible = true
 
 // Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
 function gradient32Arr(w, ...colorStop){
-	var ctx = getCtx(200,'temp-canvas', 'g_tempCanvas', w, 1);
+	var ctx = getCtx(200,"temp-canvas", "g_tempCanvas", w, 1);
 	var gradient = ctx.createLinearGradient(0,0,w,0);
 	if ( w == 2){
 		gradient.addColorStop(0, colorStop[3]);
@@ -1639,7 +1636,7 @@ function gradient32Arr(w, ...colorStop){
 // Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
 function gradient32Arr2(w, ...colorStop){
 	console.log(arguments);
-	var ctx = getCtx(200,'temp-canvas', 'g_tempCanvas', w, 1);
+	var ctx = getCtx(200,"temp-canvas", "g_tempCanvas", w, 1);
 	var gradient = ctx.createLinearGradient(0,0,w,0);
 	if ( w == 2){
 		gradient.addColorStop(0, colorStop[3]);
@@ -1764,9 +1761,9 @@ function averageHex(hex1, hex2){
 	  t = dec2hex( (hex2dec(b1[--i]) + hex2dec(b2[i])) >> 1 );
 
 	  // Add leading zero if only one character
-	  c[i] = t.length == 2? '' + t : '0' + t; 
+	  c[i] = t.length == 2? "" + t : "0" + t; 
 	}
-	return  c.join('');
+	return  c.join("");
 
 }
 

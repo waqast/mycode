@@ -1122,7 +1122,7 @@ function arrayBinary(operation, a1, a2){
 
 function convert_uint8_str(uint8){
 	var c8 = SnappyJS.compress(uint8);
-	return pako.gzip(c8, { to: 'string' });
+	return pako.gzip(c8, { to: "string" });
 }
 
 function convert_str_uint8(str){

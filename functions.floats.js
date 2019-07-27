@@ -89,7 +89,7 @@ function getFloats(weave2D8) {
 
 		var fx, fy, i
 
-		if(typeof floats[yarnSet][side][floatSize] === 'undefined') {
+		if(typeof floats[yarnSet][side][floatSize] === "undefined") {
 			floats[yarnSet][side][0].push(floatSize);
 			//floats[yarnSet][side][floatSize] = [];
 		}
