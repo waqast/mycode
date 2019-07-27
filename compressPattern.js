@@ -1,3 +1,6 @@
+var cycles = 0;
+var counter = 0;
+
 function compress1D_B(str){
 
 	console.log("Compress B Start");
@@ -18,9 +21,6 @@ function compress1D_B(str){
 	return outA;
 
 }
-
-var cycles = 0;
-var counter = 0;
 
 function recursiveCompression(outA){
 
@@ -77,8 +77,8 @@ function recursiveCompression(outA){
 
 					if ( match.length && match[1] > 1 || match[3] > 1){
 
-						replacement = match[2] == undefined ? match[4] : match[2];
-						var newMultiple = Number(match[1] == undefined ? match[3] : match[1]);
+						replacement = match[2] === undefined ? match[4] : match[2];
+						var newMultiple = Number(match[1] === undefined ? match[3] : match[1]);
 
 						multiples = multiples * newMultiple;
 
@@ -86,7 +86,7 @@ function recursiveCompression(outA){
 
 					if ( replacement.length > 1){
 						replacement = multiples + "(" + replacement + ")";
-					} else if ( replacement.length == 1){
+					} else if ( replacement.length === 1){
 						replacement = multiples + replacement;
 					}
 					
@@ -121,7 +121,7 @@ function recursiveCompression(outA){
 
 	if ( cycles > 10000){
 		console.log("cycles exceeding limit : exit function");
-		return;
+		outA = false;
 	}
 
 	console.log([marker, "OUT", outA.join("")]);
@@ -222,7 +222,7 @@ function compress1D(str){
 	while (match = multiplesRegex.exec(out) ) {
 		multiples = match[0].length;
 
-		if ( multiples == 1 ){
+		if ( multiples === 1 ){
 			mid += match[1];
 		} else {
 			mid += multiples + match[1];
@@ -322,7 +322,7 @@ function decodePattern(string){
 	var regex = /(\d*)([a-zA-Z])/yg;
 	while (match = regex.exec(cleanString) ) {
 
-		if ( match[1] == "" ){
+		if ( match[1] === "" ){
 			matches[0].push("1"+match[0]);
 			matches[1].push("1");
 			matches[2].push(match[2]);

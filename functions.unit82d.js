@@ -1,6 +1,6 @@
 Uint8Array.prototype.copy1D8 = function(startX = 0 , lastX, overflow = "trim", blank = 0){
 
-	if ( lastX == undefined ){
+	if ( lastX === undefined ){
 		return this;
 	}
 
@@ -15,21 +15,21 @@ Uint8Array.prototype.copy1D8 = function(startX = 0 , lastX, overflow = "trim", b
 		[startX, lastX] = [lastX, startX];
 	}
 
-	if ( overflow == "trim" ){
+	if ( overflow === "trim" ){
 
 		startX = limitNumber(startX, 0, canvasW);
 		lastX = limitNumber(lastX, 0, canvasW);
 		copyW = lastX + 1;
 		result = canvas.slice(startX, copyW);
 
-	} else if ( overflow == "loop" ){
+	} else if ( overflow === "loop" ){
 
 		copyW = lastX - startX + 1;
 		tile = this.shift1D8(-startX);
 		result = new Uint8Array(copyW);
 		result = result.paste1D8(tile, 0, "repeat");
 
-	} else if ( overflow == "extend" ){
+	} else if ( overflow === "extend" ){
 
 		var leftIndent = startX < 0 ? -startX : 0;
 		resultW = lastX - startX + 1;
@@ -67,7 +67,7 @@ Uint8Array.prototype.paste1D8 = function(tile, pasteX = 0, overflow = "trim", bl
 
 	result = this.slice();
 
-	if ( overflow == "trim" ){
+	if ( overflow === "trim" ){
 
 		pasteW = Math.min(canvasW, tileW, canvasW - pasteX, tileW + pasteX);
 		pasteW = pasteW < 0 ? 0 : pasteW;
@@ -77,7 +77,7 @@ Uint8Array.prototype.paste1D8 = function(tile, pasteX = 0, overflow = "trim", bl
 			result[x + canvasX] = tile[x + tileX];
 		}
 
-	} else if ( overflow == "loop" ){
+	} else if ( overflow === "loop" ){
 
 		pasteW = limitNumber(tileW, 0, canvasW);
 		pasteX = loopNumber(pasteX, canvasW);
@@ -87,7 +87,7 @@ Uint8Array.prototype.paste1D8 = function(tile, pasteX = 0, overflow = "trim", bl
 		}
 		result = result.shift1D8(pasteX);
 
-	} else if ( overflow == "extend" ){
+	} else if ( overflow === "extend" ){
 
 		resultW = Math.max(canvasW, tileW, canvasW - pasteX, tileW + pasteX);
 		result = new Uint8Array(resultW);
@@ -102,7 +102,7 @@ Uint8Array.prototype.paste1D8 = function(tile, pasteX = 0, overflow = "trim", bl
 			result[x+pasteX] = tile[x];
 		}
 
-	} else if ( overflow == "repeat" ){
+	} else if ( overflow === "repeat" ){
 
 		pasteW = tileW;
 		result = result.shift1D8(-pasteX);
@@ -123,11 +123,11 @@ Uint8Array.prototype.copy2D8 = function(sx = 0, sy = 0, lx, ly, overflowX, overl
 	var sw = this.get("w");
 	var sh = this.get("h");
 
-	if (lx == undefined){
+	if (lx === undefined){
 		lx = sw - 1;
 	}
 
-	if (ly == undefined){
+	if (ly === undefined){
 		ly = sh - 1;
 	}
 
@@ -156,21 +156,21 @@ Uint8Array.prototype.copy2D8 = function(sx = 0, sy = 0, lx, ly, overflowX, overl
 
 	/*
 
-	if ( overflowX == "trim" ){
+	if ( overflowX === "trim" ){
 
 		startX = limitNumber(startX, 0, canvasW);
 		lastX = limitNumber(lastX, 0, canvasW);
 		copyW = lastX + 1;
 		result = canvas.slice(startX, copyW);
 
-	} else if ( overflowX == "loop" ){
+	} else if ( overflowX === "loop" ){
 
 		copyW = lastX - startX + 1;
 		canvas = canvas.shift1D(-startX);
 		result = [blank].repeat(copyW);
 		result = paste1D(canvas, result, 0, "repeat");
 
-	} else if ( overflowX == "extend" ){
+	} else if ( overflowX === "extend" ){
 
 		var leftIndent = startX < 0 ? -startX : 0;
 		resultW = lastX - startX + 1;
@@ -195,7 +195,7 @@ Uint8Array.prototype.value8 = function(x, y, val){
 	var sw, sh;
 	[sw, sh] = this.get("wh");
 	var si = y * sw + x + 2;
-	if ( val == undefined ){
+	if ( val === undefined ){
 		return this[si];
 	} else {
 		this[si] = val;
@@ -212,13 +212,13 @@ Uint8Array.prototype.get = function(prop, n = 0){
 	var sh = (this.length - 2)/sw;
 	var arr8 = this.subarray(2);
 
-	if (prop == "row"){
+	if (prop === "row"){
 
 		var y = loopNumber(n, sh);
 		var res = arr8.subarray(y*sw,y*sw+sw);
 		return res;
 
-	} else if (prop == "col"){
+	} else if (prop === "col"){
 		var res = new Uint8Array(sh);
 		var x = loopNumber(n, sw);
 		for (y = 0; y < sh; ++y) {
@@ -226,11 +226,11 @@ Uint8Array.prototype.get = function(prop, n = 0){
 			res[y] = this[i];
 		}
 		return res;
-	} else if ( prop == "w" ){
+	} else if ( prop === "w" ){
 		return sw;
-	} else if ( prop == "h"){
+	} else if ( prop === "h"){
 		return sh;
-	} else if ( prop == "wh"){
+	} else if ( prop === "wh"){
 		return [sw,sh];
 	}
 }
@@ -245,7 +245,7 @@ Uint8Array.prototype.transform8 = function(dir){
 	var dataW = this.length - 2;
 	var res = new Uint8Array(this.length);
 
-	if (dir == "rotater"){
+	if (dir === "rotater"){
 
 		[rw, rh] = [sh, sw];
 		for (x = 0; x < rw; ++x) {
@@ -258,7 +258,7 @@ Uint8Array.prototype.transform8 = function(dir){
 			}
 		}
 
-    } else if (dir == "rotatel"){
+    } else if (dir === "rotatel"){
 
 		[rw, rh] = [sh, sw];
 		for (x = 0; x < rw; ++x) {
@@ -271,7 +271,7 @@ Uint8Array.prototype.transform8 = function(dir){
 			}
 		}
 
-	} else if (dir == "180"){
+	} else if (dir === "180"){
 
 		[rw, rh] = [sh, sw];
 		for (x = 0; x < rw; ++x) {
@@ -284,7 +284,7 @@ Uint8Array.prototype.transform8 = function(dir){
 			}
 		}
 
-	} else if (dir == "flipx"){
+	} else if (dir === "flipx"){
 
 		for (x = 0; x < rw; ++x) {
 			for (y = 0; y < rh; ++y) {
@@ -296,7 +296,7 @@ Uint8Array.prototype.transform8 = function(dir){
 			}
 		}
 
-	} else if (dir == "flipy"){
+	} else if (dir === "flipy"){
 
 		for (x = 0; x < rw; ++x) {
 			for (y = 0; y < rh; ++y) {
@@ -308,16 +308,16 @@ Uint8Array.prototype.transform8 = function(dir){
 			}
 		}
 
-	} else if (dir == "new"){
+	} else if (dir === "new"){
 
 		res = new Uint8Array(6);
 		rw = 2;
 
-	} else if (dir == "clear"){
+	} else if (dir === "clear"){
 
 		// do nothing
 
-	} else if (dir == "inverse"){
+	} else if (dir === "inverse"){
 
 		for (y = 0; y < rh; ++y) {
 			i = y * rw + 2;
@@ -326,7 +326,7 @@ Uint8Array.prototype.transform8 = function(dir){
 			}
 		}
 
-	} else if (dir == "mirrorr"){
+	} else if (dir === "mirrorr"){
 
 		res = new Uint8Array(dataW*2+2);
 		rw = sw * 2;
@@ -343,7 +343,7 @@ Uint8Array.prototype.transform8 = function(dir){
 
     	}
 
-	} else if (dir == "mirrorl"){
+	} else if (dir === "mirrorl"){
 
 		res = new Uint8Array(dataW*2+2);
 		rw = sw * 2;
@@ -359,7 +359,7 @@ Uint8Array.prototype.transform8 = function(dir){
     		res[rw*ry+rx+2] = this[i+2];
 
     	}
-	} else if (dir == "mirroru"){
+	} else if (dir === "mirroru"){
 
 		res = new Uint8Array(dataW*2+2);
 		rh = sh * 2;
@@ -376,7 +376,7 @@ Uint8Array.prototype.transform8 = function(dir){
 
     	}
 
-	} else if (dir == "mirrord"){
+	} else if (dir === "mirrord"){
 
 		res = new Uint8Array(dataW*2+2);
 		rh = sh * 2;
@@ -392,7 +392,7 @@ Uint8Array.prototype.transform8 = function(dir){
     		res[rw*ry+rx+2] = this[i+2];
 
     	}
-	} else if (dir == "addplainbase"){
+	} else if (dir === "addplainbase"){
 
 		res = new Uint8Array(dataW*2+2);
 		rh = sh * 2;
@@ -435,11 +435,11 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 	var [rw, rh] = [sw, sh];
 	var res;
 
-	if (command == "clear"){
+	if (command === "clear"){
 
 		res = newArray2D8(38, rw, rh);
 
-	} else if (command == "rotater"){
+	} else if (command === "rotater"){
 
 		[rw, rh] = [sh, sw];
 		res = newArray2D8(39, rw, rh);
@@ -451,7 +451,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-    } else if (command == "rotatel"){
+    } else if (command === "rotatel"){
 
 		[rw, rh] = [sh, sw];
 		res = newArray2D8(40, rw, rh);
@@ -463,7 +463,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "180"){
+	} else if (command === "180"){
 
 		res = newArray2D8(41, rw, rh);		
 		for (x = 0; x < rw; x++) {
@@ -474,7 +474,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "flipx"){
+	} else if (command === "flipx"){
 
 		res = newArray2D8(42, rw, rh);	
 		for (x = 0; x < rw; ++x) {
@@ -485,7 +485,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "flipy"){
+	} else if (command === "flipy"){
 
 		res = newArray2D8(43, rw, rh);
 		for (x = 0; x < rw; ++x) {
@@ -496,15 +496,15 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "new"){
+	} else if (command === "new"){
 
 		res = newArray2D8(44, 2, 2);
 
-	} else if (command == "clear"){
+	} else if (command === "clear"){
 
 		res = newArray2D8(45, rw, rh);
 
-	} else if (command == "inverse"){
+	} else if (command === "inverse"){
 
 		res = newArray2D8(46, rw, rh);
 		for (x = 0; x < rw; ++x) {
@@ -513,7 +513,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "mirrorr"){
+	} else if (command === "mirrorr"){
 
 		rw = sw * 2;
 		res = newArray2D8(47, rw, rh);
@@ -524,7 +524,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "mirrorl"){
+	} else if (command === "mirrorl"){
 
 		rw = sw * 2;
 		res = newArray2D8(48, rw, rh);
@@ -535,7 +535,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "mirroru"){
+	} else if (command === "mirroru"){
 
 		rh = sh * 2;
 		res = newArray2D8(49, rw, rh);
@@ -546,7 +546,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "mirrord"){
+	} else if (command === "mirrord"){
 
 		rh = sh * 2;
 		res = newArray2D8(50, rw, rh);
@@ -557,7 +557,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "addplainbase"){
+	} else if (command === "addplainbase"){
 
 		rh = sh * 2;
 		res = newArray2D8(51, rw, rh);
@@ -569,7 +569,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "shiftx"){
+	} else if (command === "shiftx"){
 
 		res = newArray2D8(52, rw, rh);
 		for (x = 0; x < sw; ++x) {
@@ -579,7 +579,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "shifty"){
+	} else if (command === "shifty"){
 
 		res = newArray2D8(53, rw, rh);
 		for (x = 0; x < sw; ++x) {
@@ -589,7 +589,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "shiftx2"){
+	} else if (command === "shiftx2"){
 
 		res = this.clone2D8();
 
@@ -609,30 +609,30 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 
 		}
 
-	} else if (command == "shifty2"){
+	} else if (command === "shifty2"){
 
 		res = this.clone2D8();
 		for (x = 0; x < sw; ++x) {
 			res[x] = res[x].shift1D8(val);
 		}
 		
-	} else if (command == "shuffle_ends"){
+	} else if (command === "shuffle_ends"){
 
 		res = this.shuffle();
 		
-	} else if (command == "mirror_stitch_right"){
+	} else if (command === "mirror_stitch_right"){
 
 		var dup = this.clone2D8();
 		dup.reverse();
 		res = this.concat(dup.slice(1, -1));
 		
-	} else if (command == "mirror_stitch_left"){
+	} else if (command === "mirror_stitch_left"){
 
 		var dup = this.clone2D8();
 		dup.reverse();
 		res = dup.concat(this.slice(1, -1));
 		
-	} else if (command == "mirror_stitch_up"){
+	} else if (command === "mirror_stitch_up"){
 
 		rh = sh * 2 - 2;
 		res = newArray2D8(54, rw, rh);
@@ -648,7 +648,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 		
-	} else if (command == "mirror_stitch_down"){
+	} else if (command === "mirror_stitch_down"){
 
 		rh = sh * 2 - 2;
 		res = newArray2D8(55, rw, rh);
@@ -664,7 +664,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command == "mirror_stitch_cross"){
+	} else if (command === "mirror_stitch_cross"){
 
 		var rightPart = this.transform2D8(0, "mirror_stitch_right");
 		res = rightPart.transform2D8(0, "mirror_stitch_up");
@@ -686,7 +686,7 @@ Uint8Array.prototype.transform8_old = function(dir){
 	var dataW = this.length - 2;
 	var res = new Uint8Array(this.length);
 
-	if (dir == "rotater"){
+	if (dir === "rotater"){
 
 		[rw, rh] = [sh, sw];
 
@@ -698,7 +698,7 @@ Uint8Array.prototype.transform8_old = function(dir){
     		res[i+2] = this[sw*sy+sx+2];
     	}
 
-	} else if (dir == "rotatel"){
+	} else if (dir === "rotatel"){
 
 		[rw, rh] = [sh, sw];
 
@@ -710,7 +710,7 @@ Uint8Array.prototype.transform8_old = function(dir){
     		res[i+2] = this[sw*sy+sx+2];
     	}
 
-	} else if (dir == "180"){
+	} else if (dir === "180"){
 
 		for (i = 0; i < dataW; ++i) {
 			
@@ -722,7 +722,7 @@ Uint8Array.prototype.transform8_old = function(dir){
     		res[i+2] = this[sw*sy+sx+2];
     	}
 
-	} else if (dir == "flipx"){
+	} else if (dir === "flipx"){
 
 		for (i = 0; i < dataW; ++i) {
 			
@@ -734,7 +734,7 @@ Uint8Array.prototype.transform8_old = function(dir){
     		res[i+2] = this[sw*sy+sx+2];
     	}
 
-	} else if (dir == "flipy"){
+	} else if (dir === "flipy"){
 
 		for (i = 0; i < dataW; ++i) {
 			
@@ -746,12 +746,12 @@ Uint8Array.prototype.transform8_old = function(dir){
     		res[i+2] = this[sw*sy+sx+2];
     	}
 
-	} else if (dir == "clear"){
+	} else if (dir === "clear"){
 
 		res = new Uint8Array(6);
 		rw = 2;
 
-	} else if (dir == "inverse"){
+	} else if (dir === "inverse"){
 
 		for (i = 0; i < dataW; ++i) {
 			
@@ -763,7 +763,7 @@ Uint8Array.prototype.transform8_old = function(dir){
     		res[i+2] = this[sw*sy+sx+2] ? 0 : 1;
     	}
 
-	} else if (dir == "mirrorr"){
+	} else if (dir === "mirrorr"){
 
 		res = new Uint8Array(dataW*2+2);
 		rw = sw * 2;
@@ -780,7 +780,7 @@ Uint8Array.prototype.transform8_old = function(dir){
 
     	}
 
-	} else if (dir == "mirrorl"){
+	} else if (dir === "mirrorl"){
 
 		res = new Uint8Array(dataW*2+2);
 		rw = sw * 2;
@@ -796,7 +796,7 @@ Uint8Array.prototype.transform8_old = function(dir){
     		res[rw*ry+rx+2] = this[i+2];
 
     	}
-	} else if (dir == "mirroru"){
+	} else if (dir === "mirroru"){
 
 		res = new Uint8Array(dataW*2+2);
 		rh = sh * 2;
@@ -813,7 +813,7 @@ Uint8Array.prototype.transform8_old = function(dir){
 
     	}
 
-	} else if (dir == "mirrord"){
+	} else if (dir === "mirrord"){
 
 		res = new Uint8Array(dataW*2+2);
 		rh = sh * 2;
@@ -839,7 +839,7 @@ Uint8Array.prototype.transform8_old = function(dir){
 
 Uint8Array.prototype.setWidth = function(w){
 	var w256 = convertNumberBase([w], 10, 256);
-	if ( w256.length == 1 ){ w256 = [0, w256[0]]; }
+	if ( w256.length === 1 ){ w256 = [0, w256[0]]; }
 	this[0] = w256[0];
 	this[1] = w256[1];
 }
@@ -881,7 +881,7 @@ Uint8Array.prototype.unique8 = function(weave8){
 	array2D.forEach(function(e, i) {
 		str = e.join("");
 		pos = uniqueStrs.indexOf(str);		
-		if ( pos == -1 ){
+		if ( pos === -1 ){
 			uniqueStrs[n] = str;
 			uniques[n] = e;
 			pos = n;
@@ -966,7 +966,7 @@ function weaveTextToWeave8(weaveText){
 	for (x = 0; x < w; ++x) {
 		for (y = 0; y < h; ++y) {
 			i = y * w + x + 2
-			weave8[i] = weave2D[x][y] == "U" || weave2D[x][y] == "u" ? 1 : 0;
+			weave8[i] = weave2D[x][y] === "U" || weave2D[x][y] === "u" ? 1 : 0;
 		}	
 	}
 	return weave8;
@@ -980,7 +980,7 @@ function weaveTextToWeave2D8(weaveText){
 	var weave2D8 = newArray2D8(57, w, h);
 	for (x = 0; x < w; ++x) {
 		for (y = 0; y < h; ++y) {
-			weave2D8[x][y] = weave2D[x][y] == "U" || weave2D[x][y] == "u" ? 1 : 0;
+			weave2D8[x][y] = weave2D[x][y] === "U" || weave2D[x][y] === "u" ? 1 : 0;
 		}	
 	}
 	return weave2D8;
@@ -992,7 +992,7 @@ function patternTextTo1D8(patternText){
 	var threadS = pattern1D.length;
 	var thread1D8 = new Uint8Array(threadS);
 	for (var n = 0; n < threadS; ++n) {
-		thread1D8[n] = pattern1D[n] == "U" || pattern1D[n] == "u" ? 1 : 0;
+		thread1D8[n] = pattern1D[n] === "U" || pattern1D[n] === "u" ? 1 : 0;
 	}
 	return thread1D8;
 }
@@ -1073,7 +1073,7 @@ function weave2DToWeave2D8(weave){
 	var weave2D8 = newArray2D8(60, w, h);
 	for (x = 0; x < w; ++x) {
 		for (y = 0; y < h; ++y) {
-			weave2D8[x][y] = weave[x][y] == "U" ? 1 : 0;
+			weave2D8[x][y] = weave[x][y] === "U" ? 1 : 0;
 		}	
 	}
 	return weave2D8;
@@ -1103,13 +1103,13 @@ function arrayBinary(operation, a1, a2){
 	var rW = Math.max(a1W, a2W);
 	var r = new Uint8Array(rW);
 
-	if ( operation == "OR"){
+	if ( operation === "OR"){
 
 		for (var x = 0; x < rW; x++) {
 			r[x] = a1[x] || a2[x];
 		}
 
-	} else if ( operation == "AND"){
+	} else if ( operation === "AND"){
 
 		for (var x = 0; x < rW; x++) {
 			r[x] = a1[x] && a2[x];

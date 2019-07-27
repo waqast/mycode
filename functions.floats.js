@@ -95,8 +95,8 @@ function getFloats(weave2D8) {
 		}
 		//floats[yarnSet][side][floatSize].push([endIndex,pickIndex]);
 
-		fabricSideSymbole = side == "face" ? 1 : -1;
-		if ( yarnSet == "warp" ){
+		fabricSideSymbole = side === "face" ? 1 : -1;
+		if ( yarnSet === "warp" ){
 			for (i = 0; i < floatSize; i++) {
 				fx = endIndex;
 				fy = loopNumber(i + pickIndex, h);
@@ -104,7 +104,7 @@ function getFloats(weave2D8) {
 			}
 		}
 
-		if ( yarnSet == "weft" ){
+		if ( yarnSet === "weft" ){
 			for (i = 0; i < floatSize; i++) {
 				fx = loopNumber(i + endIndex, w);
 				fy = pickIndex;

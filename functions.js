@@ -1008,23 +1008,23 @@ function paste1D8(tile, canvas, pasteX = 0, overflow = "trim", blank = "") {
 
 function paste1D(tile, canvas, pasteX = 0, overflow = "trim", blank = "") {
 
-	let x, result, resultW, pasteW, canvasW, canvasX, tileW, tileX;
+	let x, pasteW, canvasX;
 
 	canvas = canvas.slice();
-	canvasW = canvas.length;
+	var canvasW = canvas.length;
 
-	tile = tile.slice();
-	tileW = tile.length;
+	var tile = tile.slice();
+	var tileW = tile.length;
 
-	result = canvas.slice();
-	resultW = canvasW;
+	var result = canvas.slice();
+	var resultW = canvasW;
 
 	if ( overflow == "trim" ){
 
 		pasteW = Math.min(canvasW, tileW, canvasW - pasteX, tileW + pasteX);
 		pasteW = pasteW < 0 ? 0 : pasteW;
 		canvasX = limitNumber(pasteX, 0, canvasW-1);
-		tileX = canvasX - pasteX;
+		var tileX = canvasX - pasteX;
 		for (x = 0; x < pasteW; ++x) {
 			result[x + canvasX] = tile[x + tileX];
 		}
@@ -1056,7 +1056,6 @@ function paste1D(tile, canvas, pasteX = 0, overflow = "trim", blank = "") {
 	// fill canvas with tile from pasteX 
 	} else if ( overflow == "repeat" ){
 
-		pasteW = tileW;
 		result = result.shift1D(-pasteX);
 		for (x = 0; x < resultW; ++x) {
 			result[x] = tile[loopNumber(x, tileW)];
@@ -1226,11 +1225,9 @@ function paste2D_old(tile, canvas, pasteX = 0, pasteY = 0, xOverflow = "trim", y
 
 	var resultW = canvasW;
 	var resultH = canvasH;
-	var pasteW = tileW;
-	var pasteH = tileH;
 
 	if ( xOverflow == "trim" ){
-		pasteW = Math.min(canvasW, tileW, canvasW - pasteX, tileW + pasteX);
+		var pasteW = Math.min(canvasW, tileW, canvasW - pasteX, tileW + pasteX);
 		pasteW = limitNumber(pasteW, 0, canvasW);
 	} else if ( xOverflow == "loop" ){
 
@@ -1239,7 +1236,7 @@ function paste2D_old(tile, canvas, pasteX = 0, pasteY = 0, xOverflow = "trim", y
 	}
 
 	if ( yOverflow == "trim" ){
-		pasteH = Math.min(canvasH, tileH, canvasH - pasteY, tileH + pasteY);
+		var pasteH = Math.min(canvasH, tileH, canvasH - pasteY, tileH + pasteY);
 		pasteH = limitNumber(pasteH, 0, canvasH);
 	} else if ( yOverflow == "loop" ){
 

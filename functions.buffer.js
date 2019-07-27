@@ -2,22 +2,22 @@ function drawRectBuffer(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, colo
 
 	//console.log([sx, sy, w, h]);
 
-	var i, x, y, a, rgba, mix32;
+	var i, x, y, a, mix32;
 
-	if (origin == "br"){
+	if (origin === "br"){
 		sx = ctxW - sx - w;
 		sy = ctxH - sy - h;
 	}
-	if (origin == "bl"){
+	if (origin === "bl"){
 		sy = ctxH - sy - h;
 	}
-	if (origin == "tr"){
+	if (origin === "tr"){
 		sx = ctxW - sx - w;
 	}
 
 	if ((sx+w) > 0 && sx < ctxW && w > 0 && (sy+h) > 0 && sy < ctxH && h > 0){
 
-		if ( fillType == "gradient" ){
+		if ( fillType === "gradient" ){
 			var gradientStartPosX = 0;
 			var gradientStartPosY = 0;
 			if (sx < 0){ gradientStartPosX = -sx % w; }
@@ -43,12 +43,12 @@ function drawRectBuffer(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, colo
 			sy = sy|0;
 		}
 		
-		if ( w == 1 && h == 1 && fillType == "rgba"){
+		if ( w === 1 && h === 1 && fillType === "rgba"){
 
 			a = Math.ceil(opacity * color.a * 256) - 1;
 			pixels[sy * ctxW + sx] = a << 24 | color.b << 16 | color.g << 8 | color.r;
 
-		} else if ( w == 1 && h == 1 && fillType == "color32"){
+		} else if ( w === 1 && h === 1 && fillType === "color32"){
 
 			pixels[sy * ctxW + sx] = color;
 
@@ -57,7 +57,7 @@ function drawRectBuffer(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, colo
 			if (lx < 0) lx = 0; else if (lx >= ctxW) lx = ctxW-1; else lx = lx|0;
 			if (ly < 0) ly = 0; else if (ly >= ctxH) ly = ctxH-1; else ly = ly|0;
 
-			if ( fillType == "rgba" ){
+			if ( fillType === "rgba" ){
 
 				a = Math.ceil(opacity * color.a * 256) - 1;
 
@@ -68,9 +68,7 @@ function drawRectBuffer(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, colo
 					}
 				}
 
-			} else if ( fillType == "rgba_mix"){
-
-				a = Math.ceil(opacity * color.a * 256) - 1;
+			} else if ( fillType === "rgba_mix"){
 
 				for (y = sy; y <= ly; ++y) {
 					i = y * ctxW;
@@ -80,16 +78,16 @@ function drawRectBuffer(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, colo
 					}
 				}
 
-			} else if ( fillType == "gradient"){
+			} else if ( fillType === "gradient"){
 
 				for (y = sy; y <= ly; ++y) {
 					i = y * ctxW;
 					for (x = sx; x <= lx; ++x) {
-						pixels[i + x] = gradientOrientation == "h" ? color[x - sx + gradientStartPosX] : color[y - sy + gradientStartPosY];
+						pixels[i + x] = gradientOrientation === "h" ? color[x - sx + gradientStartPosX] : color[y - sy + gradientStartPosY];
 					}
 				}
 
-			} else if ( fillType == "color32" ){
+			} else if ( fillType === "color32" ){
 
 				for (y = sy; y <= ly; ++y) {
 					i = y * ctxW;
