@@ -5,9 +5,9 @@
 // ----------------------------------------------------------------------------------
 var processCount = 0;
 var favicon = new Favico({
-	animation:'none',
-	bgColor : '#ff0000',
-	textColor : '#fff'
+	animation:"none",
+	bgColor : "#ff0000",
+	textColor : "#fff"
 });
 
 var g_weaveLimitMin = 2;
@@ -26,7 +26,7 @@ var g_YarnNumberSystemDefault = "nec";
 
 var ga_YarnCounts = [g_YarnNumberDefault].repeat(52);
 
-var g_simulationDrawMethod = 'quick';
+var g_simulationDrawMethod = "quick";
 var g_layoutPattern = "2E";
 
 var g_origin = "bl";
@@ -126,7 +126,7 @@ var g_projectNotes = "";
 var g_doRender = false;
 var g_enableWarp = true;
 var g_enableWeft = true;
-var weaveSelectionColor = 'rgba(0,0,255,0.5)';
+var weaveSelectionColor = "rgba(0,0,255,0.5)";
 
 var g_graphTool = "pointer"; // "pointer", "line", "fill", "brush", "zoom", "hand", "selection"
 var g_graphLineStarted = false;
@@ -258,7 +258,7 @@ $(document).ready ( function(){
 
 		// console.log(["Load Checks", g_interfaceLoadCheckCount, g_interfaceLoadCheckTotal]);
 
-		$('div.main-overlay-caption').text("Loading interface"+".".repeat(g_interfaceLoadCheckCount));
+		$("div.main-overlay-caption").text("Loading interface"+".".repeat(g_interfaceLoadCheckCount));
 		
 		if (g_interfaceLoadCheckCount >= g_interfaceLoadCheckTotal) {
 
@@ -282,9 +282,9 @@ $(document).ready ( function(){
 
 			renderAll();
 
-			layoutToolbar.disableItem('toolbar-main-edit-redo');
-			layoutToolbar.disableItem('toolbar-main-edit-undo');
-			$('div.main-overlay').hide();
+			layoutToolbar.disableItem("toolbar-main-edit-redo");
+			layoutToolbar.disableItem("toolbar-main-edit-undo");
+			$("div.main-overlay").hide();
 
 			globalPalette.selectChip("a");
 
@@ -294,7 +294,7 @@ $(document).ready ( function(){
 
 	}
 
-	$('div.main-overlay-caption').click(function(e) {
+	$("div.main-overlay-caption").click(function(e) {
 		if (e.which === 1) {
 			clearHistory();
 			setTimeout(function () {
@@ -310,7 +310,7 @@ $(document).ready ( function(){
 	    appLoadingCheckTimer = setTimeout(function(){
 	    	console.log(g_interfaceLoadCheckCount);
 	    	//if (g_interfaceLoadCheckCount < g_interfaceLoadCheckTotal) {
-				$('div.main-overlay-caption').text("Seems a problem. Reload Page.");
+				$("div.main-overlay-caption").text("Seems a problem. Reload Page.");
 			//}
 			clearTimeout(appLoadingCheckTimer);
 
@@ -331,7 +331,7 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Window Resize
 	// ----------------------------------------------------------------------------------
-	window.addEventListener('resize', function(event){
+	window.addEventListener("resize", function(event){
 		//createLayout(3);
 	});
 
@@ -459,17 +459,17 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Debug Window
 	// ----------------------------------------------------------------------------------
-	$('<div>', {id: 'debug-system', class: 'debug-tab'})
-	.append($('<ul>', { class: 'debug-list'}))
-	.appendTo('#noshow');
+	$("<div>", {id: "debug-system", class: "debug-tab"})
+	.append($("<ul>", { class: "debug-list"}))
+	.appendTo("#noshow");
 
-	$('<div>', {id: 'debug-three', class: 'debug-tab'})
-	.append($('<ul>', { class: 'debug-list'}))
-	.appendTo('#noshow');
+	$("<div>", {id: "debug-three", class: "debug-tab"})
+	.append($("<ul>", { class: "debug-list"}))
+	.appendTo("#noshow");
 
-	$('<div>', {id: 'debug-model', class: 'debug-tab'})
-	.append($('<ul>', { class: 'debug-list'}))
-	.appendTo('#noshow');
+	$("<div>", {id: "debug-model", class: "debug-tab"})
+	.append($("<ul>", { class: "debug-list"}))
+	.appendTo("#noshow");
 
 	var debugWin = dhxLayout.dhxWins.createWindow({
 	    id:"debugWin",
@@ -503,7 +503,7 @@ $(document).ready ( function(){
 		]
 	});
 	
-	debugTabbar.setArrowsMode('auto');
+	debugTabbar.setArrowsMode("auto");
 	debugTabbar.tabs("d1").attachObject("debug-system");
 	debugTabbar.tabs("d2").attachObject("debug-three");
 	debugTabbar.tabs("d3").attachObject("debug-model");
@@ -522,9 +522,9 @@ $(document).ready ( function(){
 			var count = Number(parent.data("count")) + 1;
 			parent.data("count", count);
 
-			item.addClass('debug-bold');
-			item.siblings('div.item-value').text(value).addClass('debug-bold');
-			item.siblings('div.item-count').text(count).addClass('debug-bold');
+			item.addClass("debug-bold");
+			item.siblings("div.item-value").text(value).addClass("debug-bold");
+			item.siblings("div.item-count").text(count).addClass("debug-bold");
 
 			if (!isNaN(value)){
 
@@ -532,11 +532,11 @@ $(document).ready ( function(){
 				parent.data("sum", sum);
 				var avg = Math.round(sum / count * 100)/100;
 
-				var currentMin = Number(item.siblings('div.item-min').text());
-				var currentMax = Number(item.siblings('div.item-max').text());
-				if ( currentMin > value ){ item.siblings('div.item-min').text(value).addClass('debug-bold'); }
-				if ( currentMax < value ){ item.siblings('div.item-max').text(value).addClass('debug-bold'); }
-				item.siblings('div.item-avg').text(avg).addClass('debug-bold');
+				var currentMin = Number(item.siblings("div.item-min").text());
+				var currentMax = Number(item.siblings("div.item-max").text());
+				if ( currentMin > value ){ item.siblings("div.item-min").text(value).addClass("debug-bold"); }
+				if ( currentMax < value ){ item.siblings("div.item-max").text(value).addClass("debug-bold"); }
+				item.siblings("div.item-avg").text(avg).addClass("debug-bold");
 
 			}
 			
@@ -544,42 +544,42 @@ $(document).ready ( function(){
 
 			if ( isNaN(value) ){
 
-				$('<li data-count='+1+'>')
-				.append($('<div>', {class: 'item-title debug-bold'}).text(title))
-				.append($('<div>', {class: 'item-count debug-bold'}).text(1))
-				.append($('<div>', {class: 'item-value debug-bold'}).text(value))
+				$("<li data-count="+1+">")
+				.append($("<div>", {class: "item-title debug-bold"}).text(title))
+				.append($("<div>", {class: "item-count debug-bold"}).text(1))
+				.append($("<div>", {class: "item-value debug-bold"}).text(value))
 				.appendTo(debugList);
 
 			} else {
 
-				$('<li data-sum='+value+' data-count='+1+'>')
-				.append($('<div>', {class: 'item-title debug-bold'}).text(title))
-				.append($('<div>', {class: 'item-count debug-bold'}).text(1))
-				.append($('<div>', {class: 'item-avg debug-bold'}).text(value))
-				.append($('<div>', {class: 'item-max debug-bold'}).text(value))
-				.append($('<div>', {class: 'item-min debug-bold'}).text(value))
-				.append($('<div>', {class: 'item-value debug-bold'}).text(value))
+				$("<li data-sum="+value+" data-count="+1+">")
+				.append($("<div>", {class: "item-title debug-bold"}).text(title))
+				.append($("<div>", {class: "item-count debug-bold"}).text(1))
+				.append($("<div>", {class: "item-avg debug-bold"}).text(value))
+				.append($("<div>", {class: "item-max debug-bold"}).text(value))
+				.append($("<div>", {class: "item-min debug-bold"}).text(value))
+				.append($("<div>", {class: "item-value debug-bold"}).text(value))
 				.appendTo(debugList);
 
 			}
 			
 		}
-		$.doTimeout('debugNormal', 5000, function(){
-			debugList.find('div').removeClass('debug-bold');
+		$.doTimeout("debugNormal", 5000, function(){
+			debugList.find("div").removeClass("debug-bold");
 		});
 	}
 
-	$(document).on('dblclick', '.debug-tab div.item-title', function(evt){
+	$(document).on("dblclick", ".debug-tab div.item-title", function(evt){
 		
-		var value = $(this).siblings('div.item-value').text();
-		$(this).siblings('div.item-count').text(1);
+		var value = $(this).siblings("div.item-value").text();
+		$(this).siblings("div.item-count").text(1);
 		var parent = $(this).parent();
 		parent.data("count", 1);
 		parent.data("sum", value);
-		if ( $(this).siblings('div.item-min').length ){
-			$(this).siblings('div.item-min').text(value);
-			$(this).siblings('div.item-max').text(value);
-			$(this).siblings('div.item-avg').text(value);
+		if ( $(this).siblings("div.item-min").length ){
+			$(this).siblings("div.item-min").text(value);
+			$(this).siblings("div.item-max").text(value);
+			$(this).siblings("div.item-avg").text(value);
 		}
 
 	});
@@ -652,7 +652,7 @@ $(document).ready ( function(){
 	});
 
 	artworkColorsMenu.attachEvent("onClick", function(id) {
-		if (id == 'artwork-colors-clear-all') {
+		if (id == "artwork-colors-clear-all") {
 		}
 	});
 
@@ -669,13 +669,13 @@ $(document).ready ( function(){
 
 	modelToolbar.attachEvent("onClick", function(id) {
 
-		if (id == 'toolbar-model-object-01') {
+		if (id == "toolbar-model-object-01") {
 			globalModel.loadModel(1);
-		} else if (id == 'toolbar-model-object-02') {
+		} else if (id == "toolbar-model-object-02") {
 			globalModel.loadModel(2);
-		} else if (id == 'toolbar-model-object-03') {
+		} else if (id == "toolbar-model-object-03") {
 			globalModel.loadModel(3);
-		} else if (id == 'toolbar-model-object-04') {
+		} else if (id == "toolbar-model-object-04") {
 			globalModel.loadModel(4);
 		}
 
@@ -697,7 +697,7 @@ $(document).ready ( function(){
 
 			interfaceLoadCheck(4);
 
-			$('#btnThreeUpdate').click(function(e) {
+			$("#btnThreeUpdate").click(function(e) {
 				if (e.which === 1) {
 
 					buildFabric();
@@ -711,7 +711,7 @@ $(document).ready ( function(){
 
 	threeToolbar.attachEvent("onClick", function(id) {
 
-		if (id == 'toolbar-three-render') {
+		if (id == "toolbar-three-render") {
 			
 			buildFabric();
 
@@ -755,17 +755,17 @@ $(document).ready ( function(){
 	});
 
 	artworkToolbar.attachEvent("onClick", function(id) {
-		if (id == 'toolbar-artwork-colors') {
+		if (id == "toolbar-artwork-colors") {
 			artworkColorsWindow.show();
 			artworkColorsWindow.stick();
 			artworkColorsWindow.bringToTop();
-		} else if ( id == 'toolbar-artwork-open'){
+		} else if ( id == "toolbar-artwork-open"){
 			openFileDialog("artwork");
-		} else if (id == 'toolbar-artwork-zoom-in') {
+		} else if (id == "toolbar-artwork-zoom-in") {
 			globalArtwork.setProps(1, "zoom", globalArtwork.zoom + 1);
-		} else if (id == 'toolbar-artwork-zoom-out') {
+		} else if (id == "toolbar-artwork-zoom-out") {
 			globalArtwork.setProps(2, "zoom", globalArtwork.zoom - 1);
-		} else if (id == 'toolbar-artwork-zoom-actual') {
+		} else if (id == "toolbar-artwork-zoom-actual") {
 			globalArtwork.setProps(3, "zoom", 0);
 		}
 	});
@@ -798,22 +798,22 @@ $(document).ready ( function(){
 			});
 			weaveShiftPop.attachObject("weave-shift-pop");
 
-			$('div.weaveshiftpopbutton').click(function(e) {
+			$("div.weaveshiftpopbutton").click(function(e) {
 				if (e.which === 1) {
 
-					if ($(this).hasClass('spbil')) {
+					if ($(this).hasClass("spbil")) {
 
 						modify2D8("weave", "shiftx", -1);
 
-					} else if ($(this).hasClass('spbir')) {
+					} else if ($(this).hasClass("spbir")) {
 
 						modify2D8("weave", "shiftx", 1);
 
-					} else if ($(this).hasClass('spbiu')) {
+					} else if ($(this).hasClass("spbiu")) {
 
 						modify2D8("weave", "shifty", 1);
 
-					} else if ($(this).hasClass('spbid')) {
+					} else if ($(this).hasClass("spbid")) {
 
 						modify2D8("weave", "shifty", -1);
 
@@ -827,16 +827,16 @@ $(document).ready ( function(){
 				globalSelection.clear_old(1);
 			});
 
-			$('div.patternshiftpopbutton').click(function(e) {
+			$("div.patternshiftpopbutton").click(function(e) {
 				if (e.which === 1) {
 
-					if ($(this).hasClass('spbil')) {
+					if ($(this).hasClass("spbil")) {
 						globalPattern.shift("left");
-					} else if ($(this).hasClass('spbir')) {
+					} else if ($(this).hasClass("spbir")) {
 						globalPattern.shift("right");
-					} else if ($(this).hasClass('spbiu')) {
+					} else if ($(this).hasClass("spbiu")) {
 						globalPattern.shift("up");
-					} else if ($(this).hasClass('spbid')) {
+					} else if ($(this).hasClass("spbid")) {
 						globalPattern.shift("down");
 					}
 
@@ -867,7 +867,7 @@ $(document).ready ( function(){
 			});
 			autoPatternPop.attachObject("auto-pattern-setting-frame");
 
-			$('#btnAutoPattern').click(function(e) {
+			$("#btnAutoPattern").click(function(e) {
 				if (e.which === 1) {
 					autoPattern();
 					globalWeave.render2D8(1, "weave");
@@ -875,7 +875,7 @@ $(document).ready ( function(){
 				return false;
 			});
 
-			$('#btnAutoPatternClose').click(function(e) {
+			$("#btnAutoPatternClose").click(function(e) {
 				if (e.which === 1) {
 					autoPatternPop.hide();
 				}
@@ -883,21 +883,21 @@ $(document).ready ( function(){
 			});
 
 
-			$('#btnAutoColorway').click(function(e) {
+			$("#btnAutoColorway").click(function(e) {
 				if (e.which === 1) {
 					autoColorway();
 				}
 				return false;
 			});
 
-			$('#btnAutoColorwayClose').click(function(e) {
+			$("#btnAutoColorwayClose").click(function(e) {
 				if (e.which === 1) {
 					autoColorwayPop.hide();
 				}
 				return false;
 			});
 
-			$('#btnAutoWeave').click(function(e) {
+			$("#btnAutoWeave").click(function(e) {
 				if (e.which === 1) {
 					autoWeave();
 				}
@@ -931,7 +931,7 @@ $(document).ready ( function(){
 
 			g_LockLifting = state;
 			if(state){
-				g_LockLiftingArray = zipWeave(globalWeave.weave2D.rotate2D8("r")).split('x');
+				g_LockLiftingArray = zipWeave(globalWeave.weave2D.rotate2D8("r")).split("x");
 			}
 
 		} else if ( id == "toolbar-weave-lock-draft-to-treadling" ){
@@ -959,15 +959,15 @@ $(document).ready ( function(){
 			
 			}
 
-			$('#weave-container').css( 'cursor', 'default' );
+			$("#weave-container").css( "cursor", "default" );
 
 			if ( tool == "selection" ){
 				
-				$('#weave-container').css( 'cursor', 'crosshair' );
+				$("#weave-container").css( "cursor", "crosshair" );
 			
 			} else if ( tool == "hand" ){
 				
-				$('#weave-container').css( 'cursor', 'all-scroll' );
+				$("#weave-container").css( "cursor", "all-scroll" );
 			
 			}
 
@@ -978,39 +978,39 @@ $(document).ready ( function(){
 	weaveToolbar.attachEvent("onClick", function(id) {
 
 		// Open File
-		if (id == 'toolbar-weave-open') {
+		if (id == "toolbar-weave-open") {
 			openFileDialog("weave");
 
 		// Weave Zoom
-		} else if (id == 'toolbar-weave-zoom-in') {
+		} else if (id == "toolbar-weave-zoom-in") {
 			globalWeave.zoom(1);
-		} else if (id == 'toolbar-weave-zoom-out') {
+		} else if (id == "toolbar-weave-zoom-out") {
 			globalWeave.zoom(-1);
-		} else if (id == 'toolbar-weave-zoom-reset') {
+		} else if (id == "toolbar-weave-zoom-reset") {
 			globalWeave.zoom(0);
 
 		// Weave Draw Tool	
-		} else if ( id == 'toolbar-weave-tool-pointer'){
+		} else if ( id == "toolbar-weave-tool-pointer"){
 			setGraphTool("pointer");
-		} else if ( id == 'toolbar-weave-tool-brush'){
+		} else if ( id == "toolbar-weave-tool-brush"){
 			setGraphTool("brush");
-		} else if ( id == 'toolbar-weave-tool-fill'){
+		} else if ( id == "toolbar-weave-tool-fill"){
 			setGraphTool("fill");
-		} else if ( id == 'toolbar-weave-tool-line'){
+		} else if ( id == "toolbar-weave-tool-line"){
 			setGraphTool("line");
-		} else if ( id == 'toolbar-weave-tool-zoom'){
+		} else if ( id == "toolbar-weave-tool-zoom"){
 			setGraphTool("zoom");
-		} else if ( id == 'toolbar-weave-tool-hand'){
+		} else if ( id == "toolbar-weave-tool-hand"){
 			setGraphTool("hand");
-		} else if ( id == 'toolbar-weave-tool-selection'){
+		} else if ( id == "toolbar-weave-tool-selection"){
 			setGraphTool("selection");
 
 		// Weave Draw Method	
-		} else if ( id == 'toolbar-weave-draw-method-toggle'){
+		} else if ( id == "toolbar-weave-draw-method-toggle"){
 			g_graphDrawState = "T";
-		} else if ( id == 'toolbar-weave-draw-method-up'){
+		} else if ( id == "toolbar-weave-draw-method-up"){
 			g_graphDrawState = 1;
-		} else if ( id == 'toolbar-weave-draw-method-down'){
+		} else if ( id == "toolbar-weave-draw-method-down"){
 			g_graphDrawState = 1;
 
 		// Weave Lifting Mode	
@@ -1066,14 +1066,14 @@ $(document).ready ( function(){
 				globalSimulation.updateParameterInputs();
 			});
 
-			$('#buttonApplySimulationSettings').click(function(e) {
+			$("#buttonApplySimulationSettings").click(function(e) {
 				if (e.which === 1) {
 					globalSimulation.applyParameters();
 				}
 				return false;
 			});
 
-			$('#buttonCloseSimulationSettings').click(function(e) {
+			$("#buttonCloseSimulationSettings").click(function(e) {
 				if (e.which === 1) {
 					settingPop.hide();
 				}
@@ -1087,11 +1087,11 @@ $(document).ready ( function(){
 
 	simulationToolbar.attachEvent("onClick", function(id) {
 
-		if (id == 'toolbar-simulation-fullscreen') {
+		if (id == "toolbar-simulation-fullscreen") {
 			simulationFullscreen();
-		} else if (id == 'toolbar-simulation-save') {
+		} else if (id == "toolbar-simulation-save") {
 			showSimulationSaveModal();
-		} else if (id == 'toolbar-simulation-reset-position') {
+		} else if (id == "toolbar-simulation-reset-position") {
 			resetQuickSimulationPosition();
 		}
 
@@ -1106,25 +1106,25 @@ $(document).ready ( function(){
 
 		globalSelection.clear_old(3);
 
-		if (id == 'palette_generate_random') {
+		if (id == "palette_generate_random") {
 
 			globalPalette.setRandom();
 
-		} else if (id == 'palette_load_default') {
+		} else if (id == "palette_load_default") {
 
-		} else if (id == 'weave_clear') {
+		} else if (id == "weave_clear") {
 
 			modify2D8("weave", "clear");
 
-		} else if (id == 'weave_open') {
+		} else if (id == "weave_open") {
 
 			openFileDialog("weave");
 
-		} else if (id == 'weave_library') {
+		} else if (id == "weave_library") {
 
 			showWeaveLibraryModal();
 
-		} else if (id == 'weave_save') {
+		} else if (id == "weave_save") {
 
 			//showWeaveSaveModal();			
 			var light32 = rgbaToColor32(255,255,255,255);
@@ -1132,31 +1132,31 @@ $(document).ready ( function(){
 			var colors32 = new Uint32Array([light32, dark32]);
 			weave2D8ImageSave(globalWeave.weave2D8, colors32);
 			
-		} else if (id == 'weave_print') {
+		} else if (id == "weave_print") {
 
 			var printWeaveCode = JSON.stringify(zipWeave(globalWeave.weave2D));
-			$('#pd').val(printWeaveCode);
-			$('#ps').val(getWeaveShafts());
-			$('#pn').val(g_projectName);
-			$('#print_weave_form').submit();
+			$("#pd").val(printWeaveCode);
+			$("#ps").val(getWeaveShafts());
+			$("#pn").val(g_projectName);
+			$("#print_weave_form").submit();
 
-		} else if (id == 'weave_save_library') {
+		} else if (id == "weave_save_library") {
 
 			showWeaveSaveToLibraryModal();
 
-		} else if (id == 'weave_zoom_in') {
+		} else if (id == "weave_zoom_in") {
 
 			globalWeave.zoom(1);
 
-		} else if (id == 'weave_zoom_out') {
+		} else if (id == "weave_zoom_out") {
 
 			globalWeave.zoom(-1);
 
-		} else if (id == 'weave-tools-addbase') {
+		} else if (id == "weave-tools-addbase") {
 
 			modify2D8("weave", "addplainbase");
 
-		} else if (id == 'weave_inverse') {
+		} else if (id == "weave_inverse") {
 
 			modify2D8("weave", "inverse");
 
@@ -1168,235 +1168,235 @@ $(document).ready ( function(){
 
 			modify2D8("weave", "rotatel");
 
-		} else if (id == 'weave_rotate_180') {
+		} else if (id == "weave_rotate_180") {
 
 			modify2D8("weave", "180");
 
-		} else if (id == 'weave_resize') {
+		} else if (id == "weave_resize") {
 
 			showWeaveResizeModal();
 
-		} else if (id == 'weave_flip_horizontal') {
+		} else if (id == "weave_flip_horizontal") {
 
 			modify2D8("weave", "flipx");
 
-		} else if (id == 'weave_flip_vertical') {
+		} else if (id == "weave_flip_vertical") {
 
 			modify2D8("weave", "flipy");
 
-		} else if (id == 'weave_mirror_right') {
+		} else if (id == "weave_mirror_right") {
 
 			modify2D8("weave", "mirrorr");
 
-		} else if (id == 'weave_mirror_left') {
+		} else if (id == "weave_mirror_left") {
 
 			modify2D8("weave", "mirrorl");
 
-		} else if (id == 'weave_mirror_up') {
+		} else if (id == "weave_mirror_up") {
 
 			modify2D8("weave", "mirroru");
 
-		} else if (id == 'weave_mirror_down') {
+		} else if (id == "weave_mirror_down") {
 
 			modify2D8("weave", "mirrord");
 
-		} else if (id == 'weave_mirror_stitch_right') {
+		} else if (id == "weave_mirror_stitch_right") {
 
 			modify2D8("weave", "mirror_stitch_right");
 
-		} else if (id == 'weave_mirror_stitch_left') {
+		} else if (id == "weave_mirror_stitch_left") {
 
 			modify2D8("weave", "mirror_stitch_left");
 
-		} else if (id == 'weave_mirror_stitch_up') {
+		} else if (id == "weave_mirror_stitch_up") {
 
 			modify2D8("weave", "mirror_stitch_up");
 
-		} else if (id == 'weave_mirror_stitch_down') {
+		} else if (id == "weave_mirror_stitch_down") {
 
 			modify2D8("weave", "mirror_stitch_down");
 
-		} else if (id == 'weave_mirror_stitch_cross') {
+		} else if (id == "weave_mirror_stitch_cross") {
 
 			modify2D8("weave", "mirror_stitch_cross");
 
-		} else if (id == 'weave_tile') {
+		} else if (id == "weave_tile") {
 
 			showWeaveTileModal();
 
-		} else if (id == 'weave_tools_shuffle_ends') {
+		} else if (id == "weave_tools_shuffle_ends") {
 
 			modify2D8("weave", "shuffle_ends");
 
-		} else if (id == 'artwork_open') {
+		} else if (id == "artwork_open") {
 
 			openFileDialog("artwork");
 
-		} else if (id == 'pattern_shift_left') {
+		} else if (id == "pattern_shift_left") {
 
 			globalPattern.shift("left");
 
-		} else if (id == 'pattern_shift_right') {
+		} else if (id == "pattern_shift_right") {
 
 			globalPattern.shift("right");
 
-		} else if (id == 'pattern_shift_up') {
+		} else if (id == "pattern_shift_up") {
 
 			globalPattern.shift("up");
 
-		} else if (id == 'pattern_shift_down') {
+		} else if (id == "pattern_shift_down") {
 
 			globalPattern.shift("down");
 
-		} else if (id == 'pattern_clear_warp') {
+		} else if (id == "pattern_clear_warp") {
 
 			globalPattern.clear("warp");
 
-		} else if (id == 'pattern_clear_weft') {
+		} else if (id == "pattern_clear_weft") {
 
 			globalPattern.clear("weft");
 
-		} else if (id == 'pattern_clear_warp_and_weft') {
+		} else if (id == "pattern_clear_warp_and_weft") {
 
 			globalPattern.clear();
 
-		} else if (id == 'pattern_copy_warp_to_weft') {
+		} else if (id == "pattern_copy_warp_to_weft") {
 
 			modifyPattern("copy_warp_to_weft");
 
-		} else if (id == 'pattern_copy_weft_to_warp') {
+		} else if (id == "pattern_copy_weft_to_warp") {
 
 			modifyPattern("copy_weft_to_warp");
 
-		} else if (id == 'pattern_copy_swap') {
+		} else if (id == "pattern_copy_swap") {
 
 			modifyPattern("copy_swap");
 
-		} else if (id == 'pattern_flip_warp') {
+		} else if (id == "pattern_flip_warp") {
 
 			modifyPattern("flip_warp");
 
-		} else if (id == 'pattern_flip_weft') {
+		} else if (id == "pattern_flip_weft") {
 
 			modifyPattern("flip_weft");
 
-		} else if (id == 'pattern_mirror_warp') {
+		} else if (id == "pattern_mirror_warp") {
 
 			modifyPattern("mirror_warp");
 
-		} else if (id == 'pattern_mirror_weft') {
+		} else if (id == "pattern_mirror_weft") {
 
 			modifyPattern("mirror_weft");
 
-		} else if (id == 'pattern_code') {
+		} else if (id == "pattern_code") {
 
 			showPatternCodeModal();
 
-		} else if (id == 'pattern_tile') {
+		} else if (id == "pattern_tile") {
 
 			showPatternTileModal();
 
-		} else if (id == 'pattern_tile_weft') {
+		} else if (id == "pattern_tile_weft") {
 
 			modifyPattern("tile_weft");
 
-		} else if (id == 'pattern_scale') {
+		} else if (id == "pattern_scale") {
 
 			showPatternScaleModal();
 
-		} else if (id == 'weave_tools_twill') {
+		} else if (id == "weave_tools_twill") {
 
 			showWeaveTwillModal();
 
-		} else if (id == 'project_new') {
+		} else if (id == "project_new") {
 
 			showProjectNewModal();
 
-		} else if (id == 'project_library') {
+		} else if (id == "project_library") {
 
 			showProjectLibraryModal();
 
-		} else if (id == 'project_save') {
+		} else if (id == "project_save") {
 
 			showProjectSaveModal();
 
-		} else if (id == 'project_save_library'){
+		} else if (id == "project_save_library"){
 
 			showProjectSaveToLibraryModal();
 
-		} else if (id == 'project_import_code') {
+		} else if (id == "project_import_code") {
 
 			showProjectCodeImportModal();
 
-		} else if (id == 'project_open') {
+		} else if (id == "project_open") {
 
 			openFileDialog("project");
 
-		} else if (id == 'project_properties') {
+		} else if (id == "project_properties") {
 
 			showProjectPropertiesModal();
 
-		} else if (id == 'project_print') {
+		} else if (id == "project_print") {
 
 			printProject();
 
-		} else if (id == 'yarn_count_set_all') {
+		} else if (id == "yarn_count_set_all") {
 
-			showYarnCountSetModal('all');
+			showYarnCountSetModal("all");
 
-		} else if (id == 'simulation-save') {
+		} else if (id == "simulation-save") {
 
 			showSimulationSaveModal();
 
-		} else if (id == 'about') {
+		} else if (id == "about") {
 
 			showModalWindow("About", "about-modal");
 
-		} else if (id == 'simulation_view_fullscreen') {
+		} else if (id == "simulation_view_fullscreen") {
 
 			simulationFullscreen();
 
-		} else if (id == 'menu_main_tieup_clear') {
+		} else if (id == "menu_main_tieup_clear") {
 
 			newTieup = newArray2D(2, 2, 1);
 			globalWeave.setGraph2D8("tieup", newTieup);
 
-		} else if (id == 'menu_main_draft_clear') {
+		} else if (id == "menu_main_draft_clear") {
 
 			newDraft = newArray2D(2, 2, 1);
 			globalWeave.setGraph2D8("draft", newDraft);
 
-		} else if (id == 'menu_main_treadling_clear') {
+		} else if (id == "menu_main_treadling_clear") {
 
 			newTreadling = newArray2D(2, 2, 1);
 			globalWeave.setGraph2D8("lifting", newTreadling);
 
-		} else if (id == 'menu_main_treadling_flip_vertical') {
+		} else if (id == "menu_main_treadling_flip_vertical") {
 
 			newTreadling = globalWeave.lifting2D8.flip2D8("y");
 			globalWeave.setGraph2D8("lifting", newTreadling);
 
-		} else if (id == 'menu_main_treadling_flip_horizontal') {
+		} else if (id == "menu_main_treadling_flip_horizontal") {
 
 			newTreadling = globalWeave.lifting2D8.flip2D8("x");
 			globalWeave.setGraph2D8("lifting", newTreadling);
 
-		} else if (id == 'menu_main_draft_flip_vertical') {
+		} else if (id == "menu_main_draft_flip_vertical") {
 
 			newDraft = globalWeave.draft2D8.flip2D8("y");
 			globalWeave.setGraph2D8("draft", newDraft);
 
-		} else if (id == 'menu_main_draft_flip_horizontal') {
+		} else if (id == "menu_main_draft_flip_horizontal") {
 
 			newDraft = globalWeave.draft2D8.flip2D8("x");
 			globalWeave.setGraph2D8("draft", newDraft);
 
-		} else if (id == 'menu_main_draft_copy_to_treadling') {
+		} else if (id == "menu_main_draft_copy_to_treadling") {
 
 			newTreadling = globalWeave.draft2D8.rotate2D8("l").flip2D8("x");
 			globalWeave.setGraph2D8("lifting", newTreadling);
 
-		} else if (id == 'menu_main_treadling_copy_to_draft') {
+		} else if (id == "menu_main_treadling_copy_to_draft") {
 
 			newDraft = globalWeave.lifting2D8.rotate2D8("r").flip2D8("y");
 			globalWeave.setGraph2D8("draft", newDraft);
@@ -1453,8 +1453,8 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function showWeaveOpenModal(){
 		showModalWindow("Open Weave", "weave-open-modal");
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
-			var buttonIndex = $('#' + g_modalWinId + ' .action-btn').index(this);
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+			var buttonIndex = $("#" + g_modalWinId + " .action-btn").index(this);
 			if (e.which === 1 && g_fileLoaded) {
 				g_fileLoaded = false;
 				if ( buttonIndex === 0 ){
@@ -1480,9 +1480,9 @@ $(document).ready ( function(){
 
 		showModalWindow("Artwork Color: "+artworkColorIndex, "artwork-weave-open-modal");
 		
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
-			var buttonIndex = $('#' + g_modalWinId + ' .action-btn').index(this);
+			var buttonIndex = $("#" + g_modalWinId + " .action-btn").index(this);
 
 			if (e.which === 1 && g_fileLoaded) {
 
@@ -1494,8 +1494,8 @@ $(document).ready ( function(){
 					
 					applyWeaveToArtworkColor(g_artworkWeaveArray_imported, artworkColorIndex, 0, 0);
 
-					$("#acw-"+artworkColorIndex).attr('data-weave-name', g_fileLoadedName);
-					$("#acw-"+artworkColorIndex).attr('data-weave-code', zipWeave(g_artworkWeaveArray_imported));
+					$("#acw-"+artworkColorIndex).attr("data-weave-name", g_fileLoadedName);
+					$("#acw-"+artworkColorIndex).attr("data-weave-code", zipWeave(g_artworkWeaveArray_imported));
 				
 				}
 				
@@ -1577,8 +1577,8 @@ $(document).ready ( function(){
 		renderWeaveLibraryData("system", globalWeaves.system);
 		/*
 		$.ajax({
-			url: 'php/weave-library.php',
-			type: 'POST',
+			url: "php/weave-library.php",
+			type: "POST",
 			data: {
 				tv: "<?php echo($timeVariable); ?>",
 				rv: "Boston"
@@ -1586,7 +1586,7 @@ $(document).ready ( function(){
 			cache: false,
 			success: function(d) {
 				if (d) {
-					$('#weave-library-system').html(d);
+					$("#weave-library-system").html(d);
 				}
 			}
 		});
@@ -1651,7 +1651,7 @@ $(document).ready ( function(){
 
 		var w2D8, wDataURL;
 
-		var libraryList = $('#weave-library-'+libraryId + ' .weave-library-list');
+		var libraryList = $("#weave-library-"+libraryId + " .weave-library-list");
 
 		libraryList.html("");
 
@@ -1664,11 +1664,11 @@ $(document).ready ( function(){
 			w2D8 = weaveTextToWeave2D8(code);
 			wDataURL = weave2D8ToDataURL(w2D8, 50, 50, globals.upColor32, 4, 4);
 
-			$('<li data-weave-library='+libraryId+' data-weave-index='+index+'>')
-				.append($('<div>', {class: 'img-thumb'}).css({'background-image': 'url("' + wDataURL + '")',}))
-				.append($('<div>', {class: 'txt-id'}).text(id))
-				.append($('<div>', {class: 'txt-title'}).text(name))
-				.append($('<div>', {class: 'txt-info'}).text(w2D8.length + ' \xD7 ' + w2D8[0].length))
+			$("<li data-weave-library="+libraryId+" data-weave-index="+index+">")
+				.append($("<div>", {class: "img-thumb"}).css({"background-image": "url(\"" + wDataURL + "\")",}))
+				.append($("<div>", {class: "txt-id"}).text(id))
+				.append($("<div>", {class: "txt-title"}).text(name))
+				.append($("<div>", {class: "txt-info"}).text(w2D8.length + " \xD7 " + w2D8[0].length))
 				.appendTo(libraryList);
 		});
 
@@ -1680,22 +1680,22 @@ $(document).ready ( function(){
 		name : false
 	};
 
-	$('<div>', {id: 'weave-library-system', class: 'weave-library-tab'})
-	.append($('<ul>', { class: 'weave-library-list'}))
-	.appendTo('#noshow');
+	$("<div>", {id: "weave-library-system", class: "weave-library-tab"})
+	.append($("<ul>", { class: "weave-library-list"}))
+	.appendTo("#noshow");
 
-	$('<div>', {id: 'weave-library-private', class: 'weave-library-tab'})
-	.append($('<ul>', { class: 'weave-library-list'}))
-	.appendTo('#noshow');
+	$("<div>", {id: "weave-library-private", class: "weave-library-tab"})
+	.append($("<ul>", { class: "weave-library-list"}))
+	.appendTo("#noshow");
 
-	$('<div>', {id: 'weave-library-shared', class: 'weave-library-tab'})
-	.append($('<ul>', { class: 'weave-library-list'}))
-	.appendTo('#noshow');
+	$("<div>", {id: "weave-library-shared", class: "weave-library-tab"})
+	.append($("<ul>", { class: "weave-library-list"}))
+	.appendTo("#noshow");
 
-	$(document).on("click", '.weave-library-list li', function(evt){
+	$(document).on("click", ".weave-library-list li", function(evt){
 
-		$(this).siblings('li').removeClass('innerShadowBlue');
-		$(this).addClass('innerShadowBlue');
+		$(this).siblings("li").removeClass("innerShadowBlue");
+		$(this).addClass("innerShadowBlue");
 
 		var weaveLibrary = $(this).attr("data-weave-library");
 		var weaveIndex = $(this).attr("data-weave-index");
@@ -1705,7 +1705,7 @@ $(document).ready ( function(){
 
 	});
 
-	$(document).on("dblclick", '.weave-library-list li', function(evt){
+	$(document).on("dblclick", ".weave-library-list li", function(evt){
 
 		if ( globalTabs.active == "weave" && artworkColorsWindow.isHidden() ){
 			var weaveLibrary = $(this).attr("data-weave-library");
@@ -1743,7 +1743,7 @@ $(document).ready ( function(){
 			{ id: "a3", text: "Shared" }
 		]
 	});
-	weaveLibraryTabbar.setArrowsMode('auto');
+	weaveLibraryTabbar.setArrowsMode("auto");
 
 	weaveLibraryTabbar.tabs("a1").attachObject("weave-library-system");
 	weaveLibraryTabbar.tabs("a2").attachObject("weave-library-private");
@@ -1765,28 +1765,28 @@ $(document).ready ( function(){
 		modalWidth = modalWidth || 360;
 		modalHeight = modalHeight || 270;
 		
-		$('#' + modalObject + ' .xmodal').css({width:modalWidth, height:modalHeight});
+		$("#" + modalObject + " .xmodal").css({width:modalWidth, height:modalHeight});
 		
-		if ( $('#' + modalObject + ' .xmodal').hasClass("xsmall")){
+		if ( $("#" + modalObject + " .xmodal").hasClass("xsmall")){
 
-			$('#' + modalObject + ' .xmodal-content').css({
+			$("#" + modalObject + " .xmodal-content").css({
 				width:modalWidth,
 				height:modalHeight-47,
-				'padding-left':0,
-				'padding-right':0,
-				'padding-top':0,
-				'padding-bottom':0
+				"padding-left":0,
+				"padding-right":0,
+				"padding-top":0,
+				"padding-bottom":0
 			});
 
-		} else if ( $('#' + modalObject + ' .xmodal').hasClass("xlarge")){
+		} else if ( $("#" + modalObject + " .xmodal").hasClass("xlarge")){
 			
-			$('#' + modalObject + ' .xmodal-content').css({
+			$("#" + modalObject + " .xmodal-content").css({
 				width:modalWidth-38,
 				height:modalHeight-40-47,
-				'padding-top':14,
-				'padding-right':19,
-				'padding-bottom':20,
-				'padding-left':19
+				"padding-top":14,
+				"padding-right":19,
+				"padding-bottom":20,
+				"padding-left":19
 			});
 
 		}
@@ -1817,19 +1817,19 @@ $(document).ready ( function(){
 			hideModalWindow();
 		});
 
-		$('#' + modalObject + ' .action-btn').off('click');
+		$("#" + modalObject + " .action-btn").off("click");
 
 		clearModalNotifications();
 
 	}
 
-	$('.xmodal .cancel-btn').click(function() {
+	$(".xmodal .cancel-btn").click(function() {
 		hideModalWindow();
 		return false;
 	});
 
 	function hideModalWindow() {
-		$('#' + g_modalWinId + ' .action-btn').off('click');
+		$("#" + g_modalWinId + " .action-btn").off("click");
 		g_modalWinId = false;
 		modalWindow.detachObject();
 		modalWindow.close();
@@ -1854,7 +1854,7 @@ $(document).ready ( function(){
 		    header:true,
 		});
 
-		dhxWins.window('floatingWindow').stick();
+		dhxWins.window("floatingWindow").stick();
 
 	}
 
@@ -1865,12 +1865,12 @@ $(document).ready ( function(){
 
 		showModalWindow("Import Project Code", "project-code-import-modal");
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			clearModalNotifications();
 
 			if (e.which === 1) {
-				var projectCode = $('#project-code-import-textarea').val();
+				var projectCode = $("#project-code-import-textarea").val();
 				if ( validateProjectCode(projectCode) ){
 
 					hideModalWindow();
@@ -1894,7 +1894,7 @@ $(document).ready ( function(){
 
 		showModalWindow(title, "textarea-modal");
 		clearModalNotifications();
-		var textarea = $('#textarea-modal .xtextarea').val(compress2D8(globalWeave.weave2D8));
+		var textarea = $("#textarea-modal .xtextarea").val(compress2D8(globalWeave.weave2D8));
 	}
 
 	function showPatternCodeModal() {
@@ -1907,16 +1907,16 @@ $(document).ready ( function(){
 		$("#pattern-code-warp").val(warpPattern);
 		$("#pattern-code-weft").val(weftPattern);
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			clearModalNotifications();
 
 			if (e.which === 1) {
-				var warpPattern = $('#pattern-code-warp').val();
-				var weftPattern = $('#pattern-code-weft').val();
+				var warpPattern = $("#pattern-code-warp").val();
+				var weftPattern = $("#pattern-code-weft").val();
 
-				globalPattern.set(1, 'warp', unZipPattern(warpPattern), false);
-				globalPattern.set(2, 'weft', unZipPattern(weftPattern));
+				globalPattern.set(1, "warp", unZipPattern(warpPattern), false);
+				globalPattern.set(2, "weft", unZipPattern(weftPattern));
 
 				return false;
 			}
@@ -1945,16 +1945,16 @@ $(document).ready ( function(){
 
 		if ( target == "weave" ){
 
-			$('#weave-file-open').val('').trigger('click');
+			$("#weave-file-open").val("").trigger("click");
 
 		} else if ( target == "artwork" ){
 
-			$('#artwork-file-open').val('').trigger('click');
+			$("#artwork-file-open").val("").trigger("click");
 			
 		} else if ( target == "project" ){
 
 			if (window.File && window.FileReader && window.FileList && window.Blob) {
-				$('#project-file-open').val('').trigger('click');
+				$("#project-file-open").val("").trigger("click");
 			} else {
 				showProjectCodeImportModal();
 			}
@@ -1965,15 +1965,15 @@ $(document).ready ( function(){
 
 	function showProjectPropertiesModal() {
 		showModalWindow("Project Properties", "project-properties-modal");
-		$('#project-properties-name').val(g_projectName);
-		$('#project-properties-notes').val(g_projectNotes);
-		$('#project-properties-modal .action-btn').click(function(e) {
-			var projectName = $('#project-properties-name').val();
+		$("#project-properties-name").val(g_projectName);
+		$("#project-properties-notes").val(g_projectNotes);
+		$("#project-properties-modal .action-btn").click(function(e) {
+			var projectName = $("#project-properties-name").val();
 			if (e.which === 1) {
-				var projectNotes = $('#project-properties-notes').val();
+				var projectNotes = $("#project-properties-notes").val();
 				setProjectName(projectName);
 				g_projectNotes = projectNotes;
-				$('#project-properties-notes').val(projectNotes);
+				$("#project-properties-notes").val(projectNotes);
 				store.session("h1", getProjectCode(1));
 				return false;
 			}
@@ -1984,26 +1984,26 @@ $(document).ready ( function(){
 	// New Project Modal
 	// ----------------------------------------------------------------------------------
 	function showProjectNewModal() {
+		
 		showModalWindow("New Project", "project-new-modal");
+		notify("warning", "Starting a new project will reset Palette, Weave, Pattern and View Parameters.");
 
-		notify('warning', "Starting a new project will reset Palette, Weave, Pattern and View Parameters.");
+		var currentDate = getDate("short");
 
-		var currentDate = getDate('short');
-
-		$('#project-new-name').val("Untitled Project");
-		$('#project-new-created-date').val(currentDate);
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
-			var projectName = $('#project-new-name').val();
+		$("#project-new-name").val("Untitled Project");
+		$("#project-new-created-date").val(currentDate);
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+			var projectName = $("#project-new-name").val();
 			if (e.which === 1) {
 				//loadDefaultPalette(false);
-				globalPattern.set(3, 'warp', "a", false);
-				globalPattern.set(4, 'weft', "b", false);
+				globalPattern.set(3, "warp", "a", false);
+				globalPattern.set(4, "weft", "b", false);
 				globalWeave.setGraph2D8("weave", weaveTextToWeave2D8("UD_DU"), false);
-				setSimulationParameters(2, 2, 0, 0);
+				// setSimulationParameters(2, 2, 0, 0);
 				setBackgroundColor("Z", false);
 				setProjectName(projectName, false);
 				g_projectNotes = "";
-				$('#project-properties-notes').val("");	
+				$("#project-properties-notes").val("");	
 				hideModalWindow();
 				return false;
 			}
@@ -2013,7 +2013,7 @@ $(document).ready ( function(){
 	function setProjectName(text, history = true){
 		var oldProjectName = g_projectName;
 		text = text.replace(/[^a-z0-9_-]+|\s+/gmi, " ");
-		text = text.replace(/ +(?= )/g,'');
+		text = text.replace(/ +(?= )/g,"");
 		text = text.trim();
 		if ( text === ""){
 			text = "Untitled Project";
@@ -2039,11 +2039,11 @@ $(document).ready ( function(){
 		var nwei = $("#newWeaveEndsInput input");
 		var nwpi = $("#newWeavePicksInput input");
 		nwei.val(2);
-		nwei.attr('data-max', g_weaveLimitMax);
+		nwei.attr("data-max", g_weaveLimitMax);
 		nwpi.val(2);
-		nwpi.attr('data-max', g_weaveLimitMax);
+		nwpi.attr("data-max", g_weaveLimitMax);
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -2062,10 +2062,10 @@ $(document).ready ( function(){
 		var wthi = $("#weaveTileHorizontalInput input");
 		var wtvi = $("#weaveTileVerticalInput input");
 		wthi.val(1);
-		wthi.attr('data-max', Math.floor(g_weaveLimitMax/globalWeave.ends));
+		wthi.attr("data-max", Math.floor(g_weaveLimitMax/globalWeave.ends));
 		wtvi.val(1);
-		wtvi.attr('data-max', Math.floor(g_weaveLimitMax/globalWeave.picks));
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		wtvi.attr("data-max", Math.floor(g_weaveLimitMax/globalWeave.picks));
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 			if (e.which === 1) {
 				var newWeaveWidth = globalWeave.ends * wthi.val();				
 				var newWeaveHeight = globalWeave.picks * wtvi.val();
@@ -2082,18 +2082,18 @@ $(document).ready ( function(){
 		var ptpi = $("#patternTileWarpInput input");
 		var ptti = $("#patternTileWeftInput input");
 		ptpi.val(1);
-		ptpi.attr('data-max', Math.floor(g_patternLimit/globalPattern.size('warp')));
+		ptpi.attr("data-max", Math.floor(g_patternLimit/globalPattern.size("warp")));
 		ptti.val(1);
-		ptti.attr('data-max', Math.floor(g_patternLimit/globalPattern.size('weft')));
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		ptti.attr("data-max", Math.floor(g_patternLimit/globalPattern.size("weft")));
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 			if (e.which === 1) {
 				if ( ptpi.val() > 1){
 					var newWarpPattern = globalPattern.warp.repeat(ptpi.val());
-					globalPattern.set(5, 'warp', newWarpPattern, false);
+					globalPattern.set(5, "warp", newWarpPattern, false);
 				}
 				if ( ptti.val() > 1){
 					var newWeftPattern = globalPattern.weft.repeat(ptti.val());
-					globalPattern.set(6, 'weft', newWeftPattern, false);
+					globalPattern.set(6, "weft", newWeftPattern, false);
 				}
 				if ( ptpi.val() > 1 || ptti.val() > 1){
 					//validateSimulation(6);
@@ -2136,18 +2136,18 @@ $(document).ready ( function(){
 		var sppi = $("#scaleWarpPatternInput input");
 		var sfpi = $("#scaleWeftPatternInput input");
 
-		var warpScaleMaxLimit = Math.floor( g_patternLimit / globalPattern.size('warp') * 100);
-		var weftScaleMaxLimit = Math.floor( g_patternLimit / globalPattern.size('weft') * 100);
+		var warpScaleMaxLimit = Math.floor( g_patternLimit / globalPattern.size("warp") * 100);
+		var weftScaleMaxLimit = Math.floor( g_patternLimit / globalPattern.size("weft") * 100);
 
-		sppi.attr('data-max', g_patternLimit);
-		sppi.attr('data-min', 1);
-		sfpi.attr('data-max', g_patternLimit);
-		sfpi.attr('data-min', 1);
+		sppi.attr("data-max", g_patternLimit);
+		sppi.attr("data-min", 1);
+		sfpi.attr("data-max", g_patternLimit);
+		sfpi.attr("data-min", 1);
 
-		sppi.val(globalPattern.size('warp'));
-		sfpi.val(globalPattern.size('weft'));
+		sppi.val(globalPattern.size("warp"));
+		sfpi.val(globalPattern.size("weft"));
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -2160,19 +2160,19 @@ $(document).ready ( function(){
 				var newStripeSize;
 
 				$.each(warpPatternGroups, function(index, value) {
-					newStripeSize = Math.round(value[1] * sppi.val() / globalPattern.size('warp'));
+					newStripeSize = Math.round(value[1] * sppi.val() / globalPattern.size("warp"));
 					newStripeSize = newStripeSize === 0 ? 1 : newStripeSize;
 					newWarpPattern = newWarpPattern.concat(filledArray(value[0], newStripeSize));
 				});
 
 				$.each(weftPatternGroups, function(index, value) {
-					newStripeSize = Math.round(value[1] * sfpi.val() / globalPattern.size('weft'));
+					newStripeSize = Math.round(value[1] * sfpi.val() / globalPattern.size("weft"));
 					newStripeSize = newStripeSize === 0 ? 1 : newStripeSize;
 					newWeftPattern = newWeftPattern.concat(filledArray(value[0], newStripeSize));
 				});
 
-				globalPattern.set(7, 'warp', newWarpPattern, false);
-				globalPattern.set(8, 'weft', newWeftPattern, false);
+				globalPattern.set(7, "warp", newWarpPattern, false);
+				globalPattern.set(8, "weft", newWeftPattern, false);
 
 				//validateSimulation(7);
 				hideModalWindow();
@@ -2193,8 +2193,8 @@ $(document).ready ( function(){
 			showModalWindow("Error", "error-modal");
 		}
 
-		targetObj = $('#'+g_modalWinId+' .xmodal-content');
-		targetObj.append('<div class="xalert ' + notifyType + '">' + notifyMsg + '</div>');
+		var targetObj = $("#"+g_modalWinId+" .xmodal-content");
+		targetObj.append("<div class=\"xalert " + notifyType + "\">" + notifyMsg + "</div>");
 		targetObj.scrollTop(targetObj[0].scrollHeight);
 	}
 
@@ -2205,23 +2205,23 @@ $(document).ready ( function(){
 
 		showModalWindow("Save Weave to Library", "weave-save-library-modal");
 
-		$('#weave-save-library-file-name').val();
-		$('#weave-save-library-weave-size').text(globalWeave.ends + " x " +
+		$("#weave-save-library-file-name").val();
+		$("#weave-save-library-weave-size").text(globalWeave.ends + " x " +
 			globalWeave.picks);
-		$('#weave-save-library-weave-shafts').text(getWeaveShafts());
+		$("#weave-save-library-weave-shafts").text(getWeaveShafts());
 
-		$('#weave-save-library-save-btn').on('click', function(e) {
+		$("#weave-save-library-save-btn").on("click", function(e) {
 
 			if (e.which === 1) {
 
-				var weaveTitle = $('#weave-save-library-file-name').val();
+				var weaveTitle = $("#weave-save-library-file-name").val();
 				var weaveCode = zipWeave(globalWeave.weave2D);
 
 				saveWeaveToLibrary(weaveCode, weaveTitle);
 
 			}
 
-			$('#weave-save-library-save-btn').off('click');
+			$("#weave-save-library-save-btn").off("click");
 
 			return false;
 		});
@@ -2248,18 +2248,18 @@ $(document).ready ( function(){
 
 		showModalWindow("Save Project to Library", "project-save-to-library-modal");
 
-		$('#project-save-to-library-save-btn').on('click', function(e) {
+		$("#project-save-to-library-save-btn").on("click", function(e) {
 
 			if (e.which === 1) {
 
-				var projectTitle = $('#project-save-to-library-name').val();
+				var projectTitle = $("#project-save-to-library-name").val();
 				var projectCode = getProjectCode(2);
 
 				saveProjectToLibrary(projectCode, projectTitle);
 
 			}
 
-			$('#project-save-to-library-save-btn').off('click');
+			$("#project-save-to-library-save-btn").off("click");
 
 			return false;
 		});
@@ -2268,7 +2268,7 @@ $(document).ready ( function(){
 
 	function clearModalNotifications(){
 
-		$('div').remove('.xalert');
+		$("div").remove(".xalert");
 
 	}
 
@@ -2278,14 +2278,14 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Download Project Modal
 	// ----------------------------------------------------------------------------------
-	$('#project-code-save-select-btn').on('click', function(e) {
+	$("#project-code-save-select-btn").on("click", function(e) {
 
 		if (e.which === 1 ) {
 
-			//$('#project-code-save-code').select();
-			//$('#project-code-save-code').setSelectionRange(0, 9999);
-			//document.getElementById('project-code-save-code').focus();
-			//document.getElementById('project-code-save-code').select();
+			//$("#project-code-save-code").select();
+			//$("#project-code-save-code").setSelectionRange(0, 9999);
+			//document.getElementById("project-code-save-code").focus();
+			//document.getElementById("project-code-save-code").select();
 
 		}
 
@@ -2301,19 +2301,19 @@ $(document).ready ( function(){
 
 			showModalWindow("Save Project File", "project-save-file-modal");
 			
-			if( $('#project-save-file-name').val() === ""){
+			if( $("#project-save-file-name").val() === ""){
 				
-				$('#project-save-file-name').val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_project.txt");
+				$("#project-save-file-name").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_project.txt");
 			
 			}
 			
-			$('#project-save-file-modal .action-btn').click(function(e) {
+			$("#project-save-file-modal .action-btn").click(function(e) {
 
 				if (e.which === 1) {
 
 					clearModalNotifications();
 
-					var projectFileName = $('#project-save-file-name').val();
+					var projectFileName = $("#project-save-file-name").val();
 					
 
 					if (projectFileName.match(/^[a-zA-Z]+[0-9a-zA-Z._-]+$/i)) {
@@ -2325,7 +2325,7 @@ $(document).ready ( function(){
 					} else {
 
 						notify("error", "Invalid File Name !");
-						$('#project-save-file-name').select();
+						$("#project-save-file-name").select();
 
 					}
 
@@ -2336,7 +2336,7 @@ $(document).ready ( function(){
 		} else {
 
 			showModalWindow("Downlaod Project", "project-code-save-modal");
-			$('#project-code-save-textarea').val(getProjectCode(4));
+			$("#project-code-save-textarea").val(getProjectCode(4));
 
 		}
 
@@ -2348,16 +2348,16 @@ $(document).ready ( function(){
 
 		showModalWindow("Save Project File", "project-save-file-modal");
 
-		if( $('#project-save-file-name').val() === ""){
-			$('#project-save-file-name').val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_project");
+		if( $("#project-save-file-name").val() === ""){
+			$("#project-save-file-name").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_project");
 		}
 
-		$('#project-save-file-modal .action-btn').click(function(e) {
+		$("#project-save-file-modal .action-btn").click(function(e) {
 			if (e.which === 1) {
 
 				clearModalNotifications();
 
-				var projectFileName = $('#project-save-file-name').val();
+				var projectFileName = $("#project-save-file-name").val();
 				if (projectFileName.match(/^[a-zA-Z]+[0-9a-zA-Z._-]+$/i)) {
 
 					var file = new File([getProjectCode(5)], projectFileName, {type: "text/plain;charset=utf-8"});
@@ -2366,7 +2366,7 @@ $(document).ready ( function(){
 
 				} else {
 					notify("error", "Invalid File Name !");
-					$('#project-save-file-name').select();
+					$("#project-save-file-name").select();
 				}
 			}
 			return false;
@@ -2388,15 +2388,15 @@ $(document).ready ( function(){
 		} else {
 
 			showModalWindow("Save Simulation as Image", "simulation-save-modal");
-			//$('#simulation-save-file-name-input').val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_simulation.png");
-			$('#simulation-x-repeats-input').val(1);
-			$('#simulation-y-repeats-input').val(1);
-			$('#simulation-width-pixels-input').val(g_simulationWidth);
-			$('#simulation-height-pixels-input').val(g_simulationHeight);
-			$('#simulation-width-ends-input').val(getWeaveColorEnds());
-			$('#simulation-height-picks-input').val(getWeaveColorPicks());
+			//$("#simulation-save-file-name-input").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_simulation.png");
+			$("#simulation-x-repeats-input").val(1);
+			$("#simulation-y-repeats-input").val(1);
+			$("#simulation-width-pixels-input").val(g_simulationWidth);
+			$("#simulation-height-pixels-input").val(g_simulationHeight);
+			$("#simulation-width-ends-input").val(getWeaveColorEnds());
+			$("#simulation-height-picks-input").val(getWeaveColorPicks());
 
-			$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+			$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 				if (e.which === 1) {
 
@@ -2404,14 +2404,14 @@ $(document).ready ( function(){
 					var nameOk = false;
 					var sizeOk = false;
 
-					var wPixels = $('#simulation-width-pixels-input').val();
-					var hPixels = $('#simulation-height-pixels-input').val();
-					var sTitle = $('#simulation-save-title-input').val();
-					var sNotes = $('#simulation-save-notes-input').val();
+					var wPixels = $("#simulation-width-pixels-input").val();
+					var hPixels = $("#simulation-height-pixels-input").val();
+					var sTitle = $("#simulation-save-title-input").val();
+					var sNotes = $("#simulation-save-notes-input").val();
 
 					clearModalNotifications();
 
-					var simulationFileName = $('#simulation-save-file-name-input').val();
+					var simulationFileName = $("#simulation-save-file-name-input").val();
 
 					if (simulationFileName.match(/^[a-zA-Z]+[0-9a-zA-Z._-]+$/i)) {
 						nameOk = true;
@@ -2452,57 +2452,57 @@ $(document).ready ( function(){
 
 	}
 
-	$('#simulation-x-repeats-input').change(function() {
+	$("#simulation-x-repeats-input").change(function() {
 		var simulationEnds = getWeaveColorEnds() * $(this).val();
 		var simulationWidth = simulationEnds * (g_warpSize + g_warpSpace);
-		$('#simulation-width-ends-input').val(Math.round(simulationEnds));
-		$('#simulation-width-pixels-input').val(Math.round(simulationWidth));
+		$("#simulation-width-ends-input").val(Math.round(simulationEnds));
+		$("#simulation-width-pixels-input").val(Math.round(simulationWidth));
 	});
 
-	$('#simulation-y-repeats-input').change(function() {
+	$("#simulation-y-repeats-input").change(function() {
 		var simulationPicks = getWeaveColorPicks() * $(this).val();
 		var simulationHeight = simulationPicks * (g_weftSize + g_weftSpace);
-		$('#simulation-height-picks-input').val(Math.round(simulationPicks));
-		$('#simulation-height-pixels-input').val(Math.round(simulationHeight));
+		$("#simulation-height-picks-input").val(Math.round(simulationPicks));
+		$("#simulation-height-pixels-input").val(Math.round(simulationHeight));
 	});
 
-	$('#simulation-width-ends-input').change(function() {
+	$("#simulation-width-ends-input").change(function() {
 		var simulationXrepeats = $(this).val() / getWeaveColorEnds();
 		var simulationWidth = $(this).val() * (g_warpSize + g_warpSpace);
-		$('#simulation-x-repeats-input').val(Math.round(simulationXrepeats * 100) /
+		$("#simulation-x-repeats-input").val(Math.round(simulationXrepeats * 100) /
 			100);
-		$('#simulation-width-pixels-input').val(Math.round(simulationWidth));
+		$("#simulation-width-pixels-input").val(Math.round(simulationWidth));
 	});
 
-	$('#simulation-height-picks-input').change(function() {
+	$("#simulation-height-picks-input").change(function() {
 		var simulationYrepeats = $(this).val() / getWeaveColorPicks();
 		var simulationHeight = $(this).val() * (g_weftSize + g_weftSpace);
-		$('#simulation-y-repeats-input').val(Math.round(simulationYrepeats * 100) /
+		$("#simulation-y-repeats-input").val(Math.round(simulationYrepeats * 100) /
 			100);
-		$('#simulation-height-pixels-input').val(Math.round(simulationHeight));
+		$("#simulation-height-pixels-input").val(Math.round(simulationHeight));
 	});
 
-	$('#simulation-x-repeats-input').change(function() {
+	$("#simulation-x-repeats-input").change(function() {
 		var simulationEnds = getWeaveColorEnds() * $(this).val();
 		var simulationWidth = simulationEnds * (g_warpSize + g_warpSpace);
-		$('#simulation-width-ends-input').val(Math.round(simulationEnds));
-		$('#simulation-width-pixels-input').val(Math.round(simulationWidth));
+		$("#simulation-width-ends-input").val(Math.round(simulationEnds));
+		$("#simulation-width-pixels-input").val(Math.round(simulationWidth));
 	});
 
-	$('#simulation-width-pixels-input').change(function() {
+	$("#simulation-width-pixels-input").change(function() {
 		$(this).val(Math.round($(this).val()));
 		var simulationEnds = $(this).val() / (g_warpSize + g_warpSpace);
 		var simulationXrepeats = simulationEnds / getWeaveColorEnds();
-		$('#simulation-x-repeats-input').val(Math.round(simulationXrepeats * 100) / 100);
-		$('#simulation-width-ends-input').val(Math.round(simulationEnds * 10) / 10);
+		$("#simulation-x-repeats-input").val(Math.round(simulationXrepeats * 100) / 100);
+		$("#simulation-width-ends-input").val(Math.round(simulationEnds * 10) / 10);
 	});
 
-	$('#simulation-height-pixels-input').change(function() {
+	$("#simulation-height-pixels-input").change(function() {
 		$(this).val(Math.round($(this).val()));
 		var simulationPicks = $(this).val() / (g_weftSize + g_weftSpace);
 		var simulationYrepeats = simulationPicks / getWeaveColorPicks();
-		$('#simulation-y-repeats-input').val(Math.round(simulationYrepeats * 100) / 100);
-		$('#simulation-height-picks-input').val(Math.round(simulationPicks * 10) / 10);
+		$("#simulation-y-repeats-input").val(Math.round(simulationYrepeats * 100) / 100);
+		$("#simulation-height-picks-input").val(Math.round(simulationPicks * 10) / 10);
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -2510,13 +2510,13 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function showWeaveSaveModal() {
 		showModalWindow("Save Weave File", "weave-save-file-modal");
-		$('#weave-save-file-name-input').val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_weave");
-		$('#weave-save-file-size').val(globalWeave.ends + " x " + globalWeave.picks);
-		$('#weave-save-file-shafts').val(getWeaveShafts());
-		$('#weave-save-file-modal .action-btn').click(function(e) {
+		$("#weave-save-file-name-input").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_weave");
+		$("#weave-save-file-size").val(globalWeave.ends + " x " + globalWeave.picks);
+		$("#weave-save-file-shafts").val(getWeaveShafts());
+		$("#weave-save-file-modal .action-btn").click(function(e) {
 			if (e.which === 1) {
 				clearModalNotifications();
-				var weaveFileName = $('#weave-save-file-name-input').val();
+				var weaveFileName = $("#weave-save-file-name-input").val();
 				if (weaveFileName.match(/^[a-zA-Z]+[0-9a-zA-Z._-]+$/i)) {
 					
 					hideModalWindow();
@@ -2527,7 +2527,7 @@ $(document).ready ( function(){
 				
 				} else {
 					notify("error", "Invalid File Name !");
-					$('#weave-save-file-name-input').select();
+					$("#weave-save-file-name-input").select();
 				}
 			}
 			return false;
@@ -2590,13 +2590,13 @@ $(document).ready ( function(){
 
 			if (idClicked == "simulation-repeat-single") {
 
-				simulationToolbar.disableItem('toolbar-simulation-reset-position');
+				simulationToolbar.disableItem("toolbar-simulation-reset-position");
 				g_simulationRepeat = "single";
 
 
 			} else if (idClicked == "simulation-repeat-seamless") {
 
-				simulationToolbar.enableItem('toolbar-simulation-reset-position');
+				simulationToolbar.enableItem("toolbar-simulation-reset-position");
 				g_simulationRepeat = "seamless";
 
 			}
@@ -2647,37 +2647,37 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function layoutToolbarClick(id) {
 
-		if (id == 'toolbar-main-project-new') {
+		if (id == "toolbar-main-project-new") {
 
 			showProjectNewModal();
 
-		} else if (id == 'toolbar-main-project-open') {
+		} else if (id == "toolbar-main-project-open") {
 
 			openFileDialog("project");
 
-		} else if (id == 'toolbar-main-project-properties') {
+		} else if (id == "toolbar-main-project-properties") {
 
 			showProjectPropertiesModal();
 
-		} else if (id == 'toolbar-main-project-save') {
+		} else if (id == "toolbar-main-project-save") {
 
 			showProjectSaveModal();
 
-		} else if (id == 'toolbar-main-project-print') {
+		} else if (id == "toolbar-main-project-print") {
 
 			printProject();
 
-		} else if (id == 'toolbar-main-edit-undo') {
+		} else if (id == "toolbar-main-edit-undo") {
 
 			//previousHistoryStep();
 			globalHistory.gotoPrevStep();
 
-		} else if (id == 'toolbar-main-edit-redo') {
+		} else if (id == "toolbar-main-edit-redo") {
 
 			//goToNextHistoryStep();
 			globalHistory.gotoNextStep();
 
-		} else if (id == 'toolbar-main-test-01') {
+		} else if (id == "toolbar-main-test-01") {
 
 			var code = "2(3(UD2U3D2(5U1D)3U1D)3U1D)2(3(UD2U3D2(5U1D)3U1D)3U1D)2(3(UD2U3D2(5U1D)3U1D)3U1D)2(3(UD2U3D2(5U1D)3U1D)3U1D)";
 			//var code = "2(2(UD2U3D2(5UD)3UD)UD2U3D2(5UD)2(3UD))";
@@ -2698,7 +2698,7 @@ $(document).ready ( function(){
 			console.log(compress1D_A(code).join(""));
 			console.log(compress1D(code));
 
-		} else if (id == 'toolbar-main-test-02') {
+		} else if (id == "toolbar-main-test-02") {
 
 			console.log( Math.sin(0/7 * Math.PI));
 			console.log( Math.sin(1/7 * Math.PI));
@@ -2709,33 +2709,33 @@ $(document).ready ( function(){
 			console.log( Math.sin(6/7 * Math.PI));
 			console.log( Math.sin(7/7 * Math.PI));
 
-		} else if (id == 'toolbar-main-test-03') {
+		} else if (id == "toolbar-main-test-03") {
 
 			debugTime("rotatel.A");
 			modify2D8("weave", "rotatel");
 			debugTimeEnd("rotatel.A");
 
-		} else if (id == 'toolbar-main-test-04') {
+		} else if (id == "toolbar-main-test-04") {
 
 			globalWeave.weave2D8 = weave8ToWeave2D8(globalWeave.weave8);
 
-		} else if (id == 'toolbar-main-test-05') {
+		} else if (id == "toolbar-main-test-05") {
 
 			debugTime("flip2D8");
 			var weave2D8Flip = globalWeave.weave2D8.flip2D8("v");
 			debugTimeEnd("flip2D8");
 
-		} else if (id == 'toolbar-main-test-06') {
+		} else if (id == "toolbar-main-test-06") {
 
 			debugTime("flip8");
 			var weave8Flip = globalWeave.weave8.transform8("flipy");
 			debugTimeEnd("flip8");
 
-		} else if (id == 'toolbar-main-test-07') {
+		} else if (id == "toolbar-main-test-07") {
 			
 			console.log(["globalPalette", globalPalette.selected, globalPalette.rightClicked, globalPalette.marked]);
 
-		} else if (id == 'toolbar-main-test-08') {
+		} else if (id == "toolbar-main-test-08") {
 
 			globalModel.materials.fabric.map.repeat.set(4.5, 2.5);
 			globalModel.materials.fabric.map.needsUpdate = true;
@@ -2744,11 +2744,11 @@ $(document).ready ( function(){
 			//showTextAreaModal("Weave Code");
 			//saveCanvasAsImage(g_simulationRepeatCanvas, "simulation.png");
 
-		} else if (id == 'toolbar-main-test-09') {
+		} else if (id == "toolbar-main-test-09") {
 
 			setLoadingbar(0, "testid", true, "Tesing Loadingbar");
 
-		} else if (id == 'toolbar-main-test-10') {
+		} else if (id == "toolbar-main-test-10") {
 
 			var camera1 = globalModel.camera.position;
 			var camera2 = globalModel.camera.getWorldPosition();
@@ -2759,20 +2759,20 @@ $(document).ready ( function(){
 			/*
 			debugTime("gzip");
 			var input = weave2D8ToWeave8(globalWeave.weave2D8);
-			var output = pako.gzip(input,{ to: 'string' });
+			var output = pako.gzip(input,{ to: "string" });
 			var outputToinput = pako.ungzip(output);
 			debugTimeEnd("gzip");
 			//console.log(output);
 			//console.log(outputToinput);
 
 			var input = "test string";
-			var output = pako.gzip(input,{ to: 'string' });
+			var output = pako.gzip(input,{ to: "string" });
 			console.log("compressed gzip string:" + output);
-			var originalInput = pako.ungzip(output,{ to: 'string' });
+			var originalInput = pako.ungzip(output,{ to: "string" });
 			console.log("uncompressed string:" + originalInput);
 			*/
 
-		} else if (id == 'toolbar-main-debug-window') {
+		} else if (id == "toolbar-main-debug-window") {
 
 			debugWin.show();
 
@@ -2784,26 +2784,26 @@ $(document).ready ( function(){
 	// Resize Weave Group
 	// ----------------------------------------------------------------------------------
 	function resetPatternStyles() {
-		$('#warp-pattern > div').css({
-			'width': g_pointW - g_patternElementPadding * 2,
-			'height': g_patternElementSize - g_patternElementPadding * 2,
-			'border': g_patternElementPadding + 'px solid #FFF',
-			'margin-right': g_gridThickness
+		$("#warp-pattern > div").css({
+			"width": g_pointW - g_patternElementPadding * 2,
+			"height": g_patternElementSize - g_patternElementPadding * 2,
+			"border": g_patternElementPadding + "px solid #FFF",
+			"margin-right": g_gridThickness
 		});
 
-		$('#warp-pattern > div:last-child').css({
-			'margin-right': '0px'
+		$("#warp-pattern > div:last-child").css({
+			"margin-right": "0px"
 		});
 
-		$('#weft-pattern > div').css({
-			'width': g_patternElementSize - g_patternElementPadding * 2,
-			'height': g_pointW - g_patternElementPadding * 2,
-			'border': g_patternElementPadding + 'px solid #FFF',
-			'margin-bottom': g_gridThickness
+		$("#weft-pattern > div").css({
+			"width": g_patternElementSize - g_patternElementPadding * 2,
+			"height": g_pointW - g_patternElementPadding * 2,
+			"border": g_patternElementPadding + "px solid #FFF",
+			"margin-bottom": g_gridThickness
 		});
 
-		$('#weft-pattern > div:last-child').css({
-			'margin-bottom': '0px'
+		$("#weft-pattern > div:last-child").css({
+			"margin-bottom": "0px"
 		});
 
 	}
@@ -2812,7 +2812,7 @@ $(document).ready ( function(){
 	// Creat Warp & Weft Color Patterns
 	// ----------------------------------------------------------------------------------
 
-	$('#bgcolor-container').click(function() {
+	$("#bgcolor-container").click(function() {
 		if (globalPalette.selected !== "BL") {
 			setBackgroundColor(globalPalette.selected, true);
 		}
@@ -2844,15 +2844,15 @@ $(document).ready ( function(){
 	paletteContextMenu.attachEvent("onBeforeContextMenu", function(zoneId, ev) {
 
 		var element = $("#palette-chip-"+globalPalette.rightClicked);
-		var isInPattern = element.find('.warpArrow').is(':visible') || element.find('.weftArrow').is(':visible');
+		var isInPattern = element.find(".warpArrow").is(":visible") || element.find(".weftArrow").is(":visible");
 
 		if ( isInPattern ) {
 
-			paletteContextMenu.setItemEnabled('palette_context_swap');
+			paletteContextMenu.setItemEnabled("palette_context_swap");
 
 		} else {
 
-			paletteContextMenu.setItemDisabled('palette_context_swap');
+			paletteContextMenu.setItemDisabled("palette_context_swap");
 			
 		}
 
@@ -2865,13 +2865,13 @@ $(document).ready ( function(){
 
 	});
 
-	paletteContextMenu.addContextZone('palette-container');
+	paletteContextMenu.addContextZone("palette-container");
 	paletteContextMenu.attachEvent("onClick", paletteContextMenuClick);
 	paletteContextMenu.attachEvent("onHide", function(id) {
 		
 	});
 
-	$(document).on("mousedown", '.palette-chip', function(evt){
+	$(document).on("mousedown", ".palette-chip", function(evt){
 		var code = $(this).attr("id").slice(-1);
 		if (evt.which === 1){
 			globalPalette.selectChip(code);
@@ -2880,7 +2880,7 @@ $(document).ready ( function(){
 		}
 	});
 
-	$(document).on('dblclick', '.palette-chip', function(evt){
+	$(document).on("dblclick", ".palette-chip", function(evt){
 		var code = $(this).attr("id").slice(-1);
 		globalPalette.showColorPicker(code);
 	});
@@ -2891,7 +2891,7 @@ $(document).ready ( function(){
 	// Get element of palette color from element or color code
 	function getPaletteElement(color) {
 		if (typeof color === "string") {
-			color = $("#palette-chips div[data-color-code='" + color + "']");
+			color = $("#palette-chips div[data-color-code=\"" + color + "\"]");
 		}
 		return color;
 	}
@@ -2903,11 +2903,11 @@ $(document).ready ( function(){
 
 		var code = globalPalette.rightClicked;
 
-		if (id == 'palette_context_swap') {
+		if (id == "palette_context_swap") {
 
 			globalPalette.markChip(code);
 
-		} else if (id == 'palette_context_edit') {
+		} else if (id == "palette_context_edit") {
 
 			globalPalette.clearSelection();
 			globalPalette.showColorPicker(code);
@@ -2922,19 +2922,19 @@ $(document).ready ( function(){
 	var colorPickerPopup = new dhtmlXPopup();
 	colorPickerPopup.attachObject("yarn-settings");
 	var colorPicker = new dhtmlXColorPicker({parent: "yarn-settings-picker"});
-	$('#buttonApplyYarnSettings').click(function(e) {
+	$("#buttonApplyYarnSettings").click(function(e) {
 		if (e.which === 1) {
 			var code = globalPalette.selected;
 			var hex = colorPicker.getSelectedColor()[0];
-			var yarn = $('#yarnnumberinput input').numVal();
-			var system = $('#yarnsystemselect').val();
-			var luster = $('#yarnlusterinput input').numVal();
+			var yarn = $("#yarnnumberinput input").numVal();
+			var system = $("#yarnsystemselect").val();
+			var luster = $("#yarnlusterinput input").numVal();
 			globalPalette.setChip(code, hex, yarn, system, luster);
 		}
 		return false;
 	});
 
-	$('#buttonCloseYarnSettings').click(function(e) {
+	$("#buttonCloseYarnSettings").click(function(e) {
 		if (e.which === 1) {
 			colorPickerPopup.hide();
 		}
@@ -2953,8 +2953,8 @@ $(document).ready ( function(){
 		}
 	});
 
-	patternContextMenu.addContextZone('warp-container');
-	patternContextMenu.addContextZone('weft-container');
+	patternContextMenu.addContextZone("warp-container");
+	patternContextMenu.addContextZone("weft-container");
 	patternContextMenu.attachEvent("onClick", patternContextMenuClick);
 	patternContextMenu.attachEvent("onHide", function(id) {
 		if ( id === null){
@@ -2971,25 +2971,25 @@ $(document).ready ( function(){
 
 		if (zoneId == "warp-pattern") {
 
-			patternSize = globalPattern.size('warp');
+			patternSize = globalPattern.size("warp");
 			patternSizeLimit = g_patternLimit;
 
-			patternContextMenu.hideItem('pattern_context_insert_above');
-			patternContextMenu.hideItem('pattern_context_insert_below');
-			patternContextMenu.showItem('pattern_context_insert_left');
-			patternContextMenu.showItem('pattern_context_insert_right');
+			patternContextMenu.hideItem("pattern_context_insert_above");
+			patternContextMenu.hideItem("pattern_context_insert_below");
+			patternContextMenu.showItem("pattern_context_insert_left");
+			patternContextMenu.showItem("pattern_context_insert_right");
 
 			insidePattern = eIndex < patternSize ? true : false;
 
 		} else if (zoneId == "weft-pattern") {
 
-			patternSize = globalPattern.size('weft');
+			patternSize = globalPattern.size("weft");
 			patternSizeLimit = g_patternLimit;
 
-			patternContextMenu.showItem('pattern_context_insert_above');
-			patternContextMenu.showItem('pattern_context_insert_below');
-			patternContextMenu.hideItem('pattern_context_insert_left');
-			patternContextMenu.hideItem('pattern_context_insert_right');
+			patternContextMenu.showItem("pattern_context_insert_above");
+			patternContextMenu.showItem("pattern_context_insert_below");
+			patternContextMenu.hideItem("pattern_context_insert_left");
+			patternContextMenu.hideItem("pattern_context_insert_right");
 
 			insidePattern = eIndex > patternSizeLimit - patternSize - 1 ? true : false;
 
@@ -2997,11 +2997,11 @@ $(document).ready ( function(){
 
 		if (patternSize < patternSizeLimit) {
 
-			patternContextMenu.setItemEnabled('pattern_context_insert');
+			patternContextMenu.setItemEnabled("pattern_context_insert");
 
 		} else {
 
-			patternContextMenu.setItemDisabled('pattern_context_insert');
+			patternContextMenu.setItemDisabled("pattern_context_insert");
 
 		}
 
@@ -3025,70 +3025,70 @@ $(document).ready ( function(){
 
 		element = g_patternElementUnderRightClick;
 		parent = element.parent();
-		parentId = parent.attr('id');
+		parentId = parent.attr("id");
 		elementIndex = patternRightClick.threadIndex;
 		colorCode = patternRightClick.colorCode;
 		yarnSet = patternRightClick.yarnSet;
 		threadNum = elementIndex+1;
 		threadi = elementIndex;
 
-		if (id == 'pattern_context_delete_single') {
+		if (id == "pattern_context_delete_single") {
 
 			globalPattern.delete(yarnSet, elementIndex, elementIndex);
 		
-		} else if ( id == 'pattern_context_copy'){
+		} else if ( id == "pattern_context_copy"){
 			
 			patternSelection.startfor("copy");
 
-		} else if ( id == 'pattern_context_mirror'){
+		} else if ( id == "pattern_context_mirror"){
 			
 			patternSelection.startfor("mirror");
 
-		} else if ( id == 'pattern_context_delete_multiple'){
+		} else if ( id == "pattern_context_delete_multiple"){
 			
 			patternSelection.startfor("delete");
 
-		} else if ( id == 'pattern_context_flip'){
+		} else if ( id == "pattern_context_flip"){
 			
 			patternSelection.startfor("flip");
 
-		} else if (id == 'pattern_context_insert_left') {
+		} else if (id == "pattern_context_insert_left") {
 
-			globalPattern.insert('warp', globalPalette.selected, threadi-1);
+			globalPattern.insert("warp", globalPalette.selected, threadi-1);
 
-		} else if (id == 'pattern_context_insert_right') {
+		} else if (id == "pattern_context_insert_right") {
 
-			globalPattern.insert('warp', globalPalette.selected, threadi);
+			globalPattern.insert("warp", globalPalette.selected, threadi);
 
-		} else if (id == 'pattern_context_insert_above') {
+		} else if (id == "pattern_context_insert_above") {
 
-			globalPattern.insert('weft', globalPalette.selected, threadi);
+			globalPattern.insert("weft", globalPalette.selected, threadi);
 
-		} else if (id == 'pattern_context_insert_below') {
+		} else if (id == "pattern_context_insert_below") {
 
-			globalPattern.insert('weft', globalPalette.selected, threadi-1);
+			globalPattern.insert("weft", globalPalette.selected, threadi-1);
 
-		} else if (id == 'pattern_context_stripe_resize') {
+		} else if (id == "pattern_context_stripe_resize") {
 
 			showPatternStripeResizeModal(yarnSet, elementIndex);
 
-		} else if (id == 'pattern_context_fill_stripe') {
+		} else if (id == "pattern_context_fill_stripe") {
 
 			fillStripe(yarnSet, elementIndex, globalPalette.selected);
 
-		} else if ( id == 'pattern_context_fill'){
+		} else if ( id == "pattern_context_fill"){
 
 			patternSelection.startfor("fill");
 
-		} else if ( id == 'pattern_context_repeat'){
+		} else if ( id == "pattern_context_repeat"){
 
 			patternSelection.startfor("repeat");
 
-		} else if (id == 'pattern_context_select_color') {
+		} else if (id == "pattern_context_select_color") {
 
 			globalPalette.selectChip(colorCode);
 
-		} else if (id == 'pattern_context_stripe_delete') {
+		} else if (id == "pattern_context_stripe_delete") {
 
 			var stripePos = getStripeData(globalPattern[yarnSet], elementIndex);
 			globalPattern.delete(yarnSet, stripePos[0], stripePos[1]);
@@ -3122,9 +3122,9 @@ $(document).ready ( function(){
 		showModalWindow("Resize Stripe", "stripe-resize-modal", 180, 120);
 		var stripeSizeInput = $("#stripeSizeInput input");
 		stripeSizeInput.val(stripeSize);
-		stripeSizeInput.attr('data-max', maxVal);
+		stripeSizeInput.attr("data-max", maxVal);
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			var newStripeSize = Number(stripeSizeInput.val());
 
@@ -3153,7 +3153,7 @@ $(document).ready ( function(){
 	function showYarnCountSetModal(paletteElements) {
 		showModalWindow("Set Yarn Count", "yarn-count-set-modal", 180, 120);
 		var yarnCountInput = $("#yarnCountInput input");
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 			var newYarnNumber= Number(yarnCountInput.val());
 			if (e.which === 1) {
 				var yarnNumberArray = [newYarnNumber].repeat(52);
@@ -3176,9 +3176,9 @@ $(document).ready ( function(){
 		showModalWindow("Pattern Repeat", "pattern-repeat-modal", 180, 120);
 		var repeatNumInput = $("#repeatNumInput input");
 		repeatNumInput.val(1);
-		repeatNumInput.attr('data-max', maxTiles);
+		repeatNumInput.attr("data-max", maxTiles);
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -3241,9 +3241,9 @@ $(document).ready ( function(){
 
 		var moveDistance;
 		var satinPossibleMoveNumbers = getPossibleSatinMoveNumbers(weaveH);
-		$("#satinMoveNumber").find('option').remove();
+		$("#satinMoveNumber").find("option").remove();
 		satinPossibleMoveNumbers.forEach(function(moveNum) {
-			$("#satinMoveNumber").append('<option value="'+moveNum+'">'+moveNum+'</option>');
+			$("#satinMoveNumber").append("<option value=\""+moveNum+"\">"+moveNum+"</option>");
 		});
 
 	}
@@ -3251,9 +3251,9 @@ $(document).ready ( function(){
 	function showWeaveTwillModal() {
     
 		showModalWindow("Make Twill", "make-twill-modal", 180, 215);
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
-			var buttonIndex = $('#' + g_modalWinId + ' .action-btn').index(this);
+			var buttonIndex = $("#" + g_modalWinId + " .action-btn").index(this);
 
 			if (e.which === 1) {
 
@@ -3291,31 +3291,31 @@ $(document).ready ( function(){
 	toolsContextMenu.attachEvent("onContextMenu", function(zoneId, ev) { });
 	toolsContextMenu.attachEvent("onClick", function(id) {
 
-		if (id == 'tools_pointer') {
+		if (id == "tools_pointer") {
 
 			setGraphTool("pointer");
 
-		} else if (id == 'tools_brush') {
+		} else if (id == "tools_brush") {
 
 			setGraphTool("brush");
 			
-		} else if (id == 'tools_zoom') {
+		} else if (id == "tools_zoom") {
 
 			setGraphTool("zoom");
 			
-		} else if (id == 'tools_hand') {
+		} else if (id == "tools_hand") {
 
 			setGraphTool("hand");
 			
-		} else if (id == 'tools_line') {
+		} else if (id == "tools_line") {
 
 			setGraphTool("line");
 			
-		} else if (id == 'tools_fill') {
+		} else if (id == "tools_fill") {
 
 			setGraphTool("fill");
 			
-		} else if (id == 'tools_selection') {
+		} else if (id == "tools_selection") {
 
 			setGraphTool("selection");
 			
@@ -3340,21 +3340,21 @@ $(document).ready ( function(){
 		globalSelection.moveTargetBox = false;
 
 		if ( globalSelection.confirmed && globalSelection.paste_action == "paste"){
-			selectionContextMenu.setItemDisabled('selection_context_paste');
+			selectionContextMenu.setItemDisabled("selection_context_paste");
 		} else {
-			selectionContextMenu.setItemEnabled('selection_context_paste');
+			selectionContextMenu.setItemEnabled("selection_context_paste");
 		}
 
 		if ( globalSelection.confirmed && globalSelection.paste_action == "fill"){
-			selectionContextMenu.setItemDisabled('selection_context_fill');
+			selectionContextMenu.setItemDisabled("selection_context_fill");
 		} else {
-			selectionContextMenu.setItemEnabled('selection_context_fill');
+			selectionContextMenu.setItemEnabled("selection_context_fill");
 		}
 
 		if ( globalSelection.confirmed && globalSelection.paste_action == "crop"){
-			selectionContextMenu.setItemDisabled('selection_context_crop');
+			selectionContextMenu.setItemDisabled("selection_context_crop");
 		} else {
-			selectionContextMenu.setItemEnabled('selection_context_paste');
+			selectionContextMenu.setItemEnabled("selection_context_paste");
 		}
 
 	});
@@ -3363,26 +3363,26 @@ $(document).ready ( function(){
 
 		var mouse;
 
-		if (id == 'selection_context_paste') {
+		if (id == "selection_context_paste") {
 
 			globalSelection.paste_action = "paste";
 			mouse = getMouseFromClientXY("weave", globalMouse.currentx, globalMouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 			globalSelection.pasteStartCol = mouse.col;
 			globalSelection.pasteStartRow = mouse.row;
 
-		} else if (id == 'selection_context_fill') {
+		} else if (id == "selection_context_fill") {
 
 			globalSelection.paste_action = "fill";
 			mouse = getMouseFromClientXY("weave", globalMouse.currentx, globalMouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 			globalSelection.pasteStartCol = mouse.col;
 			globalSelection.pasteStartRow = mouse.row;
 
-		} else if (id == 'selection_context_crop') {
+		} else if (id == "selection_context_crop") {
 
 			globalWeave.setGraph2D8("weave", globalSelection.selected);
 			globalSelection.clear();
 
-		} else if (id == 'selection_context_cancel') {
+		} else if (id == "selection_context_cancel") {
 
 			globalSelection.cancelAction();
 
@@ -3411,10 +3411,10 @@ $(document).ready ( function(){
 		}
 	});
 
-	//weaveContextMenu.addContextZone('weave-container');
-	//weaveContextMenu.addContextZone('tieup-container');
-	//weaveContextMenu.addContextZone('lifting-container');
-	//weaveContextMenu.addContextZone('draft-container');
+	//weaveContextMenu.addContextZone("weave-container");
+	//weaveContextMenu.addContextZone("tieup-container");
+	//weaveContextMenu.addContextZone("lifting-container");
+	//weaveContextMenu.addContextZone("draft-container");
 
 	weaveContextMenu.attachEvent("onHide", function(id) { });
 
@@ -3429,57 +3429,57 @@ $(document).ready ( function(){
 			var weaveArray = globalWeave.weave2D;
 
 			if (weaveArray.length == g_weaveLimitMax) {
-				weaveContextMenu.setItemDisabled('weave_context_insert_end');
+				weaveContextMenu.setItemDisabled("weave_context_insert_end");
 			} else {
-				weaveContextMenu.setItemEnabled('weave_context_insert_end');
+				weaveContextMenu.setItemEnabled("weave_context_insert_end");
 			}
 
 			if (weaveArray[0].length == g_weaveLimitMax) {
-				weaveContextMenu.setItemDisabled('weave_context_insert_pick');
+				weaveContextMenu.setItemDisabled("weave_context_insert_pick");
 			} else {
-				weaveContextMenu.setItemEnabled('weave_context_insert_pick');
+				weaveContextMenu.setItemEnabled("weave_context_insert_pick");
 			}
 
 			if (weaveArray.length == g_weaveLimitMax && weaveArray[0].length == g_weaveLimitMax) {
-				weaveContextMenu.setItemDisabled('weave_context_insert');
+				weaveContextMenu.setItemDisabled("weave_context_insert");
 			} else {
-				weaveContextMenu.setItemEnabled('weave_context_insert');
+				weaveContextMenu.setItemEnabled("weave_context_insert");
 			}
 
 			if (weaveArray.length == g_weaveLimitMin) {
-				weaveContextMenu.setItemDisabled('weave_context_delete_ends');
-				weaveContextMenu.setItemDisabled('weave_context_flip_horizontal');
+				weaveContextMenu.setItemDisabled("weave_context_delete_ends");
+				weaveContextMenu.setItemDisabled("weave_context_flip_horizontal");
 			} else {
-				weaveContextMenu.setItemEnabled('weave_context_delete_ends');
-				weaveContextMenu.setItemEnabled('weave_context_flip_horizontal');
+				weaveContextMenu.setItemEnabled("weave_context_delete_ends");
+				weaveContextMenu.setItemEnabled("weave_context_flip_horizontal");
 			}
 
 			if (weaveArray[0].length == g_weaveLimitMin) {
-				weaveContextMenu.setItemDisabled('weave_context_delete_picks');
-				weaveContextMenu.setItemDisabled('weave_context_flip_vertical');
+				weaveContextMenu.setItemDisabled("weave_context_delete_picks");
+				weaveContextMenu.setItemDisabled("weave_context_flip_vertical");
 			} else {
-				weaveContextMenu.setItemEnabled('weave_context_delete_picks');
-				weaveContextMenu.setItemEnabled('weave_context_flip_vertical');
+				weaveContextMenu.setItemEnabled("weave_context_delete_picks");
+				weaveContextMenu.setItemEnabled("weave_context_flip_vertical");
 			}
 
 			if (weaveArray.length == g_weaveLimitMin && weaveArray[0].length == g_weaveLimitMin) {
-				weaveContextMenu.setItemDisabled('weave_context_delete');
-				weaveContextMenu.setItemDisabled('weave_context_crop');
-				weaveContextMenu.setItemDisabled('weave_context_fill');
-				weaveContextMenu.setItemDisabled('weave_context_copy');
-				weaveContextMenu.setItemDisabled('weave_context_flip');
-				weaveContextMenu.setItemDisabled('weave_context_shift');
-				weaveContextMenu.setItemDisabled('weave_context_clear');
-				weaveContextMenu.setItemDisabled('weave_context_inverse');
+				weaveContextMenu.setItemDisabled("weave_context_delete");
+				weaveContextMenu.setItemDisabled("weave_context_crop");
+				weaveContextMenu.setItemDisabled("weave_context_fill");
+				weaveContextMenu.setItemDisabled("weave_context_copy");
+				weaveContextMenu.setItemDisabled("weave_context_flip");
+				weaveContextMenu.setItemDisabled("weave_context_shift");
+				weaveContextMenu.setItemDisabled("weave_context_clear");
+				weaveContextMenu.setItemDisabled("weave_context_inverse");
 			} else {
-				weaveContextMenu.setItemEnabled('weave_context_delete');
-				weaveContextMenu.setItemEnabled('weave_context_crop');
-				weaveContextMenu.setItemEnabled('weave_context_fill');
-				weaveContextMenu.setItemEnabled('weave_context_copy');
-				weaveContextMenu.setItemEnabled('weave_context_flip');
-				weaveContextMenu.setItemEnabled('weave_context_shift');
-				weaveContextMenu.setItemEnabled('weave_context_clear');
-				weaveContextMenu.setItemEnabled('weave_context_inverse');
+				weaveContextMenu.setItemEnabled("weave_context_delete");
+				weaveContextMenu.setItemEnabled("weave_context_crop");
+				weaveContextMenu.setItemEnabled("weave_context_fill");
+				weaveContextMenu.setItemEnabled("weave_context_copy");
+				weaveContextMenu.setItemEnabled("weave_context_flip");
+				weaveContextMenu.setItemEnabled("weave_context_shift");
+				weaveContextMenu.setItemEnabled("weave_context_clear");
+				weaveContextMenu.setItemEnabled("weave_context_inverse");
 			}
 
 		}
@@ -3493,85 +3493,85 @@ $(document).ready ( function(){
 		var endIndex = endNum - 1;
 		var pickIndex = pickNum - 1;
 
-		if (id == 'weave_context_delete_ends') {
+		if (id == "weave_context_delete_ends") {
 
-			globalSelection.startfor('deleteEnds');
+			globalSelection.startfor("deleteEnds");
 
-		} else if (id == 'weave_context_delete_picks') {
+		} else if (id == "weave_context_delete_picks") {
 
-			globalSelection.startfor('deletePicks');
+			globalSelection.startfor("deletePicks");
 
-		} else if (id == 'weave_context_insert_ends') {
+		} else if (id == "weave_context_insert_ends") {
 
-			globalSelection.startfor('insertEnds');
+			globalSelection.startfor("insertEnds");
 
-		} else if (id == 'weave_context_insert_picks') {
+		} else if (id == "weave_context_insert_picks") {
 
-			globalSelection.startfor('insertPicks');
+			globalSelection.startfor("insertPicks");
 
-		} else if (id == 'weave_context_insert_end_right') {
+		} else if (id == "weave_context_insert_end_right") {
 
 			globalWeave.insertEndAt(endNum+1);
 
-		} else if (id == 'weave_context_insert_end_left') {
+		} else if (id == "weave_context_insert_end_left") {
 
 			globalWeave.insertEndAt(endNum);
 
-		} else if (id == 'weave_context_insert_pick_below') {
+		} else if (id == "weave_context_insert_pick_below") {
 
 			globalWeave.insertPickAt(pickNum);
 
-		} else if (id == 'weave_context_insert_pick_above') {
+		} else if (id == "weave_context_insert_pick_above") {
 
 			globalWeave.insertPickAt(pickNum+1);
 
-		} else if (id == 'weave_context_clear') {
+		} else if (id == "weave_context_clear") {
 
-			globalSelection.startfor('clear');
+			globalSelection.startfor("clear");
 
-		} else if (id == 'weave_context_copy') {
+		} else if (id == "weave_context_copy") {
 
-			globalSelection.startfor('copy');
+			globalSelection.startfor("copy");
 
-		} else if (id == 'weave_context_cancel') {
+		} else if (id == "weave_context_cancel") {
 
 			globalSelection.clear_old(4);
 
-		} else if (id == 'weave_context_crop') {
+		} else if (id == "weave_context_crop") {
 
-			globalSelection.startfor('crop');
+			globalSelection.startfor("crop");
 
-		} else if (id == 'weave_context_fill') {
+		} else if (id == "weave_context_fill") {
 
-			globalSelection.startfor('fill');
+			globalSelection.startfor("fill");
 
-		} else if (id == 'weave_context_stamp') {
+		} else if (id == "weave_context_stamp") {
 
-			globalSelection.startfor('stamp');
+			globalSelection.startfor("stamp");
 
-		} else if (id == 'weave_context_inverse') {
+		} else if (id == "weave_context_inverse") {
 
-			globalSelection.startfor('inverse');
+			globalSelection.startfor("inverse");
 
-		} else if (id == 'weave_context_flip_horizontal') {
+		} else if (id == "weave_context_flip_horizontal") {
 
-			globalSelection.startfor('flip_horizontal');
+			globalSelection.startfor("flip_horizontal");
 
-		} else if (id == 'weave_context_flip_vertical') {
+		} else if (id == "weave_context_flip_vertical") {
 
-			globalSelection.startfor('flip_vertical');
+			globalSelection.startfor("flip_vertical");
 
-		} else if (id == 'weave_context_shift') {
+		} else if (id == "weave_context_shift") {
 
-			globalSelection.startfor('shift');
+			globalSelection.startfor("shift");
 
-		} else if (id == 'weave_context_reposition') {
+		} else if (id == "weave_context_reposition") {
 
-			globalSelection.startfor('reposition');
+			globalSelection.startfor("reposition");
 
-		} else if (id == 'weave-context-build-3d') {
+		} else if (id == "weave-context-build-3d") {
 
-			globalSelection.startfor('build3d');
+			globalSelection.startfor("build3d");
 
 		}
 
@@ -3581,12 +3581,12 @@ $(document).ready ( function(){
 	// Reset Simulation Position
 	// ----------------------------------------------------------------------------------
 	function resetQuickSimulationPosition() {
-		var simBgTop = $('#simulation-frame').height() - g_simulationHeight;
-		$('#simulation-group').css({
-			'background-repeat': 'repeat',
-			'background-position': '0px ' + simBgTop,
-			'width': '100%',
-			'height': '100%',
+		var simBgTop = $("#simulation-frame").height() - g_simulationHeight;
+		$("#simulation-group").css({
+			"background-repeat": "repeat",
+			"background-position": "0px " + simBgTop,
+			"width": "100%",
+			"height": "100%",
 		});
 	}
 
@@ -3595,46 +3595,46 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function simulationFullscreen() {
 
-		$('body').append('<div id="simulation-fullscreen-wrapper"><div id="simulation-fullscreen-close-button"></div></div>');
+		$("body").append("<div id=\"simulation-fullscreen-wrapper\"><div id=\"simulation-fullscreen-close-button\"></div></div>");
 
-		$('#simulation-fullscreen-wrapper').css({
-			'position': 'absolute',
+		$("#simulation-fullscreen-wrapper").css({
+			"position": "absolute",
 			top: 0,
 			left: 0,
-			'background-image': 'url("' + g_simulationDataUrl + '")',
-			'background-size': g_simulationWidth / g_pixelRatio + 'px ' + g_simulationHeight / g_pixelRatio,
-			'background-color': '#FF0',
+			"background-image": "url(\"" + g_simulationDataUrl + "\")",
+			"background-size": g_simulationWidth / g_pixelRatio + "px " + g_simulationHeight / g_pixelRatio,
+			"background-color": "#FF0",
 			width: window.innerWidth,
 			height: window.innerHeight,
-			'z-index': 9999
+			"z-index": 9999
 		});
 
-		$('#simulation-fullscreen-wrapper').backgroundDraggable({
+		$("#simulation-fullscreen-wrapper").backgroundDraggable({
 			bound: false
 		});
 
-		$('div#simulation-fullscreen-close-button').click(function() {
+		$("div#simulation-fullscreen-close-button").click(function() {
 			$("div#simulation-fullscreen-wrapper").remove();
-			$(this).off('click');
-			$('div#simulation-fullscreen-wrapper').off('click');
-			$('div#simulation-fullscreen-wrapper').off('mousemove');
+			$(this).off("click");
+			$("div#simulation-fullscreen-wrapper").off("click");
+			$("div#simulation-fullscreen-wrapper").off("mousemove");
 		});
 
 		fullscreenCloseButtonHide();
 
-		$('div#simulation-fullscreen-wrapper').on('click mousemove', function() {
-			$('div#simulation-fullscreen-close-button').show();
+		$("div#simulation-fullscreen-wrapper").on("click mousemove", function() {
+			$("div#simulation-fullscreen-close-button").show();
 			fullscreenCloseButtonHide();
 		});
 
 	}
 
 	function fullscreenCloseButtonHide(){
-		$.doTimeout('fullscreenCloseButtonHide', 1000, function(){
+		$.doTimeout("fullscreenCloseButtonHide", 1000, function(){
 			if ( $("div#simulation-fullscreen-close-button").length ){
 				var overClose = $("div#simulation-fullscreen-close-button").is(":hover");
 				if ( !overClose ) {
-	    			$('div#simulation-fullscreen-close-button').hide();
+	    			$("div#simulation-fullscreen-close-button").hide();
 				}
 			}
 		});
@@ -3643,7 +3643,7 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Disable Right Click
 	// ----------------------------------------------------------------------------------
-	$(document).on('contextmenu', function(e) {
+	$(document).on("contextmenu", function(e) {
 
 		if (e.target.id == "project-code-import-textarea" || e.target.id == "project-code-save-textarea" || e.target.id == "project-notes-textarea") {
 
@@ -3660,17 +3660,17 @@ $(document).ready ( function(){
 
 	  //console.log(drawMethod);
 
-	  if( drawMethod == 'quick' ){
+	  if( drawMethod == "quick" ){
 
 	  	$(".multisg,.unisg").hide();
 	  	$(".quicksg").show();
 
-	  } else if( drawMethod == 'unicount' ){
+	  } else if( drawMethod == "unicount" ){
 
 	  	$(".multisg, .quicksg").hide();
 	  	$(".unisg").show();
 	  	
-	  } else if( drawMethod == 'multicount' ){
+	  } else if( drawMethod == "multicount" ){
 
 	  	$(".unisg,.quicksg").hide();
 	  	$(".multisg").show();
@@ -3683,35 +3683,35 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Spinners
 	// ----------------------------------------------------------------------------------
-	$(".spinner-counter").spinner('delay', 1).spinner('changed', function(e, newVal, oldVal) {
+	$(".spinner-counter").spinner("delay", 1).spinner("changed", function(e, newVal, oldVal) {
 
-	}).spinner('changing', function(e, newVal, oldVal) {
+	}).spinner("changing", function(e, newVal, oldVal) {
 
-		if (this.attributes['data-min'] !== undefined){
-			var dmin = this.attributes['data-min'].value;
+		if (this.attributes["data-min"] !== undefined){
+			var dmin = this.attributes["data-min"].value;
 			this.value = newVal <= dmin ? dmin : newVal;
 		}
 
-		if (this.attributes['data-max'] !== undefined){
-			var dmax = this.attributes['data-max'].value;
+		if (this.attributes["data-max"] !== undefined){
+			var dmax = this.attributes["data-max"].value;
 			this.value = newVal >= dmax ? dmax : newVal;
 		}
 
 	});
 
 	$(".static-spinner-counter")
-	//.spinner('delay', 5) //delay in ms
-	.spinner('changed', function(e, newVal, oldVal) {
+	//.spinner("delay", 5) //delay in ms
+	.spinner("changed", function(e, newVal, oldVal) {
 		//trigger lazed, depend on delay option.
 		//validateSimulation(22);
 
 	})
 
-	.spinner('changing', function(e, newVal, oldVal) {
+	.spinner("changing", function(e, newVal, oldVal) {
 
 		//trigger immediately
-		var dmin = this.attributes['data-min'].value;
-		var dmax = this.attributes['data-max'].value;
+		var dmin = this.attributes["data-min"].value;
+		var dmax = this.attributes["data-max"].value;
 
 		if (newVal >= dmax) {
 			this.value = dmax;
@@ -3737,15 +3737,15 @@ $(document).ready ( function(){
 	// --------------------------------------------------
 	// Project Open -------------------------------------
 	// --------------------------------------------------
-	$('#project-file-open').on("change", function(){
+	$("#project-file-open").on("change", function(){
 		loadFile(this.files, "project", "text");
 	});
 
-	$('#artwork-file-open').on("change", function(){
+	$("#artwork-file-open").on("change", function(){
 		loadFile(this.files, "artwork");
 	});
 
-	$('#weave-file-open').on("change", function(){
+	$("#weave-file-open").on("change", function(){
 		loadFile(this.files, "weave");
 	});
 
@@ -3755,7 +3755,7 @@ $(document).ready ( function(){
 		var validFileTypesInfo = readAs == "dataurl" ? "png/bmp/gif" : "txt" ; 
 		if ( files && files[0] ){
 			var file = files[0];
-			var ext = file.name.split('.').pop().toUpperCase();
+			var ext = file.name.split(".").pop().toUpperCase();
 			clearModalNotifications();
 			if (file.type.match(validFileTypes)){
 				var reader = new FileReader();
@@ -3808,7 +3808,7 @@ $(document).ready ( function(){
 				};
 			} else {
 				notify("error", "Invalid "+type+" file : "+file.name); 
-				notify("error", "'"+ext+"' File type not supported!");
+				notify("error", "\""+ext+"\" File type not supported!");
 				notify("notice", "Select a "+validFileTypesInfo+" file.");
 			}
 		} else {
@@ -3821,22 +3821,22 @@ $(document).ready ( function(){
 	// -------------------------------------------------------------
 	function showPartialImportProjectModal(code){
 		showModalWindow("Open Project", "project-partial-open-modal");
-		$('#partial-open-project-file-name').val(g_fileLoadedName);
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#partial-open-project-file-name").val(g_fileLoadedName);
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 			if (e.which === 1) {
 
-				var importAppSettings = $('#partialImportAppSettingsCheckbox').prop('checked');
-				var importPalette = $('#partialImportPaletteCheckbox').prop('checked');
-				var importWarpPattern = $('#partialImportWarpColorPatternCheckbox').prop('checked');
-				var importWeftPattern = $('#partialImportWeftColorPatternCheckbox').prop('checked');
-				var importWeave = $('#partialImportWeaveCheckbox').prop('checked');
-				var importDraft = $('#partialImportDraftCheckbox').prop('checked');
-				var importLifting = $('#partialImportLiftingCheckbox').prop('checked');
-				var importTieup = $('#partialImportTieupCheckbox').prop('checked');
-				var importArtwork = $('#partialImportArtworkCheckbox').prop('checked');
+				var importAppSettings = $("#partialImportAppSettingsCheckbox").prop("checked");
+				var importPalette = $("#partialImportPaletteCheckbox").prop("checked");
+				var importWarpPattern = $("#partialImportWarpColorPatternCheckbox").prop("checked");
+				var importWeftPattern = $("#partialImportWeftColorPatternCheckbox").prop("checked");
+				var importWeave = $("#partialImportWeaveCheckbox").prop("checked");
+				var importDraft = $("#partialImportDraftCheckbox").prop("checked");
+				var importLifting = $("#partialImportLiftingCheckbox").prop("checked");
+				var importTieup = $("#partialImportTieupCheckbox").prop("checked");
+				var importArtwork = $("#partialImportArtworkCheckbox").prop("checked");
 				
 				importProjectCode(2, code, importAppSettings, importPalette, importWeave, importDraft, importLifting, importTieup, importWarpPattern, importWeftPattern, importArtwork);
-				$('#project-partial-open-modal .action-btn').off('click');
+				$("#project-partial-open-modal .action-btn").off("click");
 				hideModalWindow();
 				return false;
 			}
@@ -3876,11 +3876,11 @@ $(document).ready ( function(){
 	// Project Import and Export -----------------------------------
 	// -------------------------------------------------------------
 	function getWeaveColorEnds() {
-		return [globalWeave.ends, globalPattern.size('warp')].lcm();
+		return [globalWeave.ends, globalPattern.size("warp")].lcm();
 	}
 
 	function getWeaveColorPicks() {
-		return [globalWeave.picks, globalPattern.size('weft')].lcm();
+		return [globalWeave.picks, globalPattern.size("weft")].lcm();
 	}
 
 	// -------------------------------------------------------------
@@ -3889,7 +3889,7 @@ $(document).ready ( function(){
 	function setBackgroundColor(code, renderSimulation = true) {
 		var bgColorValue = globalPalette.colors[code].hex;
 		g_backgroundColor = code;
-		$('#bgcolor-container').css('background-color', bgColorValue);
+		$("#bgcolor-container").css("background-color", bgColorValue);
 		if (renderSimulation) {
 			//validateSimulation(23);
 		}
@@ -4224,11 +4224,11 @@ $(document).ready ( function(){
 		}
 
 		if (importWarpPattern) {
-			globalPattern.set(23, 'warp', decompress1D(warpPattern), false, 0, false, false);
+			globalPattern.set(23, "warp", decompress1D(warpPattern), false, 0, false, false);
 		}
 
 		if (importWeftPattern) {
-			globalPattern.set(24, 'weft', decompress1D(weftPattern), false, 0, false, false);
+			globalPattern.set(24, "weft", decompress1D(weftPattern), false, 0, false, false);
 		}
 
 		if ( importWarpPattern || importWeftPattern ){
@@ -4249,7 +4249,7 @@ $(document).ready ( function(){
 
 			setSimulationParameters(warpSize, weftSize, warpSpace, weftSpace, warpCount, weftCount, warpDensity, weftDensity, screenDPI, 1, 1);
 			g_projectNotes = projectNotes;
-			$('#project-properties-notes').val(projectNotes);	
+			$("#project-properties-notes").val(projectNotes);	
 
 			if( projectName === "" ){
 				
@@ -4273,36 +4273,36 @@ $(document).ready ( function(){
 	// -------------------------------------------------------------
 	function modifyPattern(action, render = true) {
 
-		$.doTimeout('modifyPattern', 100, function(){
+		$.doTimeout("modifyPattern", 100, function(){
 
 			var tempWarpPattern, tempWeftPattern;
 
 			if (action == "clear_warp") {
 
-				globalPattern.set(25, 'warp', "", false);
+				globalPattern.set(25, "warp", "", false);
 
 			} else if (action == "clear_weft") {
 
-				globalPattern.set(26, 'weft', "", false);
+				globalPattern.set(26, "weft", "", false);
 
 			} else if (action == "clear_warp_and_weft") {
 
-				globalPattern.set(27, 'warp', "", false);
-				globalPattern.set(28, 'weft', "", false);
+				globalPattern.set(27, "warp", "", false);
+				globalPattern.set(28, "weft", "", false);
 
 			} else if (action == "copy_warp_to_weft") {
 
-				globalPattern.set(29, 'weft', globalPattern.warp, false);
+				globalPattern.set(29, "weft", globalPattern.warp, false);
 
 			} else if (action == "copy_weft_to_warp") {
 
-				globalPattern.set(30, 'warp', globalPattern.weft, false);
+				globalPattern.set(30, "warp", globalPattern.weft, false);
 
 			} else if (action == "copy_swap") {
 
 				var temp = globalPattern.warp;
-				globalPattern.set(31, 'warp', globalPattern.weft, false, 0, false, false);
-				globalPattern.set(32, 'weft', temp);
+				globalPattern.set(31, "warp", globalPattern.weft, false, 0, false, false);
+				globalPattern.set(32, "weft", temp);
 
 			} else if (action == "shift_left") {
 
@@ -4322,25 +4322,25 @@ $(document).ready ( function(){
 
 			} else if (action == "flip_warp") {
 
-				globalPattern.set(33, 'warp', globalPattern.warp.reverse(), false);
+				globalPattern.set(33, "warp", globalPattern.warp.reverse(), false);
 
 			} else if (action == "flip_weft") {
 
-				globalPattern.set(34, 'weft', globalPattern.weft.reverse(), false);
+				globalPattern.set(34, "weft", globalPattern.weft.reverse(), false);
 
 			} else if (action == "mirror_warp") {
 
 				tempWarpPattern = globalPattern.warp;
 				var tempMirrorWarpPattern = tempWarpPattern.concat(globalPattern.warp.reverse());
 
-				globalPattern.set(35, 'warp', tempMirrorWarpPattern);
+				globalPattern.set(35, "warp", tempMirrorWarpPattern);
 
 			} else if (action == "mirror_weft") {
 
 				tempWeftPattern = globalPattern.weft;
 				var tempMirrorWeftPattern = tempWeftPattern.concat(globalPattern.weft.reverse());
 
-				globalPattern.set(36, 'weft', tempMirrorWeftPattern);
+				globalPattern.set(36, "weft", tempMirrorWeftPattern);
 
 			}
 
@@ -4397,9 +4397,9 @@ $(document).ready ( function(){
 					index : this.currentStepIndex,
 					code : code
 				});
-				layoutToolbar.disableItem('toolbar-main-edit-redo');
+				layoutToolbar.disableItem("toolbar-main-edit-redo");
 				if ( this.currentStepIndex ){
-					layoutToolbar.enableItem('toolbar-main-edit-undo');
+					layoutToolbar.enableItem("toolbar-main-edit-undo");
 				}
 			}
 
@@ -4416,11 +4416,11 @@ $(document).ready ( function(){
 				this.currentStepIndex += 1;
 				importProjectCode(3, this.steps[this.currentStepIndex].code, false);
 				this.walkMode = false;
-				layoutToolbar.enableItem('toolbar-main-edit-undo');
+				layoutToolbar.enableItem("toolbar-main-edit-undo");
 
 				if ( this.currentStepIndex == this.steps.length+1 ) {
 
-					layoutToolbar.disableItem('toolbar-main-edit-redo');
+					layoutToolbar.disableItem("toolbar-main-edit-redo");
 
 				}
 
@@ -4438,10 +4438,10 @@ $(document).ready ( function(){
 				this.currentStepIndex -= 1;
 				importProjectCode(3, this.steps[this.currentStepIndex].code, false);
 				this.walkMode = false;
-				layoutToolbar.enableItem('toolbar-main-edit-redo');
+				layoutToolbar.enableItem("toolbar-main-edit-redo");
 
 				if ( this.currentStepIndex == 0 ) {
-					layoutToolbar.disableItem('toolbar-main-edit-undo');
+					layoutToolbar.disableItem("toolbar-main-edit-undo");
 				}
 
 			}
@@ -4463,7 +4463,7 @@ $(document).ready ( function(){
 
 		if (g_history[g_historyNum + 1] === undefined) {
 
-			layoutToolbar.disableItem('toolbar-main-edit-redo');
+			layoutToolbar.disableItem("toolbar-main-edit-redo");
 
 			return false;
 
@@ -4479,11 +4479,11 @@ $(document).ready ( function(){
 
 			g_historyMode = false;
 
-			layoutToolbar.enableItem('toolbar-main-edit-undo');
+			layoutToolbar.enableItem("toolbar-main-edit-undo");
 
 			if (g_history[g_historyNum + 1] === undefined) {
 
-				layoutToolbar.disableItem('toolbar-main-edit-redo');
+				layoutToolbar.disableItem("toolbar-main-edit-redo");
 
 			}
 
@@ -4496,7 +4496,7 @@ $(document).ready ( function(){
 
 		if (g_history[g_historyNum - 1] === undefined) {
 
-			layoutToolbar.disableItem('toolbar-main-edit-undo');
+			layoutToolbar.disableItem("toolbar-main-edit-undo");
 			return false;
 
 		} else {
@@ -4506,10 +4506,10 @@ $(document).ready ( function(){
 			var historyStepData = g_history[g_historyNum];
 			importProjectCode(4, historyStepData.code, false);
 			g_historyMode = false;
-			layoutToolbar.enableItem('toolbar-main-edit-redo');
+			layoutToolbar.enableItem("toolbar-main-edit-redo");
 
 			if (g_history[g_historyNum - 1] === undefined) {
-				layoutToolbar.disableItem('toolbar-main-edit-undo');
+				layoutToolbar.disableItem("toolbar-main-edit-undo");
 			}
 
 		}
@@ -4552,10 +4552,10 @@ $(document).ready ( function(){
 			});
 
 			globalHistory.currentStepIndex = currentStepIndex;
-			layoutToolbar.disableItem('toolbar-main-edit-redo');
+			layoutToolbar.disableItem("toolbar-main-edit-redo");
 			
 			if ( currentStepIndex ){
-				layoutToolbar.enableItem('toolbar-main-edit-undo');
+				layoutToolbar.enableItem("toolbar-main-edit-undo");
 			}
 
 		}
@@ -4657,7 +4657,7 @@ $(document).ready ( function(){
 	function autoWeave() {
 
 		var totalRandom = false;
-		var balanceWeave = $("div#autoWeaveBalanceWeave input:checkbox").prop('checked');
+		var balanceWeave = $("div#autoWeaveBalanceWeave input:checkbox").prop("checked");
 
 		var shafts = Number($("#autoWeaveShafts input").val());
 		var weaveW = Number($("#autoWeaveWidth input").val());
@@ -4666,17 +4666,17 @@ $(document).ready ( function(){
 		var threadingRigidity = Number($("#autoWeaveThreadingRigidity input").val());
 		var treadlingRigidity = Number($("#autoWeaveTreadlingRigidity input").val());
 
-		var mirrorThreading = $("div#autoWeaveMirrorThreading input:checkbox").prop('checked');
-		var mirrorTreadling = $("div#autoWeaveMirrorTreadling input:checkbox").prop('checked');
+		var mirrorThreading = $("div#autoWeaveMirrorThreading input:checkbox").prop("checked");
+		var mirrorTreadling = $("div#autoWeaveMirrorTreadling input:checkbox").prop("checked");
 
 		var maxWarpFloatReq = Number($("#autoWeaveMaxWarpFloat input").val());
 		var maxWeftFloatReq = Number($("#autoWeaveMaxWeftFloat input").val());
 
 		var minPlainArea = Number($("#autoWeaveMinPlainArea input").val());
 
-		var generateThreading = $("#autoWeaveGenerateThreading input:checkbox").prop('checked');
-		var generateTreadling = $("#autoWeaveGenerateTreadling input:checkbox").prop('checked');
-		var generateTieup = $("#autoWeaveGenerateTieup input:checkbox").prop('checked');
+		var generateThreading = $("#autoWeaveGenerateThreading input:checkbox").prop("checked");
+		var generateTreadling = $("#autoWeaveGenerateTreadling input:checkbox").prop("checked");
+		var generateTieup = $("#autoWeaveGenerateTieup input:checkbox").prop("checked");
 
 		if ( totalRandom ){
 
@@ -4778,11 +4778,11 @@ $(document).ready ( function(){
 
 		var apSizeLimit = Number($("#autoPatternSize input").val());
 		var apColorLimit = Number($("#autoPatternColors input").val());
-		var apEven = $("div#autoEvenPattern input:checkbox").prop('checked');
+		var apEven = $("div#autoEvenPattern input:checkbox").prop("checked");
 		var apStyle = $("div#autoPatternStyle select").val();
 		var apType = $("div#autoPatternType select").val();
 
-		var apLockColors = $("div#autoPatternLockColors input:checkbox").prop('checked');
+		var apLockColors = $("div#autoPatternLockColors input:checkbox").prop("checked");
 		var apLockedColors = $("#autoPatternLockedColors input").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
 		$("#autoPatternLockedColors input").val(apLockedColors);
 
@@ -4832,11 +4832,11 @@ $(document).ready ( function(){
 		}
 
 		if (g_enableWarp) {
-			globalPattern.set(22, 'warp', warpPattern, false, 0, false, false);
+			globalPattern.set(22, "warp", warpPattern, false, 0, false, false);
 		}
 
 		if (g_enableWeft) {
-			globalPattern.set(22, 'weft', weftPattern, false, 0, false, false);
+			globalPattern.set(22, "weft", weftPattern, false, 0, false, false);
 		}
 
 		globalPattern.render8(3);
@@ -5118,21 +5118,21 @@ $(document).ready ( function(){
 	var autoColorPrevColors = "";
 	function autoColorway(){
 
-		var linkColors = $("div#autoColorLinkColors input:checkbox").prop('checked');
-		var shareColors = $("div#autoColorShareColors input:checkbox").prop('checked');
+		var linkColors = $("div#autoColorLinkColors input:checkbox").prop("checked");
+		var shareColors = $("div#autoColorShareColors input:checkbox").prop("checked");
 
-		var acLockColors = $("div#autoColorLockColors input:checkbox").prop('checked');
+		var acLockColors = $("div#autoColorLockColors input:checkbox").prop("checked");
 		var acLockedColors = $("#autoColorLockedColors input").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
 		$("#autoColorLockedColors input").val(acLockedColors);
 
 		var warpPattern = globalPattern.warp;
 		var weftPattern = globalPattern.weft;
 
-		var warpColors = globalPattern.colors('warp');
+		var warpColors = globalPattern.colors("warp");
 		var warpColorCount = warpColors.length;
-		var weftColors = globalPattern.colors('weft');
+		var weftColors = globalPattern.colors("weft");
 		var weftColorCount = weftColors.length;
-		var fabricColors = globalPattern.colors('fabric');
+		var fabricColors = globalPattern.colors("fabric");
 		var fabricColorCount = fabricColors.length;
 
 		var all = [..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"];
@@ -5175,11 +5175,11 @@ $(document).ready ( function(){
 			}
 
 			if (g_enableWarp) {
-				globalPattern.set(39, 'warp', newWarpPattern, false);
+				globalPattern.set(39, "warp", newWarpPattern, false);
 			}
 
 			if (g_enableWeft){
-				globalPattern.set(40, 'weft', newWeftPattern, false);
+				globalPattern.set(40, "weft", newWeftPattern, false);
 			}
 
 		} else {
@@ -5188,13 +5188,13 @@ $(document).ready ( function(){
 
 				var newWarpColors = loc.shuffle().concat(str.shuffle(), bal.shuffle()).slice(0, warpColorCount);
 				newWarpPattern = warpPattern.replaceElements(warpColors, newWarpColors);
-				globalPattern.set(41, 'warp', newWarpPattern, false);
+				globalPattern.set(41, "warp", newWarpPattern, false);
 			}
 
 			if (g_enableWeft) {
 				var newWeftColors = loc.shuffle().concat(str.shuffle(), bal.shuffle()).slice(0, weftColorCount);
 				newWeftPattern = weftPattern.replaceElements(weftColors, newWeftColors);
-				globalPattern.set(42, 'weft', newWeftPattern, false);
+				globalPattern.set(42, "weft", newWeftPattern, false);
 
 			}
 
@@ -5209,12 +5209,12 @@ $(document).ready ( function(){
 	}
 
     $("div#autoColorShareColors input:checkbox").click(function(){
-        if( $(this).is(':checked') ) {
-        	$("div#autoColorLinkColors input:checkbox").prop('checked',true);
-            $("div#autoColorLinkColors input:checkbox").prop('disabled',false);
+        if( $(this).is(":checked") ) {
+        	$("div#autoColorLinkColors input:checkbox").prop("checked",true);
+            $("div#autoColorLinkColors input:checkbox").prop("disabled",false);
         } else {
-        	$("div#autoColorLinkColors input:checkbox").prop('checked',false);
-            $("div#autoColorLinkColors input:checkbox").prop('disabled',true);
+        	$("div#autoColorLinkColors input:checkbox").prop("checked",false);
+            $("div#autoColorLinkColors input:checkbox").prop("disabled",true);
         }
     });
 
@@ -5331,20 +5331,20 @@ $(document).ready ( function(){
 
 		var rwei = $("#resizeWeaveEndsInput input");
 		var rwpi = $("#resizeWeavePicksInput input");
-		var rwar = $("input[name='resizeWeaveAnchorRadio']");
+		var rwar = $("input[name=\"resizeWeaveAnchorRadio\"]");
 		
 		rwei.val(globalWeave.ends);
-		rwei.attr('data-max', g_weaveLimitMax);
+		rwei.attr("data-max", g_weaveLimitMax);
 		rwpi.val(globalWeave.picks);
-		rwpi.attr('data-max', g_weaveLimitMax);
+		rwpi.attr("data-max", g_weaveLimitMax);
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
 				var rwev = Number(rwei.val());
 				var rwpv = Number(rwpi.val());
-				var rwav = rwar.filter(':checked').val();
+				var rwav = rwar.filter(":checked").val();
 				var rwaV = rwav.substr(0,1);
 				var rwaH = rwav.substr(1,1);
 
@@ -5417,11 +5417,11 @@ $(document).ready ( function(){
 		var iweri = $("#insertWeaveEndsRightInput input");
 		var iweli = $("#insertWeaveEndsLeftInput input");
 		iweri.val(0);
-		iweri.attr('data-max', g_weaveLimitMax - globalWeave.ends);
+		iweri.attr("data-max", g_weaveLimitMax - globalWeave.ends);
 		iweli.val(0);
-		iweli.attr('data-max', g_weaveLimitMax - globalWeave.ends);
+		iweli.attr("data-max", g_weaveLimitMax - globalWeave.ends);
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -5443,12 +5443,12 @@ $(document).ready ( function(){
 
 	}
 
-	$("#insertWeaveEndsRightInput").spinner('changed', function(e, newVal, oldVal) {
-		$("#insertWeaveEndsLeftInput input").attr('data-max', g_weaveLimitMax - globalWeave.ends - newVal);
+	$("#insertWeaveEndsRightInput").spinner("changed", function(e, newVal, oldVal) {
+		$("#insertWeaveEndsLeftInput input").attr("data-max", g_weaveLimitMax - globalWeave.ends - newVal);
 	});
 
-	$("#insertWeaveEndsLeftInput").spinner('changed', function(e, newVal, oldVal) {
-		$("#insertWeaveEndsRightInput input").attr('data-max', g_weaveLimitMax - globalWeave.ends - newVal);
+	$("#insertWeaveEndsLeftInput").spinner("changed", function(e, newVal, oldVal) {
+		$("#insertWeaveEndsRightInput input").attr("data-max", g_weaveLimitMax - globalWeave.ends - newVal);
 	});
 
 	// -------------------------------------------------------------
@@ -5462,11 +5462,11 @@ $(document).ready ( function(){
 		var iwpai = $("#insertWeavePicksAboveInput input");
 		var iwpbi = $("#insertWeavePicksBelowInput input");
 		iwpai.val(0);
-		iwpai.attr('data-max', g_weaveLimitMax - globalWeave.picks);
+		iwpai.attr("data-max", g_weaveLimitMax - globalWeave.picks);
 		iwpbi.val(0);
-		iwpbi.attr('data-max', g_weaveLimitMax - globalWeave.picks);
+		iwpbi.attr("data-max", g_weaveLimitMax - globalWeave.picks);
 
-		$('#' + g_modalWinId + ' .action-btn').click(function(e) {
+		$("#" + g_modalWinId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -5495,12 +5495,12 @@ $(document).ready ( function(){
 
 	}
 
-	$("#insertWeavePicksAboveInput").spinner('changed', function(e, newVal, oldVal) {
-		$("#insertWeavePicksBelowInput input").attr('data-max', g_weaveLimitMax - globalWeave.picks - newVal);
+	$("#insertWeavePicksAboveInput").spinner("changed", function(e, newVal, oldVal) {
+		$("#insertWeavePicksBelowInput input").attr("data-max", g_weaveLimitMax - globalWeave.picks - newVal);
 	});
 
-	$("#insertWeavePicksBelowInput").spinner('changed', function(e, newVal, oldVal) {
-		$("#insertWeavePicksAboveInput input").attr('data-max', g_weaveLimitMax - globalWeave.picks - newVal);
+	$("#insertWeavePicksBelowInput").spinner("changed", function(e, newVal, oldVal) {
+		$("#insertWeavePicksAboveInput input").attr("data-max", g_weaveLimitMax - globalWeave.picks - newVal);
 	});
 
 	// -------------------------------------------------------------
@@ -5699,7 +5699,7 @@ $(document).ready ( function(){
 	function dataURLToImageData(dataurl){	
 		var w = dataurl.width;
 		var h = dataurl.height;
-		var x = getCtx(0, 'temp-canvas', 'g_tempCanvas', w, h, false);
+		var x = getCtx(0, "temp-canvas", "g_tempCanvas", w, h, false);
 		//x.clearRect(0, 0, w, h)
 		x.fillStyle = "#FFFFFF";
 		x.fillRect(0, 0, w, h);
@@ -5716,28 +5716,28 @@ $(document).ready ( function(){
 				$("#loadingbar-title").text(title);
 			}
 			
-			if ( value == "hide" && overlay.is(':visible')){
+			if ( value == "hide" && overlay.is(":visible")){
 				overlay.hide();
-				$('#loadingbar-cancel').off('click');
-			} else if ( value == "cancel" && overlay.is(':visible')){
+				$("#loadingbar-cancel").off("click");
+			} else if ( value == "cancel" && overlay.is(":visible")){
 				$.doTimeout(timerId);
 				overlay.hide();
-				$('#loadingbar-cancel').off('click');
+				$("#loadingbar-cancel").off("click");
 			} else if (value >= 0 && value <= 100){
-				if (overlay.is(':hidden')){
+				if (overlay.is(":hidden")){
 					overlay.show();
 					if (timerId){
-						$('#loadingbar-cancel').show();
-						$('#loadingbar-cancel').on('click', function(e) {
+						$("#loadingbar-cancel").show();
+						$("#loadingbar-cancel").on("click", function(e) {
 							if (e.which === 1) {
 								$.doTimeout(timerId);
 								overlay.hide();
-								$('#loadingbar-cancel').off('click');
+								$("#loadingbar-cancel").off("click");
 							}
 							return false;
 						});
 					} else {
-						$('#loadingbar-cancel').hide();
+						$("#loadingbar-cancel").hide();
 					}
 				}
 				$("#loadingbar-fill").width(value+"%");
@@ -5754,7 +5754,7 @@ $(document).ready ( function(){
 		var ih = arr2D8[0].length;
 
 		var x, y;
-		g_tempContext = getCtx(4, 'temp-canvas', 'g_tempCanvas', iw, ih, false);
+		g_tempContext = getCtx(4, "temp-canvas", "g_tempCanvas", iw, ih, false);
 		var imagedata = g_tempContext.createImageData(iw, ih);
 	    var pixels = new Uint32Array(imagedata.data.buffer);
 
@@ -5989,7 +5989,7 @@ $(document).ready ( function(){
 			success = false;
 			error = "imageSizeMaxLimit";
 		} else  {
-			var ctx = getCtx(14, 'temp-canvas', 'g_tempCanvas', imageW, imageH, false);
+			var ctx = getCtx(14, "temp-canvas", "g_tempCanvas", imageW, imageH, false);
 			ctx.drawImage(dataurl, 0, 0);
 			var image = ctx.getImageData(0, 0, imageW, imageH);
 			array = newArray2D8(8, imageW, imageH);
@@ -6055,7 +6055,7 @@ $(document).ready ( function(){
 		var x, y, r, g, b, a, i, v, colors = [], weave = [];
 		var imgW = dataurl.width;
 		var imgH = dataurl.height;
-		var imgCtx = getCtx(2, 'temp-canvas', 'g_tempCanvas', imgW, imgH, false);
+		var imgCtx = getCtx(2, "temp-canvas", "g_tempCanvas", imgW, imgH, false);
 		imgCtx.drawImage(dataurl, 0, 0);
 		var states = [1, 1];
 		var imgData = imgCtx.getImageData(0, 0, imgW, imgH);
@@ -6103,7 +6103,7 @@ $(document).ready ( function(){
 		var w = weaveArray.flip2D8("y");
 		var canvasW = w.length;
 		var canvasH = w[0].length;
-		g_tempContext = getCtx(4, 'temp-canvas', 'g_tempCanvas', canvasW, canvasH, false);
+		g_tempContext = getCtx(4, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
 		drawRect(g_tempContext, 0, 0, canvasW, canvasH, "#FFFFFF", false);
 		
 		for (x = 0; x < canvasW; x++) {
@@ -6145,7 +6145,7 @@ $(document).ready ( function(){
 	}
 
 	function weave2D8ToDataURL(weave2D8, canvasW, canvasH, color32, pixelW = 1, pixelH = 1){
-		g_tempContext = getCtx(6, 'temp-canvas', 'g_tempCanvas', canvasW, canvasH, false);
+		g_tempContext = getCtx(6, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
 		drawWeave2D8ToCanvas(g_tempContext, weave2D8, canvasW, canvasH, color32, pixelW, pixelH);
 		return g_tempCanvas.toDataURL();
 	}
@@ -6193,7 +6193,7 @@ $(document).ready ( function(){
 		var arr8Data = arr8.subarray(2);
 		var dataW = arr8Data.length;
 
-		g_tempContext = getCtx(4, 'temp-canvas', 'g_tempCanvas', w, h, false);
+		g_tempContext = getCtx(4, "temp-canvas", "g_tempCanvas", w, h, false);
 
 		var light32 = rgbaToColor32(255,255,255,255);
 		var dark32 = rgbaToColor32(0,0,255,255);
@@ -6230,7 +6230,7 @@ $(document).ready ( function(){
 		var canvasW = imageW;
 		var canvasH = imageH;
 
-		g_tempContext = getCtx(5, 'temp-canvas', 'g_tempCanvas', canvasW, canvasH, false);
+		g_tempContext = getCtx(5, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
 
 		var simulationPattern = g_tempContext.createPattern(g_simulationCanvas, "repeat");
 		g_tempContext.rect(0,0,canvasW,canvasH);
@@ -6254,7 +6254,7 @@ $(document).ready ( function(){
 		context.fillStyle = color;
 		context.font = style+" "+weight+" "+size+"px "+font;
 		context.textAlign = "left";
-		context.textBaseline = 'middle';
+		context.textBaseline = "middle";
 		context.fillText(text, x, y);
 
 	}
@@ -6271,7 +6271,7 @@ $(document).ready ( function(){
 		var canvasW = imageW;
 		var canvasH = imageH;
 
-		g_tempContext = getCtx(6, 'temp-canvas', 'g_tempCanvas', canvasW, canvasH, false);
+		g_tempContext = getCtx(6, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
 
 		window.pica().resize(g_simulationCanvas, g_tempCanvas, {
 			quality: 3,
@@ -6410,21 +6410,21 @@ $(document).ready ( function(){
 	// Simulation Status Update -------------------------
 	// --------------------------------------------------
 	function simulationAlert(type) {
-		$('#simulation-alert-button').removeClass().addClass("fa");
+		$("#simulation-alert-button").removeClass().addClass("fa");
 		$("#simulation-alert-overlay").show(1);
-		if (type == 'wait') {
-			$('#simulation-alert-button').addClass("fa-clock-o").css("color", "#666");
-		} else if (type == 'update') {
-			$('#simulation-alert-button').addClass("fa-refresh").css("color", "#666");
-		} else if (type == 'warning') {
-			$('#simulation-alert-button').addClass("fa-exclamation-circle").css("color", "#666");
-		} else if (type == 'success') {
-			$('#simulation-alert-button').addClass("fa-check").css("color", "#666");
+		if (type == "wait") {
+			$("#simulation-alert-button").addClass("fa-clock-o").css("color", "#666");
+		} else if (type == "update") {
+			$("#simulation-alert-button").addClass("fa-refresh").css("color", "#666");
+		} else if (type == "warning") {
+			$("#simulation-alert-button").addClass("fa-exclamation-circle").css("color", "#666");
+		} else if (type == "success") {
+			$("#simulation-alert-button").addClass("fa-check").css("color", "#666");
 			$("#simulation-alert-overlay").delay(500).hide(1);
 		}
 	}
 
-	$('#simulation-alert-button').on('click', function(e) {
+	$("#simulation-alert-button").on("click", function(e) {
 		if (e.which === 1) {
 			//validateSimulation(28, true, true);
 		}
@@ -6466,10 +6466,10 @@ $(document).ready ( function(){
 
 		} else {
 
-			var simulationLiveUpdate = layoutMenu.getCheckboxState('simulation-live-update');
+			var simulationLiveUpdate = layoutMenu.getCheckboxState("simulation-live-update");
 			if (simulationLiveUpdate || forceSimulate) {
 
-				$.doTimeout('simulate', 333, function(){
+				$.doTimeout("simulate", 333, function(){
 
 					var simulationType = g_simulationDrawMethod;
 
@@ -6507,38 +6507,38 @@ $(document).ready ( function(){
 	// Update Simulation View --------------------------------------------------
 	function updateSimulationSeamlessRepeat() {
 
-		//logTime('draggableDisable');
-		$('#simulation-group').backgroundDraggable("disable");
-		//logTimeEnd('draggableDisable');
+		//logTime("draggableDisable");
+		$("#simulation-group").backgroundDraggable("disable");
+		//logTimeEnd("draggableDisable");
 
 		if (g_simulationRepeat == "seamless") {
 
-			//logTime('simBGTop');
-			var simBgTop = $('#simulation-frame').height() - g_simulationHeight;
-			//logTimeEnd('simBGTop');
+			//logTime("simBGTop");
+			var simBgTop = $("#simulation-frame").height() - g_simulationHeight;
+			//logTimeEnd("simBGTop");
 
-			//logTime('cssRepeat');
-			$('#simulation-group').css({
-				'background-repeat': 'repeat',
-				//'background-position': '0px '+simBgTop+'px',
-				'width': '100%',
-				'height': '100%',
+			//logTime("cssRepeat");
+			$("#simulation-group").css({
+				"background-repeat": "repeat",
+				//"background-position": "0px "+simBgTop+"px",
+				"width": "100%",
+				"height": "100%",
 			});
-			//logTimeEnd('cssRepeat');
+			//logTimeEnd("cssRepeat");
 
-			//logTime('draggable');
-			$('#simulation-group').backgroundDraggable({
+			//logTime("draggable");
+			$("#simulation-group").backgroundDraggable({
 				bound: false
 			});
-			//logTimeEnd('draggable');
+			//logTimeEnd("draggable");
 
 		} else if (g_simulationRepeat == "single") {
 
-			$('#simulation-group').css({
-				'background-repeat': 'no-repeat',
-				'background-position': 'left bottom',
-				'width': g_simulationWidth,
-				'height': g_simulationHeight
+			$("#simulation-group").css({
+				"background-repeat": "no-repeat",
+				"background-position": "left bottom",
+				"width": g_simulationWidth,
+				"height": g_simulationHeight
 			});
 
 		}
@@ -6757,7 +6757,7 @@ $(document).ready ( function(){
 	// --------------------------------------------------
 	// Graph Mouse Interaxtions -------------------------
 	// --------------------------------------------------
-	$('#weave-container, #draft-container, #lifting-container, #tieup-container, #warp-container, #weft-container, #artwork-container').on("mouseover", function(evt) {
+	$("#weave-container, #draft-container, #lifting-container, #tieup-container, #warp-container, #weft-container, #artwork-container").on("mouseover", function(evt) {
 
 		var graph = getGraphId($(this).attr("id"));
 		if ( graph.in("warp","weft") ){
@@ -6766,26 +6766,26 @@ $(document).ready ( function(){
 
 		globalStatusbar.switchTo(graph);
 
-		$('#weave-container, #draft-container, #lifting-container, #tieup-container, #warp-container, #weft-container').css({
-			'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor
+		$("#weave-container, #draft-container, #lifting-container, #tieup-container, #warp-container, #weft-container").css({
+			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor
 		});
 
 		if ( graph !== "artwork" ){
 			$(this).css({
-				'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColorFocus,
-				'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColorFocus,
-				'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColorFocus
+				"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColorFocus,
+				"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColorFocus,
+				"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColorFocus
 			});
 		}
 
 	});
 
-	$('#warp-container, #weft-container').on("mousedown", function(evt) {
+	$("#warp-container, #weft-container").on("mousedown", function(evt) {
 
 		var threadNum, seamless, pasteMethod;
-		var yarnSet = $(this).attr('id').split("-")[0];
+		var yarnSet = $(this).attr("id").split("-")[0];
 
 		var mouse = getMouse(evt, $(this)[0], {
 			columnLimit : globalWeave.seamless ? globalPattern.warp.length : 0,
@@ -6849,7 +6849,7 @@ $(document).ready ( function(){
 	}
 	*/
 
-	$('#draft-container, #lifting-container, #tieup-container').on("mousedown", function(evt) {
+	$("#draft-container, #lifting-container, #tieup-container").on("mousedown", function(evt) {
 
 		var graph = getGraphId($(this).attr("id"));
 
@@ -6878,7 +6878,7 @@ $(document).ready ( function(){
 		var colNum = mouse.col;
 		var rowNum = mouse.row;
 
-		if (typeof evt.which == 'undefined') {
+		if (typeof evt.which == "undefined") {
 
 		} else if (evt.which == 1) {
 
@@ -6895,7 +6895,7 @@ $(document).ready ( function(){
 	// --------------------------------------------------
 	// Weave Maker Grid ---------------------------------
 	// --------------------------------------------------
-	$('#weave-container').on("mousedown", function(evt) {
+	$("#weave-container").on("mousedown", function(evt) {
 
 		debug("g_graphTool", g_graphTool);
 
@@ -6925,7 +6925,7 @@ $(document).ready ( function(){
 		var startRowNum = globalMouse.rowNum;
 
 		// Undefined Mouse Key
-		if (typeof evt.which == 'undefined') {
+		if (typeof evt.which == "undefined") {
 
 			globalSelection.clear_old(7);
 			return false;
@@ -7273,7 +7273,7 @@ $(document).ready ( function(){
 
 	/*
 
-	$('#weave-container-1').on("mousemove", function(evt) {
+	$("#weave-container-1").on("mousemove", function(evt) {
 
 		var mouse = getMouse(evt, $(this)[0], {
 			origin : "bl",
@@ -7304,7 +7304,7 @@ $(document).ready ( function(){
 
 			if ( step == 0){
 
-				if ( g_graphTool == 'line' && g_graphLineStarted){
+				if ( g_graphTool == "line" && g_graphLineStarted){
 					weaveHighlight.show.line(startColNum, startRowNum, lastColNum, lastRowNum, globalColors.rgba_str.blue2);
 				}
 
@@ -7338,7 +7338,7 @@ $(document).ready ( function(){
 
 			} else if ( globalSelection.step == 3){
 
-				if ( action == 'fill'){
+				if ( action == "fill"){
 
 					weaveHighlight.show.box(globalSelection.startEnd, globalSelection.startPick, globalSelection.lastEnd, globalSelection.lastPick, globalColors.rgba_str.blue2);
 
@@ -7346,7 +7346,7 @@ $(document).ready ( function(){
 
 			} else if ( globalSelection.step == 4){
 
-				if ( action == 'fill'){
+				if ( action == "fill"){
 
 					var startColNum, lastColNum, startRowNum, lastRowNum;
 					[startColNum, lastColNum] = mapCols(globalMouse.colNum, colNum);
@@ -7364,7 +7364,7 @@ $(document).ready ( function(){
 				g_endNumUnderMouse = endNum;
 				g_pickNumUnderMouse = pickNum;
 				g_weaveStateUnderMouse = currentWeaveState;
-				globalStatusbar.set('weaveIntersection', endNum, pickNum);
+				globalStatusbar.set("weaveIntersection", endNum, pickNum);
 
 				// console.log([globalMouse.isDown, g_graphTool, currentWeaveState, g_graphBrushState]);
 				if (globalMouse.isDown && g_graphTool == "brush" && currentWeaveState !== g_graphBrushState) {
@@ -7509,7 +7509,7 @@ $(document).ready ( function(){
 		var doRenderModel = globalTabs.active == "model" && render && globalModel.sceneCreated;
 		createModelLayout(1, doRenderModel);
 
-		$('#simulation-fullscreen-wrapper').width(window.innerWidth).height(window.innerHeight);
+		$("#simulation-fullscreen-wrapper").width(window.innerWidth).height(window.innerHeight);
 
 	}
 
@@ -7519,7 +7519,7 @@ $(document).ready ( function(){
 
 		$("<div>", {id: "palette-chip-0", "class": "palette-chip"})
 			.append("<span>&times;</span>")
-			.append("<div class='colorBox transparent'></div>")
+			.append("<div class=\"colorBox transparent\"></div>")
 			.appendTo(container);
 		globalPalette.setChip(0, "#FFFFFF", false, false, false, false, false);
 
@@ -7527,9 +7527,9 @@ $(document).ready ( function(){
 			globalPalette.colors[code] = {};
 			$("<div>", {id: "palette-chip-"+code, "class": "palette-chip"})
 			.append("<span>" + code + "</span>")
-			.append("<div class='colorBox'></div>")
-			.append("<div class='warpArrow'></div>")
-			.append("<div class='weftArrow'></div>")
+			.append("<div class=\"colorBox\"></div>")
+			.append("<div class=\"warpArrow\"></div>")
+			.append("<div class=\"weftArrow\"></div>")
 			.appendTo(container);
 			globalPalette.setChip(code, false, false, false, false, false, false);
 		});
@@ -7553,29 +7553,29 @@ $(document).ready ( function(){
 		globalArtwork.viewW = artworkBoxW;
 		globalArtwork.viewH = artworkBoxH;
 
-		$('#artwork-container').css({
-			'width':  artworkBoxW,
-			'height': artworkBoxH,
-			'left': artworkBoxL,
-			'bottom': artworkBoxB,
+		$("#artwork-container").css({
+			"width":  artworkBoxW,
+			"height": artworkBoxH,
+			"left": artworkBoxL,
+			"bottom": artworkBoxB,
 		});
 
-		$('#artwork-scrollbar-x').show();
-		$('#artwork-scrollbar-y').show();
+		$("#artwork-scrollbar-x").show();
+		$("#artwork-scrollbar-y").show();
 
-		$('#artwork-scrollbar-x').css({
-			'width':  artworkBoxW,
-			'bottom': 0,
-			'right': 0
+		$("#artwork-scrollbar-x").css({
+			"width":  artworkBoxW,
+			"bottom": 0,
+			"right": 0
 		});
 
-		$('#artwork-scrollbar-y').css({
-			'height': artworkBoxH,
-			'top': 0,
-			'left': 0
+		$("#artwork-scrollbar-y").css({
+			"height": artworkBoxH,
+			"top": 0,
+			"left": 0
 		});
 
-		g_artworkContext = getCtx(172, 'artwork-container', 'g_artworkCanvas', artworkBoxW, artworkBoxH);
+		g_artworkContext = getCtx(172, "artwork-container", "g_artworkCanvas", artworkBoxW, artworkBoxH);
 		g_artworkContext.clearRect(0, 0, artworkBoxW, artworkBoxH);
 
 		if ( render ){
@@ -7583,7 +7583,7 @@ $(document).ready ( function(){
 			globalArtwork.render2D8(5);
 		}
 
-		$.doTimeout('updateArtworkPositions', 100, function(){
+		$.doTimeout("updateArtworkPositions", 100, function(){
 			globalPositions.update("artwork");
 		});
 
@@ -7610,29 +7610,29 @@ $(document).ready ( function(){
 		globalSimulation.viewW = mainBoxW;
 		globalSimulation.viewH = mainBoxH;
 
-		$('#simulation-container').css({
-			'width':  mainBoxW,
-			'height': mainBoxH,
-			'left': mainBoxL,
-			'bottom': mainBoxB,
+		$("#simulation-container").css({
+			"width":  mainBoxW,
+			"height": mainBoxH,
+			"left": mainBoxL,
+			"bottom": mainBoxB,
 		});
 
-		$('#simulation-scrollbar-x').show();
-		$('#simulation-scrollbar-y').show();
+		$("#simulation-scrollbar-x").show();
+		$("#simulation-scrollbar-y").show();
 
-		$('#simulation-scrollbar-x').css({
-			'width':  mainBoxW,
-			'bottom': 0,
-			'right': 0
+		$("#simulation-scrollbar-x").css({
+			"width":  mainBoxW,
+			"bottom": 0,
+			"right": 0
 		});
 
-		$('#simulation-scrollbar-y').css({
-			'height': mainBoxH,
-			'top': 0,
-			'left': 0
+		$("#simulation-scrollbar-y").css({
+			"height": mainBoxH,
+			"top": 0,
+			"left": 0
 		});
 
-		g_simulationContext = getCtx(172, 'simulation-container', 'g_simulationCanvas', mainBoxW, mainBoxH);
+		g_simulationContext = getCtx(172, "simulation-container", "g_simulationCanvas", mainBoxW, mainBoxH);
 		g_simulationContext.clearRect(0, 0, mainBoxW, mainBoxH);
 
 		if ( render ){
@@ -7640,7 +7640,7 @@ $(document).ready ( function(){
 			globalSimulation.render(5);
 		}
 
-		$.doTimeout('updateSimulationPositions', 100, function(){
+		$.doTimeout("updateSimulationPositions", 100, function(){
 			globalPositions.update("simulation");
 		});
 
@@ -7662,21 +7662,21 @@ $(document).ready ( function(){
 		var threeBoxW = threeFrameW - threeBoxL;
 		var threeBoxH = threeFrameH - threeBoxB;
 
-		$('#three-container').css({
-			'width':  threeBoxW,
-			'height': threeBoxH,
-			'left': threeBoxL,
-			'bottom': threeBoxB,
+		$("#three-container").css({
+			"width":  threeBoxW,
+			"height": threeBoxH,
+			"left": threeBoxL,
+			"bottom": threeBoxB,
 		});
 
-		//g_threeContext = getCtx(172, 'three-container', 'g_threeCanvas', threeBoxW, threeBoxH);
+		//g_threeContext = getCtx(172, "three-container", "g_threeCanvas", threeBoxW, threeBoxH);
 		//g_threeContext.clearRect(0, 0, threeBoxW, threeBoxH);
 
 		if ( render ){
 			buildFabric();
 		}
 
-		$.doTimeout('updateThreePositions', 100, function(){
+		$.doTimeout("updateThreePositions", 100, function(){
 			globalPositions.update("three");
 		});
 
@@ -7698,18 +7698,18 @@ $(document).ready ( function(){
 		var modelBoxW = modelFrameW - modelBoxL;
 		var modelBoxH = modelFrameH - modelBoxB;
 
-		$('#model-container').css({
-			'width':  modelBoxW,
-			'height': modelBoxH,
-			'left': modelBoxL,
-			'bottom': modelBoxB,
+		$("#model-container").css({
+			"width":  modelBoxW,
+			"height": modelBoxH,
+			"left": modelBoxL,
+			"bottom": modelBoxB,
 		});
 
 		if ( render ){
 			// buildModel();
 		}
 
-		$.doTimeout('updateModelPositions', 100, function(){
+		$.doTimeout("updateModelPositions", 100, function(){
 			globalPositions.update("model");
 		});
 
@@ -7750,11 +7750,11 @@ $(document).ready ( function(){
 			weaveBoxW = weaveBoxW + g_tieupW + interBoxSpace;
 			weaveBoxH = weaveBoxH + g_tieupW + interBoxSpace;
 
-			$('#lifting-container').hide();
-			$('#draft-container').hide();
-			$('#tieup-container').hide();
-			$('#tieup-scrollbar-x').hide();
-			$('#tieup-scrollbar-y').hide();			
+			$("#lifting-container").hide();
+			$("#draft-container").hide();
+			$("#tieup-container").hide();
+			$("#tieup-scrollbar-x").hide();
+			$("#tieup-scrollbar-y").hide();			
 
 		} else {
 
@@ -7764,71 +7764,71 @@ $(document).ready ( function(){
 			globalTieup.viewW = tieupBoxW;
 			globalTieup.viewH = tieupBoxH;
 
-			$('#lifting-container').show();
-			$('#draft-container').show();
-			$('#tieup-scrollbar-x').show();
-			$('#tieup-scrollbar-y').show();
+			$("#lifting-container").show();
+			$("#draft-container").show();
+			$("#tieup-scrollbar-x").show();
+			$("#tieup-scrollbar-y").show();
 
 			var liftingBoxW = g_tieupW;
 			var liftingBoxH = weaveBoxH;
-			g_liftingContext = getCtx(183, 'lifting-container', 'g_liftingCanvas', liftingBoxW, liftingBoxH);
+			g_liftingContext = getCtx(183, "lifting-container", "g_liftingCanvas", liftingBoxW, liftingBoxH);
 			g_liftingContext.clearRect(0, 0, liftingBoxW, liftingBoxH);
 
 			var draftBoxW = weaveBoxW;
 			var draftBoxH = g_tieupW;
-			g_draftContext = getCtx(19, 'draft-container', 'g_draftCanvas', draftBoxW, draftBoxH);
+			g_draftContext = getCtx(19, "draft-container", "g_draftCanvas", draftBoxW, draftBoxH);
 			g_draftContext.clearRect(0, 0, draftBoxW, draftBoxH);
 
-			$('#lifting-container').css({
-				'width':  liftingBoxW,
-				'height': liftingBoxH,
-				'bottom': weaveBoxB,
-				'left': liftingBoxL,
-				'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-				'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-				'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
+			$("#lifting-container").css({
+				"width":  liftingBoxW,
+				"height": liftingBoxH,
+				"bottom": weaveBoxB,
+				"left": liftingBoxL,
+				"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+				"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+				"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 			});
 
-			$('#draft-container').css({
-				'width':  draftBoxW,
-				'height': draftBoxH,
-				'bottom': draftBoxB,
-				'left': weaveBoxL,
-				'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-				'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-				'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
+			$("#draft-container").css({
+				"width":  draftBoxW,
+				"height": draftBoxH,
+				"bottom": draftBoxB,
+				"left": weaveBoxL,
+				"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+				"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+				"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 			});
 
-			$('#tieup-scrollbar-x').css({
-				'width':  tieupBoxW + g_boxShadow * 2,
-				'bottom': 0,
-				'left': liftingBoxL - g_boxShadow
+			$("#tieup-scrollbar-x").css({
+				"width":  tieupBoxW + g_boxShadow * 2,
+				"bottom": 0,
+				"left": liftingBoxL - g_boxShadow
 			});
 
-			$('#tieup-scrollbar-y').css({
-				'height': tieupBoxH + g_boxShadow * 2,
-				'bottom': draftBoxB - g_boxShadow,
-				'left': 0
+			$("#tieup-scrollbar-y").css({
+				"height": tieupBoxH + g_boxShadow * 2,
+				"bottom": draftBoxB - g_boxShadow,
+				"left": 0
 			});
 
 			if ( g_liftingMode == "treadling"){
 
-				$('#tieup-container').show();
-				g_tieupContext = getCtx(20, 'tieup-container', 'g_tieupCanvas', tieupBoxW, tieupBoxH);
+				$("#tieup-container").show();
+				g_tieupContext = getCtx(20, "tieup-container", "g_tieupCanvas", tieupBoxW, tieupBoxH);
 				g_tieupContext.clearRect(0, 0, tieupBoxW, tieupBoxH);
 
-				$('#tieup-container').css({
-					'width':  tieupBoxW,
-					'height': tieupBoxH,
-					'bottom': draftBoxB,
-					'left': liftingBoxL,
-					'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-					'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-					'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
+				$("#tieup-container").css({
+					"width":  tieupBoxW,
+					"height": tieupBoxH,
+					"bottom": draftBoxB,
+					"left": liftingBoxL,
+					"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+					"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+					"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 				});
 			} else {
 
-				$('#tieup-container').hide();
+				$("#tieup-container").hide();
 			}
 
 		}
@@ -7836,78 +7836,78 @@ $(document).ready ( function(){
 		globalWeave.viewW = weaveBoxW;
 		globalWeave.viewH = weaveBoxH;
 
-		g_weaveContext = getCtx(21, 'weave-container', 'g_weaveCanvas', weaveBoxW, weaveBoxH);
+		g_weaveContext = getCtx(21, "weave-container", "g_weaveCanvas", weaveBoxW, weaveBoxH);
 		g_weaveContext.clearRect(0, 0, weaveBoxW, weaveBoxH);
 
-		g_weaveLayer1Context = getCtx(211, 'weave-container', 'g_weaveLayer1Canvas', weaveBoxW, weaveBoxH);
+		g_weaveLayer1Context = getCtx(211, "weave-container", "g_weaveLayer1Canvas", weaveBoxW, weaveBoxH);
 		g_weaveLayer1Context.clearRect(0, 0, weaveBoxW, weaveBoxH);
 
-		g_warpContext = getCtx(22, 'warp-container', 'g_warpCanvas', weaveBoxW, g_patternElementSize);
+		g_warpContext = getCtx(22, "warp-container", "g_warpCanvas", weaveBoxW, g_patternElementSize);
 		g_warpContext.clearRect(0, 0, weaveBoxW, g_patternElementSize);
 
-		g_weftContext = getCtx(23, 'weft-container', 'g_weftCanvas', g_patternElementSize, weaveBoxH);
+		g_weftContext = getCtx(23, "weft-container", "g_weftCanvas", g_patternElementSize, weaveBoxH);
 		g_weftContext.clearRect(0, 0, g_patternElementSize, weaveBoxH);
 
-		$('#weave-scrollbar-x').show();
-		$('#weave-scrollbar-y').show();
+		$("#weave-scrollbar-x").show();
+		$("#weave-scrollbar-y").show();
 
-		$('#weave-scrollbar-x').css({
-			'width':  weaveBoxW + g_boxShadow * 2 + 1,
-			'bottom': 0,
-			'left': weaveBoxL - g_boxShadow
+		$("#weave-scrollbar-x").css({
+			"width":  weaveBoxW + g_boxShadow * 2 + 1,
+			"bottom": 0,
+			"left": weaveBoxL - g_boxShadow
 		});
 
-		$('#weave-scrollbar-y').css({
-			'height': weaveBoxH + g_boxShadow * 2 - 1,
-			'bottom': weaveBoxB - g_boxShadow,
-			'left': 0
+		$("#weave-scrollbar-y").css({
+			"height": weaveBoxH + g_boxShadow * 2 - 1,
+			"bottom": weaveBoxB - g_boxShadow,
+			"left": 0
 		});
 		
-		$('#weave-container').css({
-			'width':  weaveBoxW,
-			'height': weaveBoxH,
-			'bottom': weaveBoxB,
-			'left': weaveBoxL,
-			'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
+		$("#weave-container").css({
+			"width":  weaveBoxW,
+			"height": weaveBoxH,
+			"bottom": weaveBoxB,
+			"left": weaveBoxL,
+			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 		});
 
-		$('#warp-container').css({
-			'width': weaveBoxW,
-			'height': g_patternElementSize,
-			'bottom': warpBoxB,
-			'left': weaveBoxL,
-			'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor
+		$("#warp-container").css({
+			"width": weaveBoxW,
+			"height": g_patternElementSize,
+			"bottom": warpBoxB,
+			"left": weaveBoxL,
+			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor
 		});
 
-		$('#weft-container').css({
-			'width': g_patternElementSize,
-			'height': weaveBoxH,
-			'bottom': weaveBoxB,
-			'left': weftBoxL,
-			'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor
+		$("#weft-container").css({
+			"width": g_patternElementSize,
+			"height": weaveBoxH,
+			"bottom": weaveBoxB,
+			"left": weftBoxL,
+			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor
 		});
 
-		$('#bgcolor-container').css({
-			'width': g_patternElementSize,
-			'height': g_patternElementSize,
-			'box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-webkit-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'-moz-box-shadow': '0px 0px 0px '+g_boxShadow+'px '+boxShadowColor,
-			'left': weftBoxL,
-			'bottom': warpBoxB
+		$("#bgcolor-container").css({
+			"width": g_patternElementSize,
+			"height": g_patternElementSize,
+			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"left": weftBoxL,
+			"bottom": warpBoxB
 		});
 
-		$('#palette-container').css({
-			'width': paletteBoxW,
-			'height': paletteBoxH,
-			'left': 0,
-			'top': 0
+		$("#palette-container").css({
+			"width": paletteBoxW,
+			"height": paletteBoxH,
+			"left": 0,
+			"top": 0
 		});
 
 		if ( render ){
@@ -7920,7 +7920,7 @@ $(document).ready ( function(){
 			updateAllScrollbars();
 		}
 
-		$.doTimeout('updateWeavePositions', 100, function(){
+		$.doTimeout("updateWeavePositions", 100, function(){
 			globalPositions.update("weave");
 			globalPositions.update("warp");
 			globalPositions.update("weft");
@@ -7954,7 +7954,7 @@ $(document).ready ( function(){
 	// g_weave Array Functions ---------------------
 	// --------------------------------------------------
 	function isSet(variable){
-		if( typeof variable === 'undefined' || variable === null ){
+		if( typeof variable === "undefined" || variable === null ){
 		    return false;
 		} else {
 			return true;
@@ -7971,7 +7971,7 @@ $(document).ready ( function(){
 			if ( weaveWidth > g_weaveLimitMax ) errors.push("Can't insert end. Maximum limit of weave size is " + g_weaveLimitMax + " Ends.");
 			if ( weaveWidth < g_weaveLimitMin ) errors.push("Can't delete end. Minimum limit of weave size reached.");
 
-			if ( typeof obj[0] !== 'undefined'  ){
+			if ( typeof obj[0] !== "undefined"  ){
 				var weaveHeight = obj[0].length;
 				if ( weaveHeight > g_weaveLimitMax ) errors.push("Can't insert pick. Maximum limit of weave size is " + g_weaveLimitMax + " Picks.");
 				if ( weaveHeight < g_weaveLimitMin ) errors.push("Can't delete pick. Minimum limit of weave size reached.");
@@ -7997,12 +7997,12 @@ $(document).ready ( function(){
 			var weavePicks = weaveArray[0].length;
 			var warpRepeatSize = [weaveEnds, warpPatternSize].lcm();
 			var weftRepeatSize = [weavePicks, weftPatternSize].lcm();
-			if ( warpRepeatSize > g_repeatLimit ) errors.push('Warp Color Weave Repeat Exceeding Limit of ' + g_repeatLimit + ' Ends.');
-			if ( weftRepeatSize > g_repeatLimit ) errors.push('Weft Color Weave Repeat Exceeding Limit of ' + g_repeatLimit + ' Picks.');
-			if ( warpPatternArray.indexOf("BL") !== -1 ) errors.push('Warp Pattern contains empty threads.');
-			if ( weftPatternArray.indexOf("BL") !== -1 ) errors.push('Weft Pattern contains empty threads.');
-			if ( warpPatternSize === 0 ) errors.push('Warp Pattern is empty.'); 
-			if ( weftPatternSize === 0 ) errors.push('Weft Pattern is empty.');
+			if ( warpRepeatSize > g_repeatLimit ) errors.push("Warp Color Weave Repeat Exceeding Limit of " + g_repeatLimit + " Ends.");
+			if ( weftRepeatSize > g_repeatLimit ) errors.push("Weft Color Weave Repeat Exceeding Limit of " + g_repeatLimit + " Picks.");
+			if ( warpPatternArray.indexOf("BL") !== -1 ) errors.push("Warp Pattern contains empty threads.");
+			if ( weftPatternArray.indexOf("BL") !== -1 ) errors.push("Weft Pattern contains empty threads.");
+			if ( warpPatternSize === 0 ) errors.push("Warp Pattern is empty."); 
+			if ( weftPatternSize === 0 ) errors.push("Weft Pattern is empty.");
 
 		}
 
@@ -8015,31 +8015,31 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function getWeaveShafts() {
 		var wString = zipWeave(globalWeave.weave2D8);
-		return wString.split('x').unique().length;
+		return wString.split("x").unique().length;
 	}
 
 	// ----------------------------------------------------------------------------------
 	// Initial
 	// ----------------------------------------------------------------------------------
-	$("#autoPatternSize input").attr('data-max', g_patternLimit);
+	$("#autoPatternSize input").attr("data-max", g_patternLimit);
 	$("#autoPatternSize input").val(120);
 
 	// ----------------------------------------------------------------------------------
 	// Remove Javascript Code ID
 	// ----------------------------------------------------------------------------------
-	$('#sid').remove();
+	$("#sid").remove();
 
 	// ----------------------------------------------------------------------------------
 	// Javascript URL Binding
 	// ----------------------------------------------------------------------------------
-	var jsurl = $(location).attr('hostname');
+	var jsurl = $(location).attr("hostname");
 	var jsdomain = jsurl.replace("www.", "");
 
 	/*if (jsdomain !== "weavedesigner.com" && jsdomain !== "localhost") {
 		alert(jsdomain + " : Redirecting to " + "http://www.weavedesigner.com/zapp");
-		$(window).unbind('beforeunload');
+		$(window).unbind("beforeunload");
 		window.location.href = "http://www.weavedesigner.com/zapp";
-		throw new Error('Error');
+		throw new Error("Error");
 	}*/
 
 	function getWeaveProps(weave){
@@ -8144,8 +8144,8 @@ $(document).ready ( function(){
 	function saveProjectToLibrary(projectCode, projectTitle){
 
 		$.ajax({
-			url: 'php/sptl.php',
-			type: 'POST',
+			url: "php/sptl.php",
+			type: "POST",
 			data: {
 				pc: projectCode,
 				pt: projectTitle
@@ -8167,8 +8167,8 @@ $(document).ready ( function(){
 	function saveWeaveToLibrary(weaveCode, weaveTitle){
 
 		$.ajax({
-			url: 'php/swtl.php',
-			type: 'POST',
+			url: "php/swtl.php",
+			type: "POST",
 			data: {
 				wc: weaveCode,
 				wt: weaveTitle
@@ -8290,24 +8290,24 @@ $(document).ready ( function(){
 		var $wrapper = this;
 		var $target = this;
 		var moved = false;
-		$wrapper.bind('touchstart mousedown', function(e) {
+		$wrapper.bind("touchstart mousedown", function(e) {
 			e.preventDefault();
 			moved = false;
 			$target = $(e.target);
 			if ($target.nodeType == 3) {
 				$target = $($target.parent());
 			}
-			$target.addClass('pressed');
-			$wrapper.bind('touchmove mousemove', function(e) {
+			$target.addClass("pressed");
+			$wrapper.bind("touchmove mousemove", function(e) {
 				moved = true;
-				$target.removeClass('pressed');
+				$target.removeClass("pressed");
 			});
-			$wrapper.bind('touchend mouseup', function(e) {
-				$wrapper.unbind('mousemove touchmove');
-				$wrapper.unbind('mouseup touchend');
+			$wrapper.bind("touchend mouseup", function(e) {
+				$wrapper.unbind("mousemove touchmove");
+				$wrapper.unbind("mouseup touchend");
 				if (!moved && $target.length) {
-					$target.removeClass('pressed');
-					$target.trigger('click');
+					$target.removeClass("pressed");
+					$target.trigger("click");
 					$target.focus();
 				}
 			});
@@ -8391,10 +8391,10 @@ $(document).ready ( function(){
 		    this.renderer.gammaInput = true;
 			this.renderer.gammaOutput = true;
 
-		    var container = document.getElementById('model-container');
+		    var container = document.getElementById("model-container");
 		    container.innerHTML = "";
 		    container.appendChild(this.renderer.domElement);
-		    this.renderer.domElement.id = 'g_modelCanvas';
+		    this.renderer.domElement.id = "g_modelCanvas";
 
 		    addStyleClassToElement("g_modelCanvas", "graph-canvas");
 
@@ -8454,7 +8454,7 @@ $(document).ready ( function(){
 
 			var loader = new THREE.TextureLoader();
 
-			var texture_wood = loader.load( 'model/textures/wood_texture_512.jpg', function (tex) {
+			var texture_wood = loader.load( "model/textures/wood_texture_512.jpg", function (tex) {
 				texture_wood.wrapS = THREE.RepeatWrapping;
 				texture_wood.wrapT = THREE.RepeatWrapping;
 				texture_wood.repeat.set(1, 1);
@@ -8463,7 +8463,7 @@ $(document).ready ( function(){
 				globalModel.render();
 			});
 
-			var bump_wood = loader.load( 'model/textures/wood_bump_512.jpg', function ( tex ) {
+			var bump_wood = loader.load( "model/textures/wood_bump_512.jpg", function ( tex ) {
 				bump_wood.wrapS = THREE.RepeatWrapping;
 				bump_wood.wrapT = THREE.RepeatWrapping;
 				bump_wood.repeat.set(1, 1);
@@ -8532,7 +8532,7 @@ $(document).ready ( function(){
 
 			console.log([repeatW, repeatH, canvasW, canvasH]);
 
-			g_simulationRepeatContext = getCtx(61, 'temp-canvas', 'g_simulationRepeatCanvas', canvasW, canvasH, false);
+			g_simulationRepeatContext = getCtx(61, "temp-canvas", "g_simulationRepeatCanvas", canvasW, canvasH, false);
 			globalSimulation.renderTo(g_simulationRepeatContext, repeatW, repeatH, globalWeave.weave2D8, "bl", 0, 0, false, false);
 
 			if ( globalModel.fabric.texture !== undefined ){
@@ -8713,22 +8713,22 @@ $(document).ready ( function(){
 
 	};
 
-	$('#model-container').on("mouseover", function(evt) {
+	$("#model-container").on("mouseover", function(evt) {
 		if ( globalModel.sceneCreated ){
 			globalModel.doAnimate = true;
 	    	globalModel.animate();
 		}
 	});
 
-	$('#model-container').on("mouseout", function(evt) {
+	$("#model-container").on("mouseout", function(evt) {
 		globalModel.doAnimate = false;
 	});
 
-	$('#model-container').on("mouseup", function(evt) {
+	$("#model-container").on("mouseup", function(evt) {
 		globalMouse.reset();
 	});
 
-	$('#model-container').on("mousedown", function(evt) {
+	$("#model-container").on("mousedown", function(evt) {
 		globalMouse.set("model", 0, 0, true, evt.which);
 	});
 
@@ -8813,26 +8813,26 @@ $(document).ready ( function(){
 
 	};
 
-	$('#three-container').on("mouseover", function(evt) {
+	$("#three-container").on("mouseover", function(evt) {
 		if ( globalThree.sceneCreated ){
 			globalThree.animate = true;
 	    	animateThree();
 		}
 	});
 
-	$('#three-container').on("mouseout", function(evt) {
+	$("#three-container").on("mouseout", function(evt) {
 		globalThree.animate = false;
 	});
 
-	$('#three-container').on("mouseup", function(evt) {
+	$("#three-container").on("mouseup", function(evt) {
 		globalMouse.reset();
 	});
 
-	$('#three-container').on("mousedown", function(evt) {
+	$("#three-container").on("mousedown", function(evt) {
 		globalMouse.set("three", 0, 0, true, evt.which);
 	});
 
-	$('#three-container').on("mousemove", function(evt) {
+	$("#three-container").on("mousemove", function(evt) {
 
 		debug("isDown", globalMouse.isDown);
 
@@ -8922,7 +8922,7 @@ $(document).ready ( function(){
 
 	function setThreeTextSpriteCanvas(canvasId, text, canvasW = 64 , canvasH = 64){
 
-		var canvas = $('<canvas/>', { id: canvasId, width: canvasW, height: canvasH})[0];
+		var canvas = $("<canvas/>", { id: canvasId, width: canvasW, height: canvasH})[0];
 		
 		canvas.id = canvasId;
 		canvas.width = canvasW;
@@ -8931,7 +8931,7 @@ $(document).ready ( function(){
 
 		document.body.appendChild(canvas);
 
-		const ctx = canvas.getContext('2d');
+		const ctx = canvas.getContext("2d");
 		const x = canvasW/2;
 		const y = canvasH/2;
 
@@ -8942,13 +8942,13 @@ $(document).ready ( function(){
 		ctx.fillRect(4, 4, canvasW-8, canvasH-8);
 
 		ctx.fillStyle = "rgba(240, 240, 240, 1)";
-		ctx.font = '32px helvetica';
-		ctx.textAlign = 'center';
-		ctx.textBaseline = 'middle';
+		ctx.font = "32px helvetica";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
 		ctx.fillText(text, x, y);
 
 		numberTexture = new THREE.CanvasTexture(
-		    document.querySelector('#'+canvasId)
+		    document.querySelector("#"+canvasId)
 		);
 
 		spriteMaterial = new THREE.SpriteMaterial({
@@ -9189,10 +9189,10 @@ $(document).ready ( function(){
 	    renderer.setSize(globalThree.frameW, globalThree.frameH);
 	    renderer.setClearColor(0xd7d7d7, 1);
 
-	    var container = document.getElementById('three-container');
+	    var container = document.getElementById("three-container");
 	    container.innerHTML = "";
 	    container.appendChild(renderer.domElement);
-	    renderer.domElement.id = 'g_threeCanvas';
+	    renderer.domElement.id = "g_threeCanvas";
 
 	    addStyleClassToElement("g_threeCanvas", "graph-canvas");
 
@@ -9552,7 +9552,7 @@ $(document).ready ( function(){
 
 	  }
 
-	$('#three-container').on("dblclick", function(evt) {
+	$("#three-container").on("dblclick", function(evt) {
 
 		var iThreadSet, warpUUIDs = [], weftUUIDs = [];
 		var wi, ti, ts;
@@ -9569,7 +9569,7 @@ $(document).ready ( function(){
 
 		var threeDblClickMouse = getMouse(evt, $(this)[0]);
 
-		if (typeof evt.which == 'undefined') {
+		if (typeof evt.which == "undefined") {
 
 		} else if (evt.which == 1) {
 
@@ -9596,8 +9596,8 @@ $(document).ready ( function(){
 					var warpThread_uuid = intersectUUIDs.warp[0];
 					var weftThread_uuid = intersectUUIDs.weft[0];
 
-					var warpThread_obj = scene.getObjectByProperty('uuid', warpThread_uuid);
-					var weftThread_obj = scene.getObjectByProperty('uuid', weftThread_uuid);
+					var warpThread_obj = scene.getObjectByProperty("uuid", warpThread_uuid);
+					var weftThread_obj = scene.getObjectByProperty("uuid", weftThread_uuid);
 
 					var wpWeavei = warpThread_obj.userData.weavei; // Actual globalWeave.weave2D8 index of warp Thread
 					var wfWeavei = weftThread_obj.userData.weavei; // Actual globalWeave.weave2D8 index of weft Thread
@@ -9815,9 +9815,9 @@ $(document).ready ( function(){
 		},
 
 		updateStatusbar : function(){
-			globalStatusbar.set('patternSize');
-			globalStatusbar.set('colorCount');
-			globalStatusbar.set('stripeCount');
+			globalStatusbar.set("patternSize");
+			globalStatusbar.set("colorCount");
+			globalStatusbar.set("stripeCount");
 		},
 
 		get : function(yarnSet, index = 0, len = 0){
@@ -9847,11 +9847,11 @@ $(document).ready ( function(){
 		},
 		
 		clear : function (set){
-			if (typeof set !== 'undefined'){
+			if (typeof set !== "undefined"){
 				globalPattern.set(45, set, globalPalette.codes.random(1));
 			} else {
-				globalPattern.set(46, 'warp', globalPalette.codes.random(1), false);
-				globalPattern.set(47, 'weft', globalPalette.codes.random(1));
+				globalPattern.set(46, "warp", globalPalette.codes.random(1), false);
+				globalPattern.set(47, "weft", globalPalette.codes.random(1));
 			}
 		},
 
@@ -9885,8 +9885,8 @@ $(document).ready ( function(){
 			return stripes.length;
 		},
 
-		colors : function (yarnSet = 'fabric'){
-			var arr = ['warp','weft'].includes(yarnSet) ? this[yarnSet] : this.warp.concat(this.weft);
+		colors : function (yarnSet = "fabric"){
+			var arr = ["warp","weft"].includes(yarnSet) ? this[yarnSet] : this.warp.concat(this.weft);
 			return arr.filter(Boolean).unique();
 		},
 
@@ -10114,14 +10114,14 @@ $(document).ready ( function(){
 			var warpColors = globalPattern.warp.filter(Boolean).unique();
 			var weftColors = globalPattern.weft.filter(Boolean).unique();
 
-			$('.palette-chip').find('.warpArrow, .weftArrow').hide();
+			$(".palette-chip").find(".warpArrow, .weftArrow").hide();
 
 			warpColors.forEach(function(code) {
-				$("#palette-chip-"+code).find('.warpArrow').show();
+				$("#palette-chip-"+code).find(".warpArrow").show();
 			});
 
 			weftColors.forEach(function(code) {
-				$("#palette-chip-"+code).find('.weftArrow').show();
+				$("#palette-chip-"+code).find(".weftArrow").show();
 			});			
 
 		},
@@ -10136,17 +10136,17 @@ $(document).ready ( function(){
 				codeB = this.marked;
 
 				if (g_enableWarp){
-					newPattern = globalPattern.warp.replaceAll(codeA, 'FLAG');
+					newPattern = globalPattern.warp.replaceAll(codeA, "FLAG");
 					newPattern = newPattern.replaceAll(codeB, codeA);
-					newPattern = newPattern.replaceAll('FLAG', codeB);
-					globalPattern.set(19, 'warp', newPattern, false);
+					newPattern = newPattern.replaceAll("FLAG", codeB);
+					globalPattern.set(19, "warp", newPattern, false);
 				}
 
 				if (g_enableWeft){
-					newPattern = globalPattern.weft.replaceAll(codeA, 'FLAG');
+					newPattern = globalPattern.weft.replaceAll(codeA, "FLAG");
 					newPattern = newPattern.replaceAll(codeB, codeA);
-					newPattern = newPattern.replaceAll('FLAG', codeB);
-					globalPattern.set(19, 'weft', newPattern, false);
+					newPattern = newPattern.replaceAll("FLAG", codeB);
+					globalPattern.set(19, "weft", newPattern, false);
 				}
 
 				renderAll();
@@ -10155,7 +10155,7 @@ $(document).ready ( function(){
 
 			this.clearSelection();
 			this.clearMarker();
-			$("#palette-chip-"+code).addClass('highlight-chip');
+			$("#palette-chip-"+code).addClass("highlight-chip");
 			this.selected = code;
 
 		},
@@ -10163,19 +10163,19 @@ $(document).ready ( function(){
 		markChip : function(code){
 
 			this.clearMarker();
-			$("#palette-chip-"+code).addClass('mark-chip');
+			$("#palette-chip-"+code).addClass("mark-chip");
 			this.marked = code;
 
 		},
 
 		clearMarker : function(){
 			globalPalette.marked = false;
-			$(".palette-chip").removeClass('mark-chip');
+			$(".palette-chip").removeClass("mark-chip");
 		},
 
 		clearSelection : function(){
 			globalPalette.marked = false;
-			$(".palette-chip").removeClass('highlight-chip');
+			$(".palette-chip").removeClass("highlight-chip");
 		},
 
 		compress: function(){
@@ -10278,9 +10278,9 @@ $(document).ready ( function(){
 			var w = element.width();
 			var h = element.height();
 			colorPickerPopup.show(x,y,w,h);
-			$('#yarnnumberinput input').val(this.colors[code].yarn);
-			$('#yarnsystemselect').val(this.colors[code].system);
-			$('#yarnlusterinput input').val(this.colors[code].luster);
+			$("#yarnnumberinput input").val(this.colors[code].yarn);
+			$("#yarnsystemselect").val(this.colors[code].system);
+			$("#yarnlusterinput input").val(this.colors[code].luster);
 
 		}
 
@@ -10353,116 +10353,116 @@ $(document).ready ( function(){
 			
 				var1 = globalPattern.warp.length;
 				var2 = globalPattern.weft.length;
-				$('#sb-pattern-size').text('[' + var1 + ' \xD7 ' + var2 + ']');
+				$("#sb-pattern-size").text("[" + var1 + " \xD7 " + var2 + "]");
 			
 			} else if ( item == "colorCount"){
 				
-				var1 = globalPattern.colors('warp').length;
-				var2 = globalPattern.colors('weft').length;
-				var3 = globalPattern.colors('fabric').length;
-				$('#sb-color-count').text('Colors: ' +  var1 + ' \xD7 ' + var2 + ' \x2F ' + var3);
+				var1 = globalPattern.colors("warp").length;
+				var2 = globalPattern.colors("weft").length;
+				var3 = globalPattern.colors("fabric").length;
+				$("#sb-color-count").text("Colors: " +  var1 + " \xD7 " + var2 + " \x2F " + var3);
 			
 			} else if ( item == "stripeCount"){
 				
-				var1 = globalPattern.stripeCount('warp');
-				var2 = globalPattern.stripeCount('weft');
-				$('#sb-stripe-count').text('Stripes: ' + var1 + ' \xD7 ' + var2);
+				var1 = globalPattern.stripeCount("warp");
+				var2 = globalPattern.stripeCount("weft");
+				$("#sb-stripe-count").text("Stripes: " + var1 + " \xD7 " + var2);
 			
 			} else if ( item == "shaftCount"){
 				
-				//$('#sb-shaft-count').text('Shafts: ' + getWeaveShafts());
+				//$("#sb-shaft-count").text("Shafts: " + getWeaveShafts());
 
-				$('#sb-weave-shafts').text('Shafts = ' + var1);
+				$("#sb-weave-shafts").text("Shafts = " + var1);
 			
 			} else if ( item == "weaveIntersection"){
 				
-				$('#sb-weave-intersection').text(var1 + ', ' + var2);
+				$("#sb-weave-intersection").text(var1 + ", " + var2);
 
 			} else if ( item == "draftIntersection"){
 				
-				$('#sb-draft-intersection').text(var1 + ', ' + var2);
+				$("#sb-draft-intersection").text(var1 + ", " + var2);
 
 			} else if ( item == "liftingIntersection"){
 
-				$('#sb-lifting-intersection').text(var1 + ', ' + var2);
+				$("#sb-lifting-intersection").text(var1 + ", " + var2);
 
 			} else if ( item == "tieupIntersection"){
 				
-				$('#sb-tieup-intersection').text(var1 + ', ' + var2);
+				$("#sb-tieup-intersection").text(var1 + ", " + var2);
 
 			} else if ( item == "artworkIntersection"){
 			
-				$('#sb-artwork-intersection').text(var1 + ', ' + var2);
+				$("#sb-artwork-intersection").text(var1 + ", " + var2);
 
 			} else if ( item == "artworkColorCount"){
 
-				$('#sb-artwork-color-count').text(globalArtwork.colors.length);
+				$("#sb-artwork-color-count").text(globalArtwork.colors.length);
 
 			} else if ( item == "artworkSize"){
 
 				var1 = globalArtwork.width;
 				var2 = globalArtwork.height;
-				$('#sb-artwork-size').text(var1 + ' \xD7 ' + var2);
+				$("#sb-artwork-size").text(var1 + " \xD7 " + var2);
 			
 			} else if ( item == "patternThread"){
 
-				$('#sb-pattern-thread').text(var1 + ': ' + var2);
+				$("#sb-pattern-thread").text(var1 + ": " + var2);
 
 			} else if ( item == "stripeSize"){
 
-				$('#sb-pattern-stripe-size').text("[" + var1 + "]");
+				$("#sb-pattern-stripe-size").text("[" + var1 + "]");
 
 			} else if ( item == "weaveSize"){
 
-				$('#sb-weave-size').text('[' + var1 + ' \xD7 ' + var2 + ']');
+				$("#sb-weave-size").text("[" + var1 + " \xD7 " + var2 + "]");
 			
 			} else if ( item == "artworkColor"){
 
 				if ( isNaN(var2) ){
-					$('#sb-artwork-color-chip').css({
-						'background-image': 'linear-gradient(135deg, #cccccc 14.29%, #eeeeee 14.29%, #eeeeee 50%, #cccccc 50%, #cccccc 64.29%, #eeeeee 64.29%, #eeeeee 100%)',
-						'background-size' : '5.00px 5.00px',
-						'background-color': 'none'
+					$("#sb-artwork-color-chip").css({
+						"background-image": "linear-gradient(135deg, #cccccc 14.29%, #eeeeee 14.29%, #eeeeee 50%, #cccccc 50%, #cccccc 64.29%, #eeeeee 64.29%, #eeeeee 100%)",
+						"background-size" : "5.00px 5.00px",
+						"background-color": "none"
 					});
 				} else {
-					$('#sb-artwork-color-chip').css({
-						'background-image': 'none',
-						'background-color': var1
+					$("#sb-artwork-color-chip").css({
+						"background-image": "none",
+						"background-color": var1
 					});
 				}
-				$('#sb-artwork-color-index').text(var2);
+				$("#sb-artwork-color-index").text(var2);
 
 			} else if ( item == "colorChip"){
 				
 				if (var1 == "") {
-					$('#sb-pattern-color').css({
-						'background-image': 'url(img/no-color.gif)',
-						'background-position': 'center center',
-						'background-color': '#F0F0DD',
-						'background-repeat': 'no-repeat'
+					$("#sb-pattern-color").css({
+						"background-image": "url(img/no-color.gif)",
+						"background-position": "center center",
+						"background-color": "#F0F0DD",
+						"background-repeat": "no-repeat"
 					});
-					$('#sb-pattern-code').text('\xD7');
+					$("#sb-pattern-code").text("\xD7");
 				} else {
-					$('#sb-pattern-color').css({
-						'background-image': 'none',
-						'background-color': globalPalette.colors[var1].hex
+					$("#sb-pattern-color").css({
+						"background-image": "none",
+						"background-color": globalPalette.colors[var1].hex
 					});
-					$('#sb-pattern-code').text(var1);
+					$("#sb-pattern-code").text(var1);
 				}
 			
 			} else if ( item == "serverConnecting"){
 
-				$("#sb-login").find(".sb-icon img").attr('src','img/icon-server-connecting.png');
+				$("#sb-login").find(".sb-icon img").attr("src","img/icon-server-connecting.png");
 				$("#sb-server-status").text("Connecting Server");
 
 			} else if ( item == "loginSuccessful"){
 
-				$("#sb-login").find(".sb-icon img").attr('src', 'img/icon-server-connected.png');
+				$("#sb-login").find(".sb-icon img").attr("src", "img/icon-server-connected.png");
 				$("#sb-server-status").text("Login Successful");	
 			
 			} else if ( item == "loginFail"){
 				
-				$("#sb-login").find(".sb-icon img").attr('src', 'img/icon-server-disconnected.png');
+				$("#sb-login").find(".sb-icon img").attr("src", "img/icon-server-disconnected.png");
 				$("#sb-server-status").text("Login Fail");
 			
 			} else if ( item == "threeIntersection"){
@@ -10492,9 +10492,9 @@ $(document).ready ( function(){
 					py = loopNumber(ty-1, ph)+1;
 				}
 				
-				$('#sb-three-fabric-intersection').text(tx + ', ' + ty);
-				$('#sb-three-weave-intersection').text(wx + ', ' + wy);
-				$('#sb-three-pattern-intersection').text(px + ', ' + py);
+				$("#sb-three-fabric-intersection").text(tx + ", " + ty);
+				$("#sb-three-weave-intersection").text(wx + ", " + wy);
+				$("#sb-three-pattern-intersection").text(px + ", " + py);
 			
 			} else if ( item == "threeSizes"){
 
@@ -10503,8 +10503,8 @@ $(document).ready ( function(){
 				pw = globalPattern.warp.length;
 				ph = globalPattern.weft.length;
 				
-				$('#sb-three-weave-size').text(ww + ' \xD7 ' + wh);
-				$('#sb-three-pattern-size').text(pw + ' \xD7 ' + ph);
+				$("#sb-three-weave-size").text(ww + " \xD7 " + wh);
+				$("#sb-three-pattern-size").text(pw + " \xD7 " + ph);
 			
 			}
 
@@ -10581,10 +10581,10 @@ $(document).ready ( function(){
 		return targetArr;
 	}
 
-	$(document).on("click", '.acw-item', function(evt){
+	$(document).on("click", ".acw-item", function(evt){
 
-		$(this).siblings('li').removeClass('innerShadowBlue');
-		$(this).addClass('innerShadowBlue');
+		$(this).siblings("li").removeClass("innerShadowBlue");
+		$(this).addClass("innerShadowBlue");
 
 		//var li = $(this).parents(".acw-item");
 		var li = $(this);
@@ -10610,17 +10610,17 @@ $(document).ready ( function(){
 		if ( globalArtwork.colors[colorIndex].colorWeaveStatus ){
 			var ofx = $("#artowrkColorWeaveOffsetX input");
 			var ofy = $("#artowrkColorWeaveOffsetY input");
-			ofx.attr('data-color-index', colorIndex);
-			ofy.attr('data-color-index', colorIndex);
-			ofx.attr('data-max', globalArtwork.colors[colorIndex].weave.length-1);
+			ofx.attr("data-color-index", colorIndex);
+			ofy.attr("data-color-index", colorIndex);
+			ofx.attr("data-max", globalArtwork.colors[colorIndex].weave.length-1);
 			ofx.val(globalArtwork.colors[colorIndex].offsetx);
-			ofy.attr('data-max', globalArtwork.colors[colorIndex].weave[0].length-1);
+			ofy.attr("data-max", globalArtwork.colors[colorIndex].weave[0].length-1);
 			ofy.val(globalArtwork.colors[colorIndex].offsety);
 		}
 
 	});
 
-	$(".awcwo").spinner('delay', 10).spinner('changed', function(e, newVal, oldVal) {
+	$(".awcwo").spinner("delay", 10).spinner("changed", function(e, newVal, oldVal) {
 		var i = $(this).attr("data-color-index");
 		var spinnerId = ($(this).parents(".spinner-counter").attr("id"));
 		if ( spinnerId == "artowrkColorWeaveOffsetX"){
@@ -10697,11 +10697,11 @@ $(document).ready ( function(){
 			colors32.forEach(function(color32, i){
 				color = color32ToTinyColor(color32);
 				globalArtwork.colors[i] = {
-					'count' : pixelCounts[i],
-					'hex' : color.toHexString(),
-					'rgba' : color.toRgb(),
-					'rgba_str' : color.toRgbString(),
-					'color32' : color32
+					"count" : pixelCounts[i],
+					"hex" : color.toHexString(),
+					"rgba" : color.toRgb(),
+					"rgba_str" : color.toRgbString(),
+					"color32" : color32
 				};
 
 			});
@@ -10725,11 +10725,11 @@ $(document).ready ( function(){
 			colors32.forEach(function(color32, i){
 				color = color32ToTinyColor(color32);
 				globalArtwork.colors[i] = {
-					'count' : pixelCounts[i],
-					'hex' : color.toHexString(),
-					'rgba' : color.toRgb(),
-					'rgba_str' : color.toRgbString(),
-					'color32' : color32
+					"count" : pixelCounts[i],
+					"hex" : color.toHexString(),
+					"rgba" : color.toRgb(),
+					"rgba_str" : color.toRgbString(),
+					"color32" : color32
 				};
 
 			});
@@ -11071,7 +11071,7 @@ $(document).ready ( function(){
 
 		getDataURL : function(){			
 			if ( this.status ){
-				return g_artworkCanvas.toDataURL('image/png');
+				return g_artworkCanvas.toDataURL("image/png");
 			} else {
 				return "";
 			}
@@ -11080,16 +11080,16 @@ $(document).ready ( function(){
 
 		blank : function(width, height){
 			
-			g_artworkContext = getCtx(24,'artwork-canvas', 'g_artworkCanvas', width, height);
+			g_artworkContext = getCtx(24,"artwork-canvas", "g_artworkCanvas", width, height);
 
-			$('#artwork-container').width(width);
-			$('#artwork-container').height(height);
-			$('#artwork-container').css({
-				'bottom': 0,
-				'left': 0
+			$("#artwork-container").width(width);
+			$("#artwork-container").height(height);
+			$("#artwork-container").css({
+				"bottom": 0,
+				"left": 0
 			});
 
-			globalStatusbar.set('artworkSize');
+			globalStatusbar.set("artworkSize");
 		},
 
 		resetView : function(render = true){
@@ -11134,7 +11134,7 @@ $(document).ready ( function(){
 
 		},
 
-		//makeSpinner("acw-"+i+"offsetx", "spinner-counter", 0, 0, 0)
+		//spinnerHTML("acw-"+i+"offsetx", "spinner-counter", 0, 0, 0)
 
 		populateColorList : function(){
 
@@ -11143,11 +11143,11 @@ $(document).ready ( function(){
 			$("#artwork-colors-list").empty();
 
 			this.colors.forEach(function(color, i){
-				colorBox = $('<div class="acw-color">').css('background-color', color.hex);
-				colorBoxIndex = $('<div class="acw-index">').text(i);
-				colorWeaveName = $('<div class="acw-name">');
-				colorWeaveInfo = $('<div class="acw-info">');
-				listItem = $('<li id="acw-'+i+'" class="acw-item">').attr('data-color-index',i);
+				colorBox = $("<div class=\"acw-color\">").css("background-color", color.hex);
+				colorBoxIndex = $("<div class=\"acw-index\">").text(i);
+				colorWeaveName = $("<div class=\"acw-name\">");
+				colorWeaveInfo = $("<div class=\"acw-info\">");
+				listItem = $("<li id=\"acw-"+i+"\" class=\"acw-item\">").attr("data-color-index",i);
 				$("#artwork-colors-list").append(
 					listItem
 						.append(colorBox.append(colorBoxIndex))
@@ -11177,7 +11177,7 @@ $(document).ready ( function(){
 
 			debugTime("art.read.1");
 
-			var ctx = getCtx(25, 'temp-canvas', 'g_tempCanvas', imageW, imageH, false);
+			var ctx = getCtx(25, "temp-canvas", "g_tempCanvas", imageW, imageH, false);
 			ctx.drawImage(dataurl, 0, 0);
 			var image = ctx.getImageData(0, 0, imageW, imageH);
 
@@ -11241,10 +11241,10 @@ $(document).ready ( function(){
 					var rgba_str = "rgba("+rgba.r+","+rgba.g+","+rgba.b+","+rgba.a+")";
 
 					globalArtwork.colors[i] = {
-						'count' : colorPixelCount[i],
-						'hex' : color.toHexString(),
-						'rgba' : rgba,
-						'rgba_str' : rgba_str
+						"count" : colorPixelCount[i],
+						"hex" : color.toHexString(),
+						"rgba" : rgba,
+						"rgba_str" : rgba_str
 					};
 
 				});
@@ -11266,13 +11266,13 @@ $(document).ready ( function(){
 
 	};
 
-	function makeSpinner(id, trigger, val, min, max){
-		var html = '';
-		html += '<div data-trigger="'+trigger+'" id="'+id+'" class="spinner-counter">';
-			html += '<a data-spin="down" class="spinner-down"></a>';
-			html += '<input type="text" value="'+val+'" data-rule="quantity" data-min="'+min+'" data-max="'+max+'">';
-			html += '<a data-spin="up" class="spinner-up"></a>';
-		html += '</div>';
+	function spinnerHTML(id, trigger, val, min, max){
+		var html = "";
+		html += "<div data-trigger=\""+trigger+"\" id=\""+id+"\" class=\"spinner-counter\">";
+			html += "<a data-spin=\"down\" class=\"spinner-down\"></a>";
+			html += "<input type=\"text\" value=\""+val+"\" data-rule=\"quantity\" data-min=\""+min+"\" data-max=\""+max+"\">";
+			html += "<a data-spin=\"up\" class=\"spinner-up\"></a>";
+		html += "</div>";
 		return html;
 	}
 
@@ -11800,17 +11800,17 @@ $(document).ready ( function(){
 				pointPlusGrid = limitNumber(pointPlusGrid, globalWeave.minPPG, globalWeave.maxPPG);
 
 				if ( pointPlusGrid >= globalWeave.maxPPG ){
-					weaveToolbar.disableItem('toolbar-weave-zoom-in');
+					weaveToolbar.disableItem("toolbar-weave-zoom-in");
 				} else {
-					weaveToolbar.enableItem('toolbar-weave-zoom-in');
+					weaveToolbar.enableItem("toolbar-weave-zoom-in");
 				}
 
 				if ( pointPlusGrid <= globalWeave.minPPG ){
-					weaveToolbar.disableItem('toolbar-weave-zoom-out');
-					weaveToolbar.disableItem('toolbar-weave-zoom-reset');
+					weaveToolbar.disableItem("toolbar-weave-zoom-out");
+					weaveToolbar.disableItem("toolbar-weave-zoom-reset");
 				} else {
-					weaveToolbar.enableItem('toolbar-weave-zoom-out');
-					weaveToolbar.enableItem('toolbar-weave-zoom-reset');
+					weaveToolbar.enableItem("toolbar-weave-zoom-out");
+					weaveToolbar.enableItem("toolbar-weave-zoom-reset");
 				}
 
 				g_showGridPossible = pointPlusGrid >= g_showGridMinPointPlusGrid;
@@ -11823,7 +11823,7 @@ $(document).ready ( function(){
 					weaveToolbar.disableItem("toolbar-weave-grid-show");
 				}
 
-				weaveToolbar.setItemState('toolbar-weave-grid-show', showGrid);
+				weaveToolbar.setItemState("toolbar-weave-grid-show", showGrid);
 
 				g_showGrid = showGrid;
 				g_pointW = pointW;
@@ -11960,9 +11960,9 @@ $(document).ready ( function(){
 
 			g_LockDraft = state;
 			if(state){
-				weaveToolbar.setItemState('toolbar-weave-lock-shafts', true);
+				weaveToolbar.setItemState("toolbar-weave-lock-shafts", true);
 			} else {
-				weaveToolbar.setItemState('toolbar-weave-lock-shafts', false);
+				weaveToolbar.setItemState("toolbar-weave-lock-shafts", false);
 			}
 
 		},
@@ -12180,13 +12180,13 @@ $(document).ready ( function(){
 
 				debugTime("setGraph2D8Render");
 
-				globalStatusbar.set('weaveSize', this.ends, this.picks);
+				globalStatusbar.set("weaveSize", this.ends, this.picks);
 
 				var weaveProps = getWeaveProps(this.weave2D8, 256);
 				if ( weaveProps.inLimit ){
-					globalStatusbar.set('shaftCount', weaveProps.shafts);
+					globalStatusbar.set("shaftCount", weaveProps.shafts);
 				} else {
-					globalStatusbar.set('shaftCount', "> 256");
+					globalStatusbar.set("shaftCount", "> 256");
 				}
 
 				globalTieup.updateScrollingParameters(3);
@@ -12468,8 +12468,8 @@ $(document).ready ( function(){
 			if ( this.status ){
 				this.status = false;
 				g_weaveHighlightContext.clearRect(0, 0, g_weaveHighlightCanvas.width, g_weaveHighlightCanvas.height);
-				$('#weave-highlight-layer').css({
-					'background-image': 'url(' + g_weaveHighlightCanvas.toDataURL() + ')'
+				$("#weave-highlight-layer").css({
+					"background-image": "url(" + g_weaveHighlightCanvas.toDataURL() + ")"
 				});
 			}
 		},
@@ -12500,8 +12500,8 @@ $(document).ready ( function(){
 
 				drawRect(g_weaveHighlightContext, startX, startY, rectW, rectH, c, true);
 
-				$('#weave-highlight-layer').css({
-					'background-image': 'url(' + g_weaveHighlightCanvas.toDataURL() + ')'
+				$("#weave-highlight-layer").css({
+					"background-image": "url(" + g_weaveHighlightCanvas.toDataURL() + ")"
 				});
 			},
 
@@ -12586,7 +12586,7 @@ $(document).ready ( function(){
 		simulationAlgorithm: 1,
 
 		screenDPI: 110,
-		smoothing: 16,
+		smoothing: 3,
 
 		warpSize : 3,
 		weftSize : 3,
@@ -12670,7 +12670,7 @@ $(document).ready ( function(){
 			this.weftDensity = $("#weftdensityinput input").numVal();
 			this.screenDPI = $("#screendpiinput input").numVal();
 			this.smoothing = $("#simulationsmoothinginput input").numVal();
-			this.reedFill = $('#reedfillinput input').numVal();
+			this.reedFill = $("#reedfillinput input").numVal();
 
 			this.update();
 
@@ -12678,22 +12678,22 @@ $(document).ready ( function(){
 
 		updateParameterInputs : function(){
 
-			$('#warpsizeinput input').val(this.warpSize);
-			$('#weftsizeinput input').val(this.weftSize);
-			$('#warpspaceinput input').val(this.warpSpace);
-			$('#weftspaceinput input').val(this.weftSpace);
-			$('#simulationWarpNumber input').val(this.warpNumber);
-			$('#simulationWeftNumber input').val(this.weftNumber);
-			$('#warpdensityinput input').val(this.warpDensity);
-			$('#weftdensityinput input').val(this.weftDensity);
-			$('#screendpiinput input').val(this.screenDPI);
-			$('#simulationsmoothinginput input').val(this.smoothing);
+			$("#warpsizeinput input").val(this.warpSize);
+			$("#weftsizeinput input").val(this.weftSize);
+			$("#warpspaceinput input").val(this.warpSpace);
+			$("#weftspaceinput input").val(this.weftSpace);
+			$("#simulationWarpNumber input").val(this.warpNumber);
+			$("#simulationWeftNumber input").val(this.weftNumber);
+			$("#warpdensityinput input").val(this.warpDensity);
+			$("#weftdensityinput input").val(this.weftDensity);
+			$("#screendpiinput input").val(this.screenDPI);
+			$("#simulationsmoothinginput input").val(this.smoothing);
 
-			$('#simulationalgorithm option[value="'+this.simulationAlgorithm+'"]').prop("selected", true);
-			$('#simulationrenderingmod option[value="'+this.simulationRenderingMode+'"]').prop("selected", true);
-			$('#simulationdrawmethod option[value="'+this.simulationDrawMethod+'"]').prop("selected", true);
+			$("#simulationalgorithm option[value=\""+this.simulationAlgorithm+"\"]").prop("selected", true);
+			$("#simulationrenderingmod option[value=\""+this.simulationRenderingMode+"\"]").prop("selected", true);
+			$("#simulationdrawmethod option[value=\""+this.simulationDrawMethod+"\"]").prop("selected", true);
 
-			$('#reedfillinput input').val(this.reedFill);
+			$("#reedfillinput input").val(this.reedFill);
 
 		},
 
@@ -12872,7 +12872,7 @@ $(document).ready ( function(){
 					this.repeatHmm = repeatHmm;
 
 					// Upscale Canvas --------------------------------------------------
-					g_upscaleContext = getCtx(10, 'upscale-canvas', 'g_upscaleCanvas', upscaleW, upscaleH, false);
+					g_upscaleContext = getCtx(10, "upscale-canvas", "g_upscaleCanvas", upscaleW, upscaleH, false);
 					g_upscaleCanvas.width = upscaleW;
 					g_upscaleCanvas.height = upscaleH;
 
@@ -13091,7 +13091,7 @@ $(document).ready ( function(){
 								if ( floatS > 1 ){
 									jitter += Math.sin(floatNode/(floatS-1) * Math.PI) * warpFloatPosJitterX * floatS;
 								}
-								nodeColor32 = floatGradient[floatNode];
+								nodeColor32 = floatGradient[floatS-floatNode-1];
 								floatNode++;
 								ytpPos = loopNumber(ytpStart+y, 8192);
 								yarnThickness = warpYarnThickness[x] * yarnThicknessProfile[ytpPos];
@@ -13192,14 +13192,14 @@ $(document).ready ( function(){
 
 	var patternHighlight = {
 		"status" : false,
-		"set" : '',
+		"set" : "",
 		"start" : 0,
 		"end" : 0,
 		"color" : 0,
 		clear : function(){
 			if ( this.status ){
 				this.status = false;
-				$('#'+this.set+'-pattern .marker').hide();
+				$("#"+this.set+"-pattern .marker").hide();
 			}
 		},
 		show : function(set, start, end, color){
@@ -13213,7 +13213,7 @@ $(document).ready ( function(){
 			var startIndex = Math.min(start, end);
 			var endIndex = Math.max(start, end);
 
-			if ( set == 'weft'){
+			if ( set == "weft"){
 				startIndex = Math.max(start, end);
 				endIndex = Math.min(start, end);
 				startIndex = g_patternLimit - startIndex - 1;
@@ -13221,7 +13221,7 @@ $(document).ready ( function(){
 			}
 			
 			for (var n = startIndex; n <= endIndex; n++) {
-				$('#'+set+'-pattern .marker').eq(n).show();
+				$("#"+set+"-pattern .marker").eq(n).show();
 			}
 		}
 	};
@@ -13421,7 +13421,7 @@ $(document).ready ( function(){
 
 		startSelectionAnimation(){
 
-			$.doTimeout('selectionAnimation', 60, function(){
+			$.doTimeout("selectionAnimation", 60, function(){
 				globalSelection.dashStart = (globalSelection.dashStart + 1) % 8;
 				globalSelection.render();
 				return true;
@@ -13430,7 +13430,7 @@ $(document).ready ( function(){
 		},
 
 		stopSelectionAnimation(){
-			$.doTimeout('selectionAnimation');
+			$.doTimeout("selectionAnimation");
 		},
 
 		render : function(){
@@ -13749,7 +13749,7 @@ $(document).ready ( function(){
 
 			var floatVal = side == "face" ? floatS : -floatS;
 
-			if ( typeof this[yarnSet][side][floatS] === 'undefined' ) {
+			if ( typeof this[yarnSet][side][floatS] === "undefined" ) {
 				this[yarnSet][side][0].push(floatS);
 				//this[yarnSet][side][floatS] = [];
 			}
@@ -13801,7 +13801,7 @@ $(document).ready ( function(){
 			var startIndex = Math.min(this.startThread, this.endThread);
 			var endIndex = Math.max(this.startThread, this.endThread);
 			this.array = globalPattern[this.set].slice(startIndex, endIndex+1);
-			patternHighlight.show(this.set, startIndex, endIndex, 'red');
+			patternHighlight.show(this.set, startIndex, endIndex, "red");
 		}
 	};
 
@@ -13854,7 +13854,7 @@ $(document).ready ( function(){
 				header: 		{ fontSize: 18, bold: true, margin: [0, 10, 0, 5] },
 				subheader: 		{ fontSize: 16, bold: true, margin: [0, 10, 0, 5] },
 				tableExample: 	{ margin: [10, 0, 10, 0] },
-				tableHeader: 	{ bold: true, fontSize: 13, color: 'black' }
+				tableHeader: 	{ bold: true, fontSize: 13, color: "black" }
 			}
 		};
 
@@ -13867,7 +13867,7 @@ $(document).ready ( function(){
 			counter++;
 
 			var font = 9;
-			var align = 'center';
+			var align = "center";
 			var maxColumns = 20;
 			var columnSize = 18;
 
@@ -13875,15 +13875,15 @@ $(document).ready ( function(){
 				text: counter,
 				fontSize: font,
 				alignment: align,
-				color: 'gray'
+				color: "gray"
 			});
 
 			color = tinycolor(globalPalette.colors[alpha].hex);
 			brightness = color.getBrightness();
-			textColor = brightness > 128 ? 'black' : 'white';
+			textColor = brightness > 128 ? "black" : "white";
 
 			secondRow.push({
-				text: num + '\n' + alpha,
+				text: num + "\n" + alpha,
 				fontSize: font,
 				alignment: align,
 				fillColor: globalPalette.colors[alpha].hex,
@@ -13920,7 +13920,7 @@ $(document).ready ( function(){
 			counter++;
 
 			var font = 9;
-			var align = 'center';
+			var align = "center";
 			var maxColumns = 20;
 			var columnSize = 18;
 
@@ -13928,15 +13928,15 @@ $(document).ready ( function(){
 				text: counter,
 				fontSize: font,
 				alignment: align,
-				color: 'gray'
+				color: "gray"
 			});
 
 			color = tinycolor(globalPalette.colors[alpha].hex);
 			brightness = color.getBrightness();
-			textColor = brightness > 128 ? 'black' : 'white';
+			textColor = brightness > 128 ? "black" : "white";
 
 			secondRow.push({
-				text: num + '\n' + alpha,
+				text: num + "\n" + alpha,
 				fontSize: font,
 				alignment: align,
 				fillColor: globalPalette.colors[alpha].hex,
@@ -13968,16 +13968,16 @@ $(document).ready ( function(){
 	// Custom Scrollbars : scrollbars
 	// ----------------------------------------------------------------------------------
 	$(".scrollbar")
-	.append($("<div class='rail'></div>"))
-	.append($("<div class='dragger'></div>"));
+	.append($("<div class=\"rail\"></div>"))
+	.append($("<div class=\"dragger\"></div>"));
 
 	$(".scrollbar.horizontal")
-	.append($("<div class='arrow left'><div class='arrow-img'></div></div>"))
-	.append($("<div class='arrow right'><div class='arrow-img'></div></div>"));
+	.append($("<div class=\"arrow left\"><div class=\"arrow-img\"></div></div>"))
+	.append($("<div class=\"arrow right\"><div class=\"arrow-img\"></div></div>"));
 
 	$(".scrollbar.vertical")
-	.append($("<div class='arrow up'><div class='arrow-img'></div></div>"))
-	.append($("<div class='arrow down'><div class='arrow-img'></div></div>"));
+	.append($("<div class=\"arrow up\"><div class=\"arrow-img\"></div></div>"))
+	.append($("<div class=\"arrow down\"><div class=\"arrow-img\"></div></div>"));
 
 	// Active Scrollbar
 	var asb = {
@@ -14124,7 +14124,7 @@ $(document).ready ( function(){
 		if ( railS == draggerS ){ dragger.hide(); } else { dragger.show(); }
 
 		if ( active ){
-			$("#"+scrollbarId).addClass('hover');
+			$("#"+scrollbarId).addClass("hover");
 			asb.id = scrollbarId;
 			asb.active = true;
 			asb.viewS = viewS;
@@ -14309,7 +14309,7 @@ $(document).ready ( function(){
 
 			var threadTitle = isWarp ? "Ends" : "Pick";
 
-			globalStatusbar.set('patternThread', threadTitle, seamlessThreadNum);
+			globalStatusbar.set("patternThread", threadTitle, seamlessThreadNum);
 
 			if ( gmy.patternPainting ) {
 
@@ -14341,8 +14341,8 @@ $(document).ready ( function(){
 				var stripeSize = getStripeData(pattern, seamlessThreadNum-1)[2];
 			}
 
-			globalStatusbar.set('stripeSize', stripeSize);
-			globalStatusbar.set('colorChip', colorCode);
+			globalStatusbar.set("stripeSize", stripeSize);
+			globalStatusbar.set("colorChip", colorCode);
 
 		}
 
@@ -14537,7 +14537,7 @@ $(document).ready ( function(){
 
 			if ( asb.active && mouseButton == 1){
 			
-				$("#"+asb.id).removeClass('hover');
+				$("#"+asb.id).removeClass("hover");
 				asb.active = false;
 			
 			} else {
@@ -14590,7 +14590,7 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Web Worker
 	// ----------------------------------------------------------------------------------
-	var fileSaveWorker = new Worker('js/file-save-worker.js');
+	var fileSaveWorker = new Worker("js/file-save-worker.js");
 	fileSaveWorker.onmessage = function (e) {
 	  //saveCanvasAsImage(g_tempCanvas, weaveFileName+".png");
 	};
@@ -14600,11 +14600,11 @@ $(document).ready ( function(){
 	// Keyborad Shortcuts
 	// ----------------------------------------------------------------------------------
 
-	hotkeys('ctrl+r, command+r', function() {
+	hotkeys("ctrl+r, command+r", function() {
 		return false;
 	});
 
-	hotkeys('*', { keydown: true, keyup: true }, function(e) {
+	hotkeys("*", { keydown: true, keyup: true }, function(e) {
 
 		var key = e.key;
 		var type = e.type;
@@ -14665,7 +14665,7 @@ $(document).ready ( function(){
 
 	});
 
-	hotkeys('p,b,h,z,l,f,s', function(event,handler) {
+	hotkeys("p,b,h,z,l,f,s", function(event,handler) {
 	  switch(handler.key){
 	    case "p": setGraphTool("pointer"); break;
 	    case "b": setGraphTool("brush"); break;
@@ -14683,18 +14683,18 @@ $(document).ready ( function(){
 // ----------------------------------------------------------------------------------
 // Window Unload
 // ----------------------------------------------------------------------------------
-$(window).bind('unload', function() {
+$(window).bind("unload", function() {
 	if (dhxWins !== null && dhxWins.unload !== null) { dhxWins.unload(); dhxWins = null; }
 });
 
 /* Alert Leaving Website after first click. Even Refresh
-$(window).bind('beforeunload', function() {
-	return 'Reloading or closing the page will reset settings and all data will be lost.';
+$(window).bind("beforeunload", function() {
+	return "Reloading or closing the page will reset settings and all data will be lost.";
 });
 */
 
 // Disable back an forward navigation. Refresh works. No Prompt
 history.pushState(null, null, document.URL);
-window.addEventListener('popstate', function () {
+window.addEventListener("popstate", function () {
     history.pushState(null, null, document.URL);
 });
