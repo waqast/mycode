@@ -1640,6 +1640,8 @@ $(document).ready ( function(){
 			[29, "Mockleno 6x6", "ududud_3d3u_ududud_dududu_3u3d_dududu"],
 			[30, "Mockleno 10x10", "dududududu_5u5d_dududududu_5u5d_dududududu_ududududud_5d5u_ududududud_5d5u_ududududud"],
 
+			[31, "Dobby 01", "11udu11d_10u2d2u10d_9u3d3u9d_8u4d4u8d_7u5d5u7d_2(6u6d)_5u7d7u5d_4u8d8u4d_3u9d9u3d_2u10d10u2d_u11d11ud_12d12u_12u12d_d11u11du_2d10u10d2u_3d9u9d3u_4d8u8d4u_5d7u7d5u_2(6d6u)_7d5u5d7u_8d4u4d8u_9d3u3d9u_10d2u2d10u_11dud11u"]
+
 		],
 		private : [],
 		shared : [],
@@ -2737,11 +2739,11 @@ $(document).ready ( function(){
 
 		} else if (id == "toolbar-main-test-08") {
 
-			globalModel.materials.fabric.map.repeat.set(4.5, 2.5);
-			globalModel.materials.fabric.map.needsUpdate = true;
-			globalModel.render();
+			//globalModel.materials.fabric.map.repeat.set(4.5, 2.5);
+			//globalModel.materials.fabric.map.needsUpdate = true;
+			//globalModel.render();
 
-			//showTextAreaModal("Weave Code");
+			showTextAreaModal("Weave Code");
 			//saveCanvasAsImage(g_simulationRepeatCanvas, "simulation.png");
 
 		} else if (id == "toolbar-main-test-09") {
@@ -4720,8 +4722,8 @@ $(document).ready ( function(){
 			gen_weave = getWeaveFromParts(gen_tieup, gen_threading, gen_treadling);
 
 			var floats = globalFloats.count(gen_weave);
-			var maxWarpFloat = Math.max(...floats.warp.face, ...floats.warp.back);
-			var maxWeftFloat = Math.max(...floats.weft.face, ...floats.weft.back);
+			var maxWarpFloat = Math.max(arrayMax(floats.warp.face), arrayMax(floats.warp.back));
+			var maxWeftFloat = Math.max(arrayMax(floats.weft.face), arrayMax(floats.weft.back));
 
 			if ( balanceWeave ){
 				maxWeftFloatReq = maxWarpFloatReq;
@@ -8054,7 +8056,7 @@ $(document).ready ( function(){
 			var picks = weave[0].length;
 			pegplan2D8 = pd.uniques;
 			draft1D = pd.posIndex.map(a => a+1);
-			shafts = Math.max(...draft1D);
+			shafts = arrayMax(draft1D);
 			draft2D8 = newArray2D8(15, ends, shafts);
 			draft1D.forEach(function(shaft, i) {
 				draft2D8[i][shaft - 1] = 1;
@@ -12582,7 +12584,7 @@ $(document).ready ( function(){
 		scrollX : 0,
 		scrollY : 0,
 
-		simulationDrawMethod: "unicount",
+		simulationMode: "bicount",
 		simulationAlgorithm: 1,
 
 		screenDPI: 110,
@@ -12594,10 +12596,10 @@ $(document).ready ( function(){
 		warpSpace: 1,
 		weftSpace: 1,
 
-		warpNumber: 60,
-		weftNumber: 60,
-		warpDensity : 110,
-		weftDensity : 110,
+		warpNumber: 20,
+		weftNumber: 20,
+		warpDensity : 55,
+		weftDensity : 55,
 
 		reedFill : 1,
 		dentingSpace : 0.05,
@@ -12631,7 +12633,7 @@ $(document).ready ( function(){
 
 		onTabSelect : function(){
 
-			if ( this.needUpdate && this.simulationDrawMethod == "quick" ){
+			if ( this.needUpdate && this.simulationMode == "quick" ){
 				this.render();
 			}
 
@@ -12656,7 +12658,7 @@ $(document).ready ( function(){
 
 		applyParameters : function(){
 
-			this.simulationDrawMethod = $("#simulationdrawmethod").val();
+			this.simulationMode = $("#simulationmode").val();
 			this.simulationRenderingMode = $("#simulationrenderingmode").val();
 			this.simulationAlgorithm = $("#simulationalgorithm").val();
 
@@ -12691,7 +12693,7 @@ $(document).ready ( function(){
 
 			$("#simulationalgorithm option[value=\""+this.simulationAlgorithm+"\"]").prop("selected", true);
 			$("#simulationrenderingmod option[value=\""+this.simulationRenderingMode+"\"]").prop("selected", true);
-			$("#simulationdrawmethod option[value=\""+this.simulationDrawMethod+"\"]").prop("selected", true);
+			$("#simulationmode option[value=\""+this.simulationMode+"\"]").prop("selected", true);
 
 			$("#reedfillinput input").val(this.reedFill);
 
@@ -12714,13 +12716,14 @@ $(document).ready ( function(){
 			var graphId = getGraphId(ctxTarget.canvas.id);
 			debugTime("renderTo > " + graphId);
 
-			ctxTarget.clearRect(0, 0, ctxW, ctxH);
+			//ctxTarget.clearRect(0, 0, ctxW, ctxH);
 
 			var x, y, i, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
 			var dark32, light32;
 			var warpSize, weftSize, warpSpace, weftSpace;
 			var floatS;
 			var intersectionW, intersectionH;
+			var colorCode;
 
 			var arrW = 0;
 			var arrH = 0;
@@ -12732,10 +12735,10 @@ $(document).ready ( function(){
 
 				var warpRepeat = [arrW, globalPattern.warp.length].lcm();
 				var weftRepeat = [arrH, globalPattern.weft.length].lcm();
-	      		var simulationDrawMethod = this.simulationDrawMethod;
+	      		var simulationMode = this.simulationMode;
 	      		var screenDPI = this.screenDPI;
 
-	      		if ( simulationDrawMethod == "quick"){
+	      		if ( simulationMode == "quick" ){
 
 					var imagedata = ctxTarget.createImageData(ctxW, ctxH);
 		      		var pixels = new Uint32Array(imagedata.data.buffer);
@@ -12826,9 +12829,11 @@ $(document).ready ( function(){
 
 					ctxTarget.putImageData(imagedata, 0, 0);
 
-	      		} else if ( simulationDrawMethod == "unicount"){
+	      		} else if ( simulationMode == "bicount" || simulationMode == "multicount" ){
 
 	      			var jitter, drawSingleRepeat, testingMode;
+	      			var m, n, floatSizes, floatArray, floatsTotal, floatSizesTotal, floats, sx, sy, lx, ly, floatW, floatH, floatL, intersectionL;
+					var floatNode, floatGradient, nodeColor32, ytpStart, ytpPos, yarnThickness, floatNodeRelativePos;
 
 	      			var smoothingUpscale = this.smoothing;
 
@@ -12855,12 +12860,6 @@ $(document).ready ( function(){
 
 					var xNodes = drawSingleRepeat ? warpRepeat : Math.floor(upscaleW / intersectionW);
 					var yNodes = drawSingleRepeat ? weftRepeat : Math.floor(upscaleH / intersectionH);
-
-	      			warpSize = yarnDia(this.warpNumber, "nec", "px", screenDPI) * smoothingUpscale;
-					weftSize = yarnDia(this.weftNumber, "nec", "px", screenDPI) * smoothingUpscale;
-
-					var backWarpSize = warpSize * 0.5;
-					var backWeftSize = weftSize * 0.5;
 
 					var repeatWmm = Math.round(warpRepeat / screenDPI * 25.4);
 					var repeatHmm = Math.round(warpRepeat / screenDPI * 25.4);
@@ -12914,22 +12913,45 @@ $(document).ready ( function(){
 					var dentingSpacePx = this.dentingSpace / 25.4 * screenDPI * smoothingUpscale;
 
 					for (x = 0; x < xNodes; ++x) {
+
+						colorCode = globalPattern.warp[x % globalPattern.warp.length];
+						color = globalPalette.colors[colorCode];
+
+						if ( simulationMode == "bicount" ){
+							yarnThickness = yarnDia(this.warpNumber, "nec", "px", screenDPI) * smoothingUpscale;
+						} else if ( simulationMode == "multicount" ){
+							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
+						}
+
 						thicknessJitter = 1 + getRandom(-this.yarnThicknessJitter, this.yarnThicknessJitter);
-						warpYarnThickness[x] =  Math.round(warpSize * thicknessJitter);
+						warpYarnThickness[x] =  Math.round(yarnThickness * thicknessJitter);
 						warpXPositions[x] = intersectionW * ( x + 0.5 ) - warpYarnThickness[x] / 2 + dentingSpacePx * dentingEffect[x % this.reedFill];
-						warpPattern32[x] = globalPalette.colors[globalPattern.warp[x % globalPattern.warp.length]].color32;
-						warpBackPattern32[x] = globalPalette.colors[globalPattern.warp[x % globalPattern.warp.length]].dark32;
-						warpPatternTranslated[x] = globalPattern.warp[x % globalPattern.warp.length];
+						warpPattern32[x] = color.color32;
+						warpBackPattern32[x] = color.dark32;
+						warpPatternTranslated[x] = colorCode;
 
 					}
 
+					yarnThickness = yarnDia(this.weftNumber, "nec", "px", screenDPI) * smoothingUpscale;
+
 					for (y = 0; y < yNodes; ++y) {
+						
+						colorCode = globalPattern.weft[y % globalPattern.weft.length];
+						color = globalPalette.colors[colorCode];
+
+						if ( simulationMode == "bicount" ){
+							yarnThickness = yarnDia(this.weftNumber, "nec", "px", screenDPI) * smoothingUpscale;
+						} else if ( simulationMode == "multicount" ){
+							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
+						}
+
 						thicknessJitter = 1 + getRandom(-this.yarnThicknessJitter, this.yarnThicknessJitter);
-						weftYarnThickness[y] =  Math.round(weftSize * thicknessJitter);
+						weftYarnThickness[y] =  Math.round(yarnThickness * thicknessJitter);
 						weftYPositions[y] = intersectionH * ( y + 0.5 ) - weftYarnThickness[y] / 2;
-						weftPattern32[y] = globalPalette.colors[globalPattern.weft[y % globalPattern.weft.length]].color32;
-						weftBackPattern32[y] = globalPalette.colors[globalPattern.weft[y % globalPattern.weft.length]].dark32;
-						weftPatternTranslated[y] = globalPattern.weft[y % globalPattern.weft.length];
+						weftPattern32[y] = color.color32;
+						weftBackPattern32[y] = color.dark32;
+						weftPatternTranslated[y] = colorCode;
+
 					}
 
 					// yarnThicknessProfile
@@ -12954,13 +12976,6 @@ $(document).ready ( function(){
 
 					}
 
-					
-
-
-
-
-					var m, n, floatSizes, floatArray, floatsTotal, floatSizesTotal, floats, sx, sy, lx, ly, floatW, floatH, floatL, intersectionL;
-
 					debugTime("globalFloats.find");
 
 					globalFloats.find(arr2D8);
@@ -12969,11 +12984,11 @@ $(document).ready ( function(){
 
 					debugTime("floatGradients-Prep");
 
-					var minWarpThickness = Math.min(...warpYarnThickness);
-					var maxWarpThickness = Math.max(...warpYarnThickness);
+					var minWarpThickness = arrayMin(warpYarnThickness);
+					var maxWarpThickness = arrayMax(warpYarnThickness);
 
-					var minWeftThickness = Math.min(...weftYarnThickness);
-					var maxWeftThickness = Math.max(...weftYarnThickness);
+					var minWeftThickness = arrayMin(weftYarnThickness);
+					var maxWeftThickness = arrayMax(weftYarnThickness);
 
 					var floatGradients = [];
 					var thicknessGradients = [];
@@ -12986,8 +13001,6 @@ $(document).ready ( function(){
 					var subShadei;
 					var subShade32;
 					var gradient;
-
-					var maxWarpFaceFloatSize = Math.max(...globalFloats.warp.face[0]);
 
 					var code, floatL;
 
@@ -13007,6 +13020,8 @@ $(document).ready ( function(){
 								floatGradients[code+"-"+floatL][nodei] = shade32;
 							}
 						}
+						floatGradients[code+"-light"] = gradient[1];
+						floatGradients[code+"-dark"] = gradient[gradient.length-1];
 					}
 
 					debugTimeEnd("floatGradients-warp");
@@ -13025,6 +13040,8 @@ $(document).ready ( function(){
 								floatGradients[code+"-"+floatL][nodei] = shade32;
 							}
 						}
+						floatGradients[code+"-light"] = gradient[1];
+						floatGradients[code+"-dark"] = gradient[gradient.length-1];
 					}
 
 					debugTimeEnd("floatGradients-weft");
@@ -13072,8 +13089,6 @@ $(document).ready ( function(){
 
 					debugTimeEnd("simulation-draw-weft-bg");
 
-					var floatNode, floatGradient, nodeColor32, yarnThicknes, ytpStart, ytpPos, yarnThickness;
-
 					for (x = 0; x < xNodes; x++) {
 						wx = loopNumber(x, arrW);
 						code = warpPatternTranslated[x];
@@ -13088,14 +13103,32 @@ $(document).ready ( function(){
 							if ( floatS > 0 ){
 								floatGradient = floatGradients[code+"-"+floatS];	
 								jitter = getRandom(-warpFloatPosJitterX, warpFloatPosJitterX);
-								if ( floatS > 1 ){
-									jitter += Math.sin(floatNode/(floatS-1) * Math.PI) * warpFloatPosJitterX * floatS;
+								if ( floatS > 2 ){
+									jitter -= Math.sin(floatNode/(floatS-1) * Math.PI) * warpFloatPosJitterX * floatS;
 								}
 								nodeColor32 = floatGradient[floatS-floatNode-1];
-								floatNode++;
+								
 								ytpPos = loopNumber(ytpStart+y, 8192);
 								yarnThickness = warpYarnThickness[x] * yarnThicknessProfile[ytpPos];
 								drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy, yarnThickness, intersectionH, upscaleW, upscaleH, "color32", nodeColor32);
+
+								floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
+
+								if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
+									drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667, sy, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+									drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy+intersectionH/2, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+								} else if ( floatNodeRelativePos < 0.5 ){
+
+									drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+
+								} else if ( floatNodeRelativePos > 0.5 ){
+
+									drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+
+								}
+
+								floatNode++;
+
 							} else {
 								floatNode = 0;
 							}
@@ -13117,14 +13150,32 @@ $(document).ready ( function(){
 							if ( floatS > 0 ){
 								floatGradient = floatGradients[code+"-"+floatS];	
 								jitter = getRandom(-weftFloatPosJitterY, weftFloatPosJitterY);
-								if ( floatS > 1 ){
+								if ( floatS > 2 ){
 									jitter += Math.sin(floatNode/(floatS-1) * Math.PI) * weftFloatPosJitterY * floatS;
 								}
 								nodeColor32 = floatGradient[floatNode];
-								floatNode++;
+								
 								ytpPos = loopNumber(ytpStart+x, 8192);
 								yarnThickness = weftYarnThickness[y] * yarnThicknessProfile[ytpPos];
 								drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness, upscaleW, upscaleH, "color32", nodeColor32);
+
+								floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
+
+								if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
+									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+									drawRectBuffer(g_origin, upscalePixels, sx+intersectionW/2, sy+jitter, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+								} else if ( floatNodeRelativePos < 0.5 ){
+
+									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+
+								} else if ( floatNodeRelativePos > 0.5 ){
+
+									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+
+								}
+
+								floatNode++;
+
 							} else {
 								floatNode = 0;
 							}
