@@ -12839,7 +12839,7 @@ $(document).ready ( function(){
 	      		} else if ( simulationMode == "bicount" || simulationMode == "multicount" ){
 
 	      			var jitter, drawSingleRepeat, testingMode;
-	      			var m, n, floatSizes, floatArray, floatsTotal, floatSizesTotal, floats, sx, sy, lx, ly, floatW, floatH, floatL, intersectionL;
+	      			var m, sx, sy, lx, ly, floatL, code;
 					var floatNode, floatGradient, nodeColor32, ytpPos, yarnThickness, floatNodeRelativePos;
 
 	      			var smoothingUpscale = this.smoothing;
@@ -13023,8 +13023,6 @@ $(document).ready ( function(){
 					var subShadei;
 					var subShade32;
 					var gradient;
-
-					var code, floatL;
 
 					debugTimeEnd("floatGradients-Prep");
 
