@@ -1843,3 +1843,42 @@ function arrayMax(arr) {
   }
   return max;
 };
+
+function addImperfectionToYarnThicknessProfile2D(profileArray2D, yarnSet, frequency, minLength, maxLength, thicknessMultiplier ){
+
+	var n, x, y, ipLength, ipPos, ipStart, ipEnd, ipNodePos;
+
+	var xNodes = profileArray2D.length;
+	var yNodes = profileArray2D[0].length;
+
+	if ( yarnSet === "warp" ){
+
+		for (n = 0; n < frequency; ++n) {
+			ipLength = getRandomInt(minLength, maxLength);
+			ipPos = getRandomInt(0, yNodes);
+			ipStart = limitNumber(ipPos-Math.floor(ipLength/2), 0, yNodes-1);
+			ipEnd = limitNumber(ipPos+Math.floor(ipLength/2), 0, yNodes-1);
+			x = getRandomInt(0, xNodes-1);
+			for (y = ipStart; y <= ipEnd; y++) {
+				ipNodePos = y-(ipPos-Math.floor(ipLength/2));
+				profileArray2D[x][y] += Math.sin(ipNodePos/(ipLength-1) * Math.PI) * thicknessMultiplier;
+			}
+		}
+
+	} else {
+
+		for (n = 0; n < frequency; ++n) {
+			ipLength = getRandomInt(minLength, maxLength);
+			ipPos = getRandomInt(0, xNodes);
+			ipStart = limitNumber(ipPos-Math.floor(ipLength/2), 0, xNodes-1);
+			ipEnd = limitNumber(ipPos+Math.floor(ipLength/2), 0, xNodes-1);
+			y = getRandomInt(0, yNodes-1);
+			for (x = ipStart; x <= ipEnd; x++) {
+				ipNodePos = x-(ipPos-Math.floor(ipLength/2));
+				profileArray2D[x][y] += Math.sin(ipNodePos/(ipLength-1) * Math.PI) * thicknessMultiplier;
+			}
+		}
+
+	}	
+
+}

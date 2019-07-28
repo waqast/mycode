@@ -144,10 +144,7 @@ var yarnThicknessJitter = 0;
 var floatPositionJitter = 0;
 var interWarpSpaceJitter = 0;
 var yarnIPI = 0;
-var drawWarpFaceFloats = true;
-var drawWarpBackFloats = true;
-var drawWeftFaceFloats = true;
-var drawWeftBackFloats = true;
+
 var backFloatThicknessRatio = 0.75;
 var faceFloatThicknessRatio = 1.25;
 
@@ -8793,8 +8790,8 @@ $(document).ready ( function(){
 		warpRadiusX : 0,
 		warpRadiusY : 0,
 		weftRadius : 0,
-		weftRadiusY : 0,
 		weftRadiusX : 0,
+		weftRadiusY : 0,
 		warpEccentricity : 0,
 		weftEccentricity : 0,
 
@@ -12610,10 +12607,10 @@ $(document).ready ( function(){
 
 		drawStyle : "flat",
 
-		yarnThicknessJitter : 0.01, // 0.01
-		warpSpaceJitter : 1, // 1,
-		warpFloatPosJitterX : 0.1, // 0.03
-		weftFloatPosJitterY : 0.1, // 0.5
+		weftNumberJitter : 0.01, // 0.01
+		warpNumberJitter : 0.01, // 0.01
+		warpPosJitter : 0.03, // 0.03
+		weftPosJitter : 0.03, // 0.5
 
 		repatWpx : 0,
 		repeatHpx : 0,
@@ -12674,6 +12671,11 @@ $(document).ready ( function(){
 			this.smoothing = $("#simulationsmoothinginput input").numVal();
 			this.reedFill = $("#reedfillinput input").numVal();
 
+			this.warpNumberJitter = $("#simulationwarpnumberjitter input").numVal();
+			this.weftNumberJitter = $("#simulationweftnumberjitter input").numVal();
+			this.warpPosJitter = $("#simulationwarpposjitter input").numVal();
+			this.weftPosJitter = $("#simulationweftposjitter input").numVal();
+
 			this.update();
 
 		},
@@ -12690,6 +12692,11 @@ $(document).ready ( function(){
 			$("#weftdensityinput input").val(this.weftDensity);
 			$("#screendpiinput input").val(this.screenDPI);
 			$("#simulationsmoothinginput input").val(this.smoothing);
+
+			$("#simulationwarpnumberjitter input").val(this.warpNumberJitter);
+			$("#simulationweftnumberjitter input").val(this.weftNumberJitter);
+			$("#simulationwarpposjitter input").val(this.warpPosJitter);
+			$("#simulationweftposjitter input").val(this.weftPosJitter);
 
 			$("#simulationalgorithm option[value=\""+this.simulationAlgorithm+"\"]").prop("selected", true);
 			$("#simulationrenderingmod option[value=\""+this.simulationRenderingMode+"\"]").prop("selected", true);
@@ -12718,7 +12725,7 @@ $(document).ready ( function(){
 
 			//ctxTarget.clearRect(0, 0, ctxW, ctxH);
 
-			var x, y, i, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
+			var x, y, i, n, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
 			var dark32, light32;
 			var warpSize, weftSize, warpSpace, weftSpace;
 			var floatS;
@@ -12880,8 +12887,8 @@ $(document).ready ( function(){
 
 		      		// Basic Physical Values ------------------------------------------
 
-		      		var warpFloatPosJitterX = this.warpFloatPosJitterX * smoothingUpscale;
-		      		var weftFloatPosJitterY = this.weftFloatPosJitterY * smoothingUpscale;
+		      		var warpPosJitter = this.warpPosJitter * smoothingUpscale;
+		      		var weftPosJitter = this.weftPosJitter * smoothingUpscale;
 
 					var warpXPositions = [];
 					var weftYPositions = [];
@@ -12923,7 +12930,7 @@ $(document).ready ( function(){
 							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
 						}
 
-						thicknessJitter = 1 + getRandom(-this.yarnThicknessJitter, this.yarnThicknessJitter);
+						thicknessJitter = 1 + getRandom(-this.warpNumberJitter, this.warpNumberJitter);
 						warpYarnThickness[x] =  Math.round(yarnThickness * thicknessJitter);
 						warpXPositions[x] = intersectionW * ( x + 0.5 ) - warpYarnThickness[x] / 2 + dentingSpacePx * dentingEffect[x % this.reedFill];
 						warpPattern32[x] = color.color32;
@@ -12945,7 +12952,7 @@ $(document).ready ( function(){
 							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
 						}
 
-						thicknessJitter = 1 + getRandom(-this.yarnThicknessJitter, this.yarnThicknessJitter);
+						thicknessJitter = 1 + getRandom(-this.weftNumberJitter, this.weftNumberJitter);
 						weftYarnThickness[y] =  Math.round(yarnThickness * thicknessJitter);
 						weftYPositions[y] = intersectionH * ( y + 0.5 ) - weftYarnThickness[y] / 2;
 						weftPattern32[y] = color.color32;
@@ -12954,44 +12961,59 @@ $(document).ready ( function(){
 
 					}
 
-					// yarnThicknessProfile
-					var yarnThicknessProfile = filledArray(1, 8192);
+					// Nep 1mm-5mm
+					// thick 50% fault 6mm-30mm
+					// thin 50% fault : 4mm-20mm
 
-					// add count variation
-					var ipStart, ipLength, ipPos;
-					for (x = 0; x < 1; x++) {
-						ipLength = getRandomInt(10, 100);
-						ipStart = getRandomInt(0, 8191);
-						for (i = 0; i < ipLength; i++) {
-							ipPos = loopNumber(ipStart+i, 8192);
-							yarnThicknessProfile[ipPos] = 1+Math.sin(i/(ipLength-1) * Math.PI)*0.3;
-						}
+					var warpYarnThickness2D = newArray2D(xNodes, yNodes, 1);
+					var weftYarnThickness2D = newArray2D(xNodes, yNodes, 1);
 
-					}
+					var totalWarpYarnKmInView = ctxH / screenDPI * xNodes / 39.37 / 1000;
+					var totalWeftYarnKmInView = ctxW / screenDPI * yNodes / 39.37 / 1000;
 
-					// add Neps
-					for (x = 0; x < 100; x++) {
-						ipPos = getRandom(0, 8191);
-						yarnThicknessProfile[ipPos] = 2;
+					var warpYarnThinPlaces = Math.round(10 * totalWarpYarnKmInView);
+					var warpYarnThickPlaces = Math.round(40 * totalWarpYarnKmInView);
+					var warpYarnNeps = Math.round(80 * totalWarpYarnKmInView);
 
-					}
+					var warpYarnThinPlaceMinLength = Math.round(4 / 25.4 * warpDensity);
+					var warpYarnThinPlaceMaxLength = Math.round(20 / 25.4 * warpDensity);
+
+					var warpYarnThickPlaceMinLength = Math.round(6 / 25.4 * warpDensity);
+					var warpYarnThickPlaceMaxLength = Math.round(30 / 25.4 * warpDensity);
+
+					var warpYarnNepMinLength = Math.round(1 / 25.4 * warpDensity);
+					var warpYarnNepMaxLength = Math.round(5 / 25.4 * warpDensity);
+
+					var weftYarnThinPlaces = Math.round(10 * totalWeftYarnKmInView);
+					var weftYarnThickPlaces = Math.round(40 * totalWeftYarnKmInView);
+					var weftYarnNeps = Math.round(80 * totalWeftYarnKmInView);
+
+					var weftYarnThinPlaceMinLength = Math.round(4 / 25.4 * weftDensity);
+					var weftYarnThinPlaceMaxLength = Math.round(20 / 25.4 * weftDensity);
+
+					var weftYarnThickPlaceMinLength = Math.round(6 / 25.4 * weftDensity);
+					var weftYarnThickPlaceMaxLength = Math.round(30 / 25.4 * weftDensity);
+
+					var weftYarnNepMinLength = Math.round(1 / 25.4 * weftDensity);
+					var weftYarnNepMaxLength = Math.round(5 / 25.4 * weftDensity);
+
+					addImperfectionToYarnThicknessProfile2D(warpYarnThickness2D, "warp", warpYarnThinPlaces, warpYarnThinPlaceMinLength, warpYarnThinPlaceMaxLength, -0.5 );
+					addImperfectionToYarnThicknessProfile2D(warpYarnThickness2D, "warp", warpYarnThickPlaces, warpYarnThickPlaceMinLength, warpYarnThickPlaceMaxLength, 0.5 );
+					addImperfectionToYarnThicknessProfile2D(warpYarnThickness2D, "warp", warpYarnNeps, warpYarnNepMinLength, warpYarnNepMaxLength, 1 );
+
+					addImperfectionToYarnThicknessProfile2D(weftYarnThickness2D, "weft", weftYarnThinPlaces, weftYarnThinPlaceMinLength, weftYarnThinPlaceMaxLength, -0.5 );
+					addImperfectionToYarnThicknessProfile2D(weftYarnThickness2D, "weft", weftYarnThickPlaces, weftYarnThickPlaceMinLength, weftYarnThickPlaceMaxLength, 0.5 );
+					addImperfectionToYarnThicknessProfile2D(weftYarnThickness2D, "weft", weftYarnNeps, weftYarnNepMinLength, weftYarnNepMaxLength, 1 );
 
 					debugTime("globalFloats.find");
 
-					globalFloats.find(arr2D8);
+					globalFloats.find(arr2D8, scrollX, scrollY, xNodes, yNodes);
 
 					debugTimeEnd("globalFloats.find");
 
 					debugTime("floatGradients-Prep");
 
-					var minWarpThickness = arrayMin(warpYarnThickness);
-					var maxWarpThickness = arrayMax(warpYarnThickness);
-
-					var minWeftThickness = arrayMin(weftYarnThickness);
-					var maxWeftThickness = arrayMax(weftYarnThickness);
-
 					var floatGradients = [];
-					var thicknessGradients = [];
 
 					var warpColors = globalPattern.colors("warp");
 					var weftColors = globalPattern.colors("weft");
@@ -13052,19 +13074,20 @@ $(document).ready ( function(){
 
 					debugTimeEnd("simulation-draw-white-bg");
 
+					var drawWarpFaceFloats = true;
+					var drawWarpBackFloats = true;
+					var drawWeftFaceFloats = true;
+					var drawWeftBackFloats = true;
+
 					debugTime("simulation-draw-warp-bg");
 
-					var wx, wy;
-
 					for (x = 0; x < xNodes; ++x) {
-						wx = loopNumber(x, arrW);
 						sx = warpXPositions[x];
 						for (y = 0; y < yNodes; ++y) {
-							wy = loopNumber(y, arrH);
 							sy = y * intersectionH;
-							floatS = globalFloats.warpFloatWeave[wx][wy];
+							floatS = globalFloats.warpFloatWeave[x][y];
 							if ( floatS < 0 ){
-								jitter = getRandom(-warpFloatPosJitterX, warpFloatPosJitterX);
+								jitter = getRandom(-warpPosJitter, warpPosJitter);
 								drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy, warpYarnThickness[x], intersectionH, upscaleW, upscaleH, "color32", warpBackPattern32[x]);
 							}
 						}
@@ -13074,14 +13097,12 @@ $(document).ready ( function(){
 					debugTime("simulation-draw-weft-bg");
 
 					for (y = 0; y < yNodes; ++y) {
-						wy = loopNumber(y, arrH);
 						sy = weftYPositions[y];
 						for (x = 0; x < xNodes; ++x) {
-							wx = loopNumber(x, arrW);
 							sx = x * intersectionW;
-							floatS = globalFloats.weftFloatWeave[wx][wy];
+							floatS = globalFloats.weftFloatWeave[x][y];
 							if ( floatS < 0 ){
-								jitter = getRandom(-weftFloatPosJitterY, weftFloatPosJitterY);
+								jitter = getRandom(-weftPosJitter, weftPosJitter);
 								drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, weftYarnThickness[y], upscaleW, upscaleH, "color32", weftBackPattern32[y]);
 							}
 						}
@@ -13089,99 +13110,102 @@ $(document).ready ( function(){
 
 					debugTimeEnd("simulation-draw-weft-bg");
 
-					for (x = 0; x < xNodes; x++) {
-						wx = loopNumber(x, arrW);
-						code = warpPatternTranslated[x];
-						color = globalPalette.colors[code];
-						sx = warpXPositions[x];
-						floatNode = 0;
-						ytpStart = getRandomInt(0, 8191);
-						for (y = 0; y < yNodes; y++) {
-							wy = loopNumber(y, arrH);
-							sy = y * intersectionH;
-							floatS = globalFloats.warpFloatWeave[wx][wy];
-							if ( floatS > 0 ){
-								floatGradient = floatGradients[code+"-"+floatS];	
-								jitter = getRandom(-warpFloatPosJitterX, warpFloatPosJitterX);
-								if ( floatS > 2 ){
-									jitter -= Math.sin(floatNode/(floatS-1) * Math.PI) * warpFloatPosJitterX * floatS;
-								}
-								nodeColor32 = floatGradient[floatS-floatNode-1];
-								
-								ytpPos = loopNumber(ytpStart+y, 8192);
-								yarnThickness = warpYarnThickness[x] * yarnThicknessProfile[ytpPos];
-								drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy, yarnThickness, intersectionH, upscaleW, upscaleH, "color32", nodeColor32);
+					if ( drawWarpFaceFloats ){
 
-								floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
-
-								if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
-									drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667, sy, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-									drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy+intersectionH/2, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-								} else if ( floatNodeRelativePos < 0.5 ){
-
-									drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-
-								} else if ( floatNodeRelativePos > 0.5 ){
-
-									drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-
-								}
-
-								floatNode++;
-
-							} else {
-								floatNode = 0;
-							}
-						}
-
-					}
-
-					for (y = 0; y < yNodes; y++) {
-						wy = loopNumber(y, arrH);
-						code = weftPatternTranslated[y];
-						color = globalPalette.colors[code];
-						sy = weftYPositions[y];
-						floatNode = 0;
-						ytpStart = getRandomInt(0, 8191);
 						for (x = 0; x < xNodes; x++) {
-							wx = loopNumber(x, arrW);
-							sx = x * intersectionW;
-							floatS = globalFloats.weftFloatWeave[wx][wy];
-							if ( floatS > 0 ){
-								floatGradient = floatGradients[code+"-"+floatS];	
-								jitter = getRandom(-weftFloatPosJitterY, weftFloatPosJitterY);
-								if ( floatS > 2 ){
-									jitter += Math.sin(floatNode/(floatS-1) * Math.PI) * weftFloatPosJitterY * floatS;
+							code = warpPatternTranslated[x];
+							color = globalPalette.colors[code];
+							sx = warpXPositions[x];
+							floatNode = 0;
+
+							for (y = 0; y < yNodes; y++) {
+								sy = y * intersectionH;
+								floatS = globalFloats.warpFloatWeave[x][y];
+								if ( floatS > 0 ){
+									floatGradient = floatGradients[code+"-"+floatS];	
+									jitter = getRandom(-warpPosJitter, warpPosJitter);
+									if ( floatS > 2 ){
+										jitter -= Math.sin(floatNode/(floatS-1) * Math.PI) * warpPosJitter * 2;
+									}
+									nodeColor32 = floatGradient[floatS-floatNode-1];
+									
+									yarnThickness = warpYarnThickness[x] * warpYarnThickness2D[x][y];
+									drawRectBuffer(g_origin, upscalePixels, sx+jitter-yarnThickness/2, sy, yarnThickness, intersectionH, upscaleW, upscaleH, "color32", nodeColor32);
+
+									floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
+
+									if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
+										drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667-yarnThickness/2, sy, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+										drawRectBuffer(g_origin, upscalePixels, sx+jitter-yarnThickness/2, sy+intersectionH/2, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+									} else if ( floatNodeRelativePos < 0.5 ){
+
+										drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667-yarnThickness/2, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+
+									} else if ( floatNodeRelativePos > 0.5 ){
+
+										drawRectBuffer(g_origin, upscalePixels, sx+jitter-yarnThickness/2, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+
+									}
+
+									floatNode++;
+
+								} else {
+									floatNode = 0;
 								}
-								nodeColor32 = floatGradient[floatNode];
-								
-								ytpPos = loopNumber(ytpStart+x, 8192);
-								yarnThickness = weftYarnThickness[y] * yarnThicknessProfile[ytpPos];
-								drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness, upscaleW, upscaleH, "color32", nodeColor32);
-
-								floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
-
-								if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
-									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-									drawRectBuffer(g_origin, upscalePixels, sx+intersectionW/2, sy+jitter, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-								} else if ( floatNodeRelativePos < 0.5 ){
-
-									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-
-								} else if ( floatNodeRelativePos > 0.5 ){
-
-									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-
-								}
-
-								floatNode++;
-
-							} else {
-								floatNode = 0;
 							}
+
 						}
 
 					}
+
+					if ( drawWeftFaceFloats ){
+						for (y = 0; y < yNodes; y++) {
+							code = weftPatternTranslated[y];
+							color = globalPalette.colors[code];
+							sy = weftYPositions[y];
+							floatNode = 0;
+							ytpStart = getRandomInt(0, 8191);
+							for (x = 0; x < xNodes; x++) {
+								sx = x * intersectionW;
+								floatS = globalFloats.weftFloatWeave[x][y];
+								if ( floatS > 0 ){
+									floatGradient = floatGradients[code+"-"+floatS];	
+									jitter = getRandom(-weftPosJitter, weftPosJitter);
+									if ( floatS > 2 ){
+										jitter += Math.sin(floatNode/(floatS-1) * Math.PI) * weftPosJitter * 2;
+									}
+									nodeColor32 = floatGradient[floatNode];
+									
+									//ytpPos = loopNumber(ytpStart+x, 8192);
+									yarnThickness = weftYarnThickness[y] * weftYarnThickness2D[x][y];
+									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness, upscaleW, upscaleH, "color32", nodeColor32);
+
+									floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
+
+									if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
+										drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+										drawRectBuffer(g_origin, upscalePixels, sx+intersectionW/2, sy+jitter, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+									} else if ( floatNodeRelativePos < 0.5 ){
+
+										drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+
+									} else if ( floatNodeRelativePos > 0.5 ){
+
+										drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+
+									}
+
+									floatNode++;
+
+								} else {
+									floatNode = 0;
+								}
+							}
+
+						}
+					}
+
+					
 					
 					if ( testingMode ){
 
@@ -13633,12 +13657,17 @@ $(document).ready ( function(){
 
 		fabricSide: { warp: ["back", "face"], weft: ["face", "back"] },
 
-		find : function(arr2D8){
+		find : function(arr2D8, startX = 0, startY = 0, width = 0, height = 0){
 
 			var x, y, floatSize, startX, startY, currentState, nextState, loopingFloat, loopingFloatSize, nextPos, fabricSide;
 
-			this.ends = arr2D8.length;
-			this.picks = arr2D8[0].length;
+			this.ends = width ? width : arr2D8.length;
+			this.picks = height ? height : arr2D8[0].length;
+
+			if ( startX || startY || width || height ){
+				arr2D8 = arr2D8.copy2D8(startX, startY, startX+this.ends-1, startY+this.picks-1, "loop", "loop", 0);
+			}
+			
 			var iLastPick = this.picks - 1;
 			var iLastEnd = this.ends - 1;
 			
