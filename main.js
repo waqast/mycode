@@ -12725,7 +12725,7 @@ $(document).ready ( function(){
 
 			//ctxTarget.clearRect(0, 0, ctxW, ctxH);
 
-			var x, y, i, n, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
+			var x, y, i, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
 			var dark32, light32;
 			var warpSize, weftSize, warpSpace, weftSpace;
 			var floatS;
@@ -12840,7 +12840,7 @@ $(document).ready ( function(){
 
 	      			var jitter, drawSingleRepeat, testingMode;
 	      			var m, n, floatSizes, floatArray, floatsTotal, floatSizesTotal, floats, sx, sy, lx, ly, floatW, floatH, floatL, intersectionL;
-					var floatNode, floatGradient, nodeColor32, ytpStart, ytpPos, yarnThickness, floatNodeRelativePos;
+					var floatNode, floatGradient, nodeColor32, ytpPos, yarnThickness, floatNodeRelativePos;
 
 	      			var smoothingUpscale = this.smoothing;
 
@@ -13164,7 +13164,7 @@ $(document).ready ( function(){
 							color = globalPalette.colors[code];
 							sy = weftYPositions[y];
 							floatNode = 0;
-							ytpStart = getRandomInt(0, 8191);
+
 							for (x = 0; x < xNodes; x++) {
 								sx = x * intersectionW;
 								floatS = globalFloats.weftFloatWeave[x][y];
@@ -13176,7 +13176,7 @@ $(document).ready ( function(){
 									}
 									nodeColor32 = floatGradient[floatNode];
 									
-									//ytpPos = loopNumber(ytpStart+x, 8192);
+
 									yarnThickness = weftYarnThickness[y] * weftYarnThickness2D[x][y];
 									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness, upscaleW, upscaleH, "color32", nodeColor32);
 
