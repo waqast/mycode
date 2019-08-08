@@ -7,7 +7,17 @@
 	};
 
 	$.fn.numVal = function() {
-	    return Number($(this).val());
+
+		if( $(this).is( "input[type=text]" ) ){
+
+			return Number($(this).val());
+		
+		} else {
+
+			return Number($(this).find("input[type=text]").first().val());
+
+		}
+
 	};
 
 	$.fn.visible = function() {

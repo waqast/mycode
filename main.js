@@ -138,15 +138,6 @@ var g_graphDrawState = "T"; // U = up, D = down, T = toggle
 var g_endNumUnderMouse = "";
 var g_pickNumUnderMouse = "";
 var g_weaveStateUnderMouse = "";
-var yarnThicknessIncreaseFactor = 1;
-var yarnThicknessDecreaseFactor = 1;
-var yarnThicknessJitter = 0;
-var floatPositionJitter = 0;
-var interWarpSpaceJitter = 0;
-var yarnIPI = 0;
-
-var backFloatThicknessRatio = 0.75;
-var faceFloatThicknessRatio = 1.25;
 
 var g_weaveCanvas, g_weaveContext,
 	g_draftCanvas, g_draftContext,
@@ -180,6 +171,8 @@ var globalColors = {
 	green32: rgbaToColor32(0,255,0),
 	blue32: rgbaToColor32(0,0,255),
 
+	grey32: rgbaToColor32(127,127,127),
+
 	BGLight32: rgbaToColor32(255,255,255,64),
 	BGDark32: rgbaToColor32(0,0,0,13),
 
@@ -193,6 +186,7 @@ var globalColors = {
 		red: {r:255, g:0, b:0, a:1},
 		green: {r:0, g:255, b:0, a:1},
 		blue: {r:0, g:0, b:255, a:1},
+		grey: {r:127, g:127, b:127, a:1}
 	},
 	
 	rgba_str: {
@@ -232,7 +226,8 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// DEVICE PIXEL RATIO ADJUSTMENT
 	// ----------------------------------------------------------------------------------
-	var g_pixelRatio = getPixelRatio();
+	var g_pixelRatio = wd_getPixelRatio();
+	console.log(["pixelRatio",g_pixelRatio]);
 	//g_pointW *= g_pixelRatio;
 	//g_pointPlusGrid *= g_pixelRatio;
 	//g_gridThickness *= g_pixelRatio;
@@ -247,9 +242,9 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function interfaceLoadCheck(instanceId = 0) {
 
-		//checkAppLoadingDelay();
-
 		// console.log(["interfaceLoadCheck", instanceId]);
+
+		// checkAppLoadingDelay();
 
 		g_interfaceLoadCheckCount++;
 
@@ -259,10 +254,12 @@ $(document).ready ( function(){
 		
 		if (g_interfaceLoadCheckCount >= g_interfaceLoadCheckTotal) {
 
+			globalHistory.recording = false;
+
 			createLayout(2, false);
 			createPaletteLayout();
 
-			var sessionCode = store.session("h1");
+			var sessionCode = store.session("activeProjectCode");
 			if ( sessionCode ){
 				// console.log("Loading Session Code");
 				importProjectCode(1, sessionCode);
@@ -279,13 +276,17 @@ $(document).ready ( function(){
 
 			renderAll();
 
-			layoutToolbar.disableItem("toolbar-main-edit-redo");
-			layoutToolbar.disableItem("toolbar-main-edit-undo");
+			globalHistory.disableUndo();
+			globalHistory.disableRedo();
 			$("div.main-overlay").hide();
 
 			globalPalette.selectChip("a");
 
-			globalHistory.addStep(9);		
+			globalHistory.recording = true;
+
+			globalHistory.addStep(9);
+
+			$(".xcheckbox").tinyToggle();	
 
 		}
 
@@ -674,6 +675,18 @@ $(document).ready ( function(){
 			globalModel.loadModel(3);
 		} else if (id == "toolbar-model-object-04") {
 			globalModel.loadModel(4);
+		} else if (id == "toolbar-model-object-05") {
+			globalModel.loadModel(5);
+		} else if (id == "toolbar-model-object-06") {
+			globalModel.loadModel(6);
+		} else if (id == "toolbar-model-object-07") {
+			globalModel.loadModel(7);
+		} else if (id == "toolbar-model-object-08") {
+			globalModel.loadModel(8);
+		} else if (id == "toolbar-model-object-09") {
+			globalModel.loadModel(9);
+		} else if (id == "toolbar-model-object-10") {
+			globalModel.loadModel(100);
 		}
 
 	});
@@ -690,15 +703,20 @@ $(document).ready ( function(){
 				toolbar: threeToolbar,
 				id: "toolbar-three-settings"
 			});
-			threeSettingsPop.attachObject("three-setting-frame");
+			threeSettingsPop.attachObject("three-parameters");
 
 			interfaceLoadCheck(4);
 
-			$("#btnThreeUpdate").click(function(e) {
+			$("#three-parameters .button-primary").click(function(e) {
 				if (e.which === 1) {
-
 					buildFabric();
+				}
+				return false;
+			});
 
+			$("#three-parameters .button-close").click(function(e) {
+				if (e.which === 1) {
+					threeSettingsPop.hide();
 				}
 				return false;
 			});
@@ -723,19 +741,8 @@ $(document).ready ( function(){
 
 			globalThree.mouseOverHighlight = state;
 
-		} else if ( id == "toolbar-three-show-pathnodes" ){
-
-			globalThree.showPathNodes = state;
-			buildFabric();
-
-		} else if ( id == "toolbar-three-show-wireframe" ){
-
-			globalThree.showWireframe = state;
-			buildFabric();
-
 		}
 		
-	
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -856,15 +863,15 @@ $(document).ready ( function(){
 				toolbar: weaveToolbar,
 				id: "toolbar-pattern-auto-colorway"
 			});
-			autoColorwayPop.attachObject("auto-colorway-setting-frame");
+			autoColorwayPop.attachObject("auto-colorway-parameters");
 
 			var autoPatternPop = new dhtmlXPopup({
 				toolbar: weaveToolbar,
 				id: "toolbar-pattern-auto-pattern"
 			});
-			autoPatternPop.attachObject("auto-pattern-setting-frame");
+			autoPatternPop.attachObject("auto-pattern-parameters");
 
-			$("#btnAutoPattern").click(function(e) {
+			$("#auto-pattern-parameters .button-primary").click(function(e) {
 				if (e.which === 1) {
 					autoPattern();
 					globalWeave.render2D8(1, "weave");
@@ -872,7 +879,7 @@ $(document).ready ( function(){
 				return false;
 			});
 
-			$("#btnAutoPatternClose").click(function(e) {
+			$("#auto-pattern-parameters .button-close").click(function(e) {
 				if (e.which === 1) {
 					autoPatternPop.hide();
 				}
@@ -880,14 +887,14 @@ $(document).ready ( function(){
 			});
 
 
-			$("#btnAutoColorway").click(function(e) {
+			$("#auto-colorway-parameters .button-primary").click(function(e) {
 				if (e.which === 1) {
 					autoColorway();
 				}
 				return false;
 			});
 
-			$("#btnAutoColorwayClose").click(function(e) {
+			$("#auto-colorway-parameters .button-close").click(function(e) {
 				if (e.which === 1) {
 					autoColorwayPop.hide();
 				}
@@ -1052,27 +1059,68 @@ $(document).ready ( function(){
 		xml: "xml/toolbar_simulation.xml",
 		onload: function() {
 			
-			// ----- Settings POP -----
+			// ----- Fabric Parameters POP -----
 			var settingPop = new dhtmlXPopup({
 				toolbar: simulationToolbar,
-				id: "toolbar-simulation-settings"
+				id: "toolbar-simulation-fabric-parameters"
 			});
-			settingPop.attachObject("simulation-settings");
+			settingPop.attachObject("simulation-parameters");
 
 			settingPop.attachEvent("onShow", function(id) {
-				globalSimulation.updateParameterInputs();
+				globalSimulation.updateFabricParameterInputs();
+				$("#simulation-parameters .button-primary").text("Save");
 			});
 
-			$("#buttonApplySimulationSettings").click(function(e) {
+			$("#simulation-parameters .button-primary").click(function(e) {
 				if (e.which === 1) {
-					globalSimulation.applyParameters();
+
+					if ( $(this).text() == "Render" ){
+						globalSimulation.render(6);
+						$(this).text("Save");
+					} else {
+						globalSimulation.applyFabricParameters();
+						$(this).text("Render");
+					}
+
 				}
 				return false;
 			});
 
-			$("#buttonCloseSimulationSettings").click(function(e) {
+			$("#simulation-parameters .button-close").click(function(e) {
 				if (e.which === 1) {
 					settingPop.hide();
+				}
+				return false;
+			});
+
+			// ----- Yarn Parameters POP -----
+			var imperfectionParamsPop = new dhtmlXPopup({
+				toolbar: simulationToolbar,
+				id: "toolbar-simulation-imperfection-parameters"
+			});
+			imperfectionParamsPop.attachObject("imperfection-parameters");
+
+			imperfectionParamsPop.attachEvent("onShow", function(id) {
+				globalSimulation.updateImperfectionParametersInputs();
+				$("#imperfection-parameters .button-primary").text("Save");
+			});
+
+			$("#imperfection-parameters .button-primary").click(function(e) {
+				if (e.which === 1) {
+					if ( $(this).text() == "Render" ){
+						globalSimulation.render(6);
+						$(this).text("Save");
+					} else {
+						globalSimulation.applyImperfectionParameters();
+						$(this).text("Render");
+					}
+				}
+				return false;
+			});
+
+			$("#imperfection-parameters .button-close").click(function(e) {
+				if (e.which === 1) {
+					imperfectionParamsPop.hide();
 				}
 				return false;
 			});
@@ -1089,7 +1137,9 @@ $(document).ready ( function(){
 		} else if (id == "toolbar-simulation-save") {
 			showSimulationSaveModal();
 		} else if (id == "toolbar-simulation-reset-position") {
-			resetQuickSimulationPosition();
+			//resetQuickSimulationPosition();
+		} else if (id == "toolbar-simulation-render") {
+			globalSimulation.render(6);
 		}
 
 	});
@@ -1411,8 +1461,8 @@ $(document).ready ( function(){
 		var ctxH = ctx.canvas.clientHeight;
 		ctx.clearRect(0, 0, ctxW, ctxH);
 		var imagedata = ctx.createImageData(ctxW, ctxH);
-	  var pixels = new Uint32Array(imagedata.data.buffer);
-	  r = getRandomInt(0, 255);
+	  	var pixels = new Uint32Array(imagedata.data.buffer);
+	  	r = getRandomInt(0, 255);
 		g = getRandomInt(0, 255);
 		b = getRandomInt(0, 255);
 		a = 255;
@@ -1637,8 +1687,11 @@ $(document).ready ( function(){
 			[29, "Mockleno 6x6", "ududud_3d3u_ududud_dududu_3u3d_dududu"],
 			[30, "Mockleno 10x10", "dududududu_5u5d_dududududu_5u5d_dududududu_ududududud_5d5u_ududududud_5d5u_ududududud"],
 
-			[31, "Dobby 01", "11udu11d_10u2d2u10d_9u3d3u9d_8u4d4u8d_7u5d5u7d_2(6u6d)_5u7d7u5d_4u8d8u4d_3u9d9u3d_2u10d10u2d_u11d11ud_12d12u_12u12d_d11u11du_2d10u10d2u_3d9u9d3u_4d8u8d4u_5d7u7d5u_2(6d6u)_7d5u5d7u_8d4u4d8u_9d3u3d9u_10d2u2d10u_11dud11u"]
+			[31, "Dobby 01", "11udu11d_10u2d2u10d_9u3d3u9d_8u4d4u8d_7u5d5u7d_2(6u6d)_5u7d7u5d_4u8d8u4d_3u9d9u3d_2u10d10u2d_u11d11ud_12d12u_12u12d_d11u11du_2d10u10d2u_3d9u9d3u_4d8u8d4u_5d7u7d5u_2(6d6u)_7d5u5d7u_8d4u4d8u_9d3u3d9u_10d2u2d10u_11dud11u"],
+			[32, "Dobby 02", "6udu11dud5u_5ududu9dudud4u_4udududu7dududud3u_3ududududu5dudududud2u_2udududududu3dudududududu_ududududududududududududud_dududududududududududududu_ududududududududududududud_dududududududududududududu_2dududududud3udududududud_3dudududud5ududududu2d_4dududud7udududu3d_5dudud9ududu4d_6dud11udu5d_5dudud9ududu4d_4dududud7udududu3d_3dudududud5ududududu2d_2dududududud3udududududud_dududududududududududududu_ududududududududududududud_dududududududududududududu_ududududududududududududud_2udududududu3dudududududu_3ududududu5dudududud2u_4udududu7dududud3u_5ududu9dudud4u"],
 
+			[33, "Spider 01", "dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududud17ududududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_8udududududududud9u_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud"],
+			[34, "Spider 02", "8ududududu_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududud9u_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud"]
 		],
 		private : [],
 		shared : [],
@@ -1973,7 +2026,7 @@ $(document).ready ( function(){
 				setProjectName(projectName);
 				g_projectNotes = projectNotes;
 				$("#project-properties-notes").val(projectNotes);
-				store.session("h1", getProjectCode(1));
+				store.session("activeProjectCode", getProjectCode(1));
 				return false;
 			}
 		});
@@ -2668,12 +2721,10 @@ $(document).ready ( function(){
 
 		} else if (id == "toolbar-main-edit-undo") {
 
-			//previousHistoryStep();
 			globalHistory.gotoPrevStep();
 
 		} else if (id == "toolbar-main-edit-redo") {
 
-			//goToNextHistoryStep();
 			globalHistory.gotoNextStep();
 
 		} else if (id == "toolbar-main-test-01") {
@@ -2710,19 +2761,17 @@ $(document).ready ( function(){
 
 		} else if (id == "toolbar-main-test-03") {
 
-			debugTime("rotatel.A");
-			modify2D8("weave", "rotatel");
-			debugTimeEnd("rotatel.A");
+			globalSimulation.renderTest1();
 
 		} else if (id == "toolbar-main-test-04") {
 
-			globalWeave.weave2D8 = weave8ToWeave2D8(globalWeave.weave8);
+			//globalWeave.weave2D8 = weave8ToWeave2D8(globalWeave.weave8);
+
+			globalSimulation.renderTest2();
 
 		} else if (id == "toolbar-main-test-05") {
 
-			debugTime("flip2D8");
-			var weave2D8Flip = globalWeave.weave2D8.flip2D8("v");
-			debugTimeEnd("flip2D8");
+			globalSimulation.renderTest3();
 
 		} else if (id == "toolbar-main-test-06") {
 
@@ -2881,7 +2930,9 @@ $(document).ready ( function(){
 
 	$(document).on("dblclick", ".palette-chip", function(evt){
 		var code = $(this).attr("id").slice(-1);
-		globalPalette.showColorPicker(code);
+		if ( code !== "0"){
+			globalPalette.showColorPicker(code);	
+		}
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -2919,9 +2970,9 @@ $(document).ready ( function(){
 	// Color Picker
 	// ----------------------------------------------------------------------------------
 	var colorPickerPopup = new dhtmlXPopup();
-	colorPickerPopup.attachObject("yarn-settings");
-	var colorPicker = new dhtmlXColorPicker({parent: "yarn-settings-picker"});
-	$("#buttonApplyYarnSettings").click(function(e) {
+	colorPickerPopup.attachObject("palette-color-parameters");
+	var colorPicker = new dhtmlXColorPicker({parent: "palette-color-picker"});
+	$("#palette-color-parameters .button-primary").click(function(e) {
 		if (e.which === 1) {
 			var code = globalPalette.selected;
 			var hex = colorPicker.getSelectedColor()[0];
@@ -2933,10 +2984,8 @@ $(document).ready ( function(){
 		return false;
 	});
 
-	$("#buttonCloseYarnSettings").click(function(e) {
-		if (e.which === 1) {
-			colorPickerPopup.hide();
-		}
+	$("#palette-color-parameters .button-close").click(function(e) {
+		if (e.which === 1) { colorPickerPopup.hide(); }
 		return false;
 	});
 
@@ -3965,19 +4014,19 @@ $(document).ready ( function(){
 
 		} else if ( activeTab == "artwork"){
 
-			createArtworkLayout(14, render);
+			// createArtworkLayout(14, render);
 
 		} else if ( activeTab == "simulation"){
 
-			createSimulationLayout(14, render);
+			// createSimulationLayout(14, render);
 
 		} else if ( activeTab == "three"){
 
-			createThreeLayout(14, render);
+			// createThreeLayout(14, render);
 
 		} else if ( activeTab == "model"){
 
-			createModelLayout(14, render);
+			// createModelLayout(14, render);
 
 		}
 
@@ -4202,6 +4251,14 @@ $(document).ready ( function(){
 			globalPalette.setFromCompressed(palette);
 		}
 
+		if (importWarpPattern) {
+			globalPattern.set(23, "warp", decompress1D(warpPattern), false, 0, false, false);
+		}
+
+		if (importWeftPattern) {
+			globalPattern.set(24, "weft", decompress1D(weftPattern), false, 0, false, false);
+		}
+
 		if (importWeave) {
 
 			if ( weave ){
@@ -4222,13 +4279,7 @@ $(document).ready ( function(){
 
 		}
 
-		if (importWarpPattern) {
-			globalPattern.set(23, "warp", decompress1D(warpPattern), false, 0, false, false);
-		}
-
-		if (importWeftPattern) {
-			globalPattern.set(24, "weft", decompress1D(weftPattern), false, 0, false, false);
-		}
+		
 
 		if ( importWarpPattern || importWeftPattern ){
 			globalPattern.render8(2);
@@ -4359,8 +4410,9 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	var globalHistory = {
 
-		currentStepIndex : -1,
-		walkMode : false,
+		recording : true,
+
+		stepi : -1,
 		steps : [],
 
 		addStep : function (instanceId){
@@ -4371,76 +4423,84 @@ $(document).ready ( function(){
 			var code = getProjectCode(6);
 			debugTimeEnd("addStepGetProjectCode");
 
-			if ( !this.walkMode ) {
+			if ( this.recording ) {
 
 				// remove last history step if new step is same
 				if ( this.steps.length ){
 
-					var currentHistoryStepData = this.steps[this.currentStepIndex];
+					var currentHistoryStepData = this.steps[this.stepi];
 					
 					// keep steps before current steps including current step
-					this.steps = this.steps.slice(0, this.currentStepIndex+1);   
+					this.steps = this.steps.slice(0, this.stepi+1);   
 
 					// if new code is same as last code
-					if ( this.steps[this.currentStepIndex] == code ){
+					if ( this.steps[this.stepi] == code ){
 						// console.log("sameCode");
 						this.steps.pop();
-						this.currentStepIndex--;
+						this.stepi--;
 					}
 
 				}
 
-				this.currentStepIndex++;
+				this.stepi++;
 				this.steps.push({
 					time : Date.now(),
-					index : this.currentStepIndex,
+					index : this.stepi,
 					code : code
 				});
-				layoutToolbar.disableItem("toolbar-main-edit-redo");
-				if ( this.currentStepIndex ){
-					layoutToolbar.enableItem("toolbar-main-edit-undo");
+				this.disableRedo();
+				if ( this.stepi ){
+					this.enableUndo();
+				} else {
+					this.disableUndo();
 				}
 			}
 
-			store.session("h1", code);
+			store.session("activeProjectCode", code);
 			// updateAppSettings();
 
 		},
 
 		gotoNextStep : function (){
 
-			if ( this.currentStepIndex < this.steps.length-1 ) {
-
-				this.walkMode = true;
-				this.currentStepIndex += 1;
-				importProjectCode(3, this.steps[this.currentStepIndex].code, false);
-				this.walkMode = false;
-				layoutToolbar.enableItem("toolbar-main-edit-undo");
-
-				if ( this.currentStepIndex == this.steps.length+1 ) {
-
-					layoutToolbar.disableItem("toolbar-main-edit-redo");
-
+			if ( this.stepi < this.steps.length-1 ) {
+				this.recording = false;
+				this.stepi += 1;
+				importProjectCode(3, this.steps[this.stepi].code, false);
+				this.recording = true;
+				this.enableUndo();
+				if ( this.stepi == this.steps.length-1 ) {
+					this.disableRedo();
 				}
-
-
 			}
 
+		},
 
+		enableUndo : function(){
+			layoutToolbar.enableItem("toolbar-main-edit-undo");
+		},
+		disableUndo : function(){
+			layoutToolbar.disableItem("toolbar-main-edit-undo");
+		},
+		enableRedo : function(){
+			layoutToolbar.enableItem("toolbar-main-edit-redo");
+		},
+		disableRedo : function(){
+			layoutToolbar.disableItem("toolbar-main-edit-redo");
 		},
 
 		gotoPrevStep : function (){
 
-			if ( this.currentStepIndex > 0 ) {
+			if ( this.stepi > 0 ) {
 
-				this.walkMode = true;
-				this.currentStepIndex -= 1;
-				importProjectCode(3, this.steps[this.currentStepIndex].code, false);
-				this.walkMode = false;
-				layoutToolbar.enableItem("toolbar-main-edit-redo");
+				this.recording = false;
+				this.stepi -= 1;
+				importProjectCode(3, this.steps[this.stepi].code, false);
+				this.enableRedo();
+				this.recording = true;
 
-				if ( this.currentStepIndex == 0 ) {
-					layoutToolbar.disableItem("toolbar-main-edit-undo");
+				if ( this.stepi == 0 ) {
+					this.disableUndo();
 				}
 
 			}
@@ -4456,113 +4516,6 @@ $(document).ready ( function(){
 
 	function clearHistory(){
 		store(false); 
-	}
-	
-	function goToNextHistoryStep() {
-
-		if (g_history[g_historyNum + 1] === undefined) {
-
-			layoutToolbar.disableItem("toolbar-main-edit-redo");
-
-			return false;
-
-		} else {
-
-			g_historyMode = true;
-
-			g_historyNum += 1;
-
-			var historyStepData = g_history[g_historyNum];
-
-			importProjectCode(3, historyStepData.code, false);
-
-			g_historyMode = false;
-
-			layoutToolbar.enableItem("toolbar-main-edit-undo");
-
-			if (g_history[g_historyNum + 1] === undefined) {
-
-				layoutToolbar.disableItem("toolbar-main-edit-redo");
-
-			}
-
-		}
-
-	}
-
-
-	function previousHistoryStep() {
-
-		if (g_history[g_historyNum - 1] === undefined) {
-
-			layoutToolbar.disableItem("toolbar-main-edit-undo");
-			return false;
-
-		} else {
-
-			g_historyMode = true;
-			g_historyNum -= 1;
-			var historyStepData = g_history[g_historyNum];
-			importProjectCode(4, historyStepData.code, false);
-			g_historyMode = false;
-			layoutToolbar.enableItem("toolbar-main-edit-redo");
-
-			if (g_history[g_historyNum - 1] === undefined) {
-				layoutToolbar.disableItem("toolbar-main-edit-undo");
-			}
-
-		}
-
-	}
-
-	function addHistoryStep() {
-
-		/*
-		var code = getProjectCode(6);
-		var currentStepIndex = globalHistory.currentStepIndex;
-
-		if ( !globalHistory.walkMode ) {
-
-			// remove last history step if new step is same
-			if ( g_history.length ){
-
-				var currentHistoryStepData = globalHistory.steps[currentStepIndex];
-
-				// keep steps before current steps including current step
-				globalHistory.steps = globalHistory.steps.filter(function(x) { return x.index <= currentStepIndex });   
-
-				// if new code is same as last code
-				if ( currentHistoryStepData.code = code ){
-
-					globalHistory.steps.pop();
-					currentStepIndex--;
-
-				}
-
-			}
-
-			currentStepIndex++;
-			globalHistory.currentStepIndex++;
-
-			globalHistory.steps.push({
-				time : Date.now(),
-				index : currentStepIndex,
-				code : code
-			});
-
-			globalHistory.currentStepIndex = currentStepIndex;
-			layoutToolbar.disableItem("toolbar-main-edit-redo");
-			
-			if ( currentStepIndex ){
-				layoutToolbar.enableItem("toolbar-main-edit-undo");
-			}
-
-		}
-
-		store.session("h1", code);
-		updateAppSettings();
-		*/
-	
 	}
 
 	function updateAppSettings(){
@@ -4777,13 +4730,13 @@ $(document).ready ( function(){
 
 		var apSizeLimit = Number($("#autoPatternSize input").val());
 		var apColorLimit = Number($("#autoPatternColors input").val());
-		var apEven = $("div#autoEvenPattern input:checkbox").prop("checked");
-		var apStyle = $("div#autoPatternStyle select").val();
-		var apType = $("div#autoPatternType select").val();
+		var apEven = $("#autoEvenPattern").prop("checked");
+		var apStyle = $("#autoPatternStyle").val();
+		var apType = $("#autoPatternType").val();
 
-		var apLockColors = $("div#autoPatternLockColors input:checkbox").prop("checked");
-		var apLockedColors = $("#autoPatternLockedColors input").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
-		$("#autoPatternLockedColors input").val(apLockedColors);
+		var apLockColors = $("#autoPatternLockColors").prop("checked");
+		var apLockedColors = $("#autoPatternLockedColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
+		$("#autoPatternLockedColors").val(apLockedColors);
 
 		var apStyleCode = 0;
 
@@ -5117,12 +5070,12 @@ $(document).ready ( function(){
 	var autoColorPrevColors = "";
 	function autoColorway(){
 
-		var linkColors = $("div#autoColorLinkColors input:checkbox").prop("checked");
-		var shareColors = $("div#autoColorShareColors input:checkbox").prop("checked");
+		var linkColors = $("#autoColorLinkColors").prop("checked");
+		var shareColors = $("#autoColorShareColors").prop("checked");
 
-		var acLockColors = $("div#autoColorLockColors input:checkbox").prop("checked");
-		var acLockedColors = $("#autoColorLockedColors input").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
-		$("#autoColorLockedColors input").val(acLockedColors);
+		var acLockColors = $("#autoColorLockColors").prop("checked");
+		var acLockedColors = $("#autoColorLockedColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
+		$("#autoColorLockedColors").val(acLockedColors);
 
 		var warpPattern = globalPattern.warp;
 		var weftPattern = globalPattern.weft;
@@ -5207,13 +5160,13 @@ $(document).ready ( function(){
 
 	}
 
-    $("div#autoColorShareColors input:checkbox").click(function(){
+    $("#autoColorShareColors").click(function(){
         if( $(this).is(":checked") ) {
-        	$("div#autoColorLinkColors input:checkbox").prop("checked",true);
-            $("div#autoColorLinkColors input:checkbox").prop("disabled",false);
+        	$("#autoColorLinkColors").prop("checked",true);
+            $("#autoColorLinkColors").prop("disabled",false);
         } else {
-        	$("div#autoColorLinkColors input:checkbox").prop("checked",false);
-            $("div#autoColorLinkColors input:checkbox").prop("disabled",true);
+        	$("#autoColorLinkColors").prop("checked",false);
+            $("autoColorLinkColors").prop("disabled",true);
         }
     });
 
@@ -7704,6 +7657,13 @@ $(document).ready ( function(){
 			"bottom": modelBoxB,
 		});
 
+		$("#model-container").css({
+			"background-image": "url(model/bgs/03.jpg)",
+			"background-size": "cover",
+			"background-position": "center center",
+			"background-repeat": "no-repeat"
+		});
+
 		if ( render ){
 			// buildModel();
 		}
@@ -8437,10 +8397,10 @@ $(document).ready ( function(){
 			this.scene.add( spotLight );
 		    
 		    // axes
-		    this.scene.add( new THREE.AxesHelper( 10 ) );
+		    //this.scene.add( new THREE.AxesHelper( 10 ) );
 
 		    //this.scene.add(new THREE.CameraHelper(this.camera));
-			this.scene.add( new THREE.SpotLightHelper( spotLight ) );
+			//this.scene.add( new THREE.SpotLightHelper( spotLight ) );
 
 			this.createMaterials();
 
@@ -8607,6 +8567,108 @@ $(document).ready ( function(){
 
 				};
 
+			} else if ( id == 4 ){
+
+				modelFolderPath = "model/obj/shirt01/";
+				modelFileName = "shirt01.obj";
+				modelMapWmm = 1030;
+				modelMapHmm = 1460;
+				cameraPos = [-43, 12, 86];
+
+				materialList = {
+
+					fabric: globalModel.materials.fabric,
+					button: globalModel.materials.white,
+					thread: globalModel.materials.white,
+
+				};
+
+			} else if ( id == 5 ){
+
+				modelFolderPath = "model/obj/chair/";
+				modelFileName = "chair03.obj";
+				modelMapWmm = 240;
+				modelMapHmm = 240;
+				cameraPos = [-15, 10, 15];
+
+				materialList = {
+
+					wood_material_01: globalModel.materials.wood,
+					back_material_02: globalModel.materials.fabric,
+					base_material_03: globalModel.materials.fabric
+					
+				};
+
+			} else if ( id == 6 ){
+
+				modelFolderPath = "model/obj/";
+				modelFileName = "fabric01.obj";
+				modelMapWmm = 1030;
+				modelMapHmm = 1460;
+				cameraPos = [0, 1, -4];
+
+				materialList = {
+
+					fabric: globalModel.materials.fabric
+
+				};
+
+			} else if ( id == 7 ){
+
+				modelFolderPath = "model/obj/";
+				modelFileName = "fabric01.obj";
+				modelMapWmm = 1030;
+				modelMapHmm = 1460;
+				cameraPos = [0, 1, -4];
+
+				materialList = {
+
+					fabric: globalModel.materials.fabric
+
+				};
+
+			} else if ( id == 8 ){
+
+				modelFolderPath = "model/obj/";
+				modelFileName = "fabric01.obj";
+				modelMapWmm = 1030;
+				modelMapHmm = 1460;
+				cameraPos = [0, 1, -4];
+
+				materialList = {
+
+					fabric: globalModel.materials.fabric
+
+				};
+
+			} else if ( id == 9 ){
+
+				modelFolderPath = "model/obj/";
+				modelFileName = "fabric01.obj";
+				modelMapWmm = 1030;
+				modelMapHmm = 1460;
+				cameraPos = [0, 1, -4];
+
+				materialList = {
+
+					fabric: globalModel.materials.fabric
+
+				};
+
+			} else if ( id == 10 ){
+
+				modelFolderPath = "model/obj/";
+				modelFileName = "fabric01.obj";
+				modelMapWmm = 1030;
+				modelMapHmm = 1460;
+				cameraPos = [0, 1, -4];
+
+				materialList = {
+
+					fabric: globalModel.materials.fabric
+
+				};
+
 			}
 
 			var objLoader = new THREE.OBJLoader();
@@ -8697,6 +8759,13 @@ $(document).ready ( function(){
 			this.controls_data.rotation = this.camera.rotation.clone();
 			this.controls_data.controlCenter = this.controls.target.clone();
 
+			var cameraPos = globalModel.camera.position;
+			// var cameraPos = globalModel.camera.getWorldPosition();
+
+			debug("Camera x", Math.round(cameraPos.x * 1000)/1000, "model");
+			debug("Camera y", Math.round(cameraPos.y * 1000)/1000, "model");
+			debug("Camera z", Math.round(cameraPos.z * 1000)/1000, "model");
+
 		},
 
 		postCreate : function(){
@@ -8708,6 +8777,13 @@ $(document).ready ( function(){
 			debug("Points", this.renderer.info.render.points, "model");
 			debug("Lines", this.renderer.info.render.lines, "model");
 
+		},
+
+		setbg : function(id){
+
+			$("#model-container").css({
+				"background-image":  "model/bgs/01.jpg"
+			});
 		}
 
 	};
@@ -8771,6 +8847,8 @@ $(document).ready ( function(){
 
 		frameW : 0,
 		frameH : 0,
+
+		threeMode : "bicount",
 
 		warpStart : 1,
 		weftStart : 1,
@@ -9261,43 +9339,51 @@ $(document).ready ( function(){
 	    	removeFabric();
 	    }
 
-		var yarnProfile = $("div#threeYarnProfile select").val();
+	    var threeMode = $("#threeMode").val();
+		globalThree.threeMode = threeMode;
+
+		var yarnProfile = $("#threeYarnProfile").val();
 		globalThree.yarnProfile = yarnProfile;
 
-		var warpNumber = $("div#threeWarpNumber input").numVal();
+		var warpNumber = $("#threeWarpNumber").numVal();
 		globalThree.warpNumber = warpNumber;
 
-		var weftNumber = $("div#threeWeftNumber input").numVal();
+		var weftNumber = $("#threeWeftNumber").numVal();
 		globalThree.weftNumber = weftNumber;
 
-		var warpDensity = $("div#threeWarpDensity input").numVal();
+		var warpDensity = $("#threeWarpDensity").numVal();
 		globalThree.warpDensity = warpDensity;
 
-		var weftDensity = $("div#threeWeftDensity input").numVal();
+		var weftDensity = $("#threeWeftDensity").numVal();
 		globalThree.weftDensity = weftDensity;
 
-		var warpEccentricity = $("div#threeWarpEccentricity input").numVal();
+		var warpEccentricity = $("#threeWarpEccentricity").numVal();
 		globalThree.warpEccentricity = warpEccentricity;
 
-		var weftEccentricity = $("div#threeWeftEccentricity input").numVal();
+		var weftEccentricity = $("#threeWeftEccentricity").numVal();
 		globalThree.weftEccentricity = weftEccentricity;
 
-		var radiusSegments = $("div#threeRadiusSegments input").numVal();
+		var radiusSegments = $("#threeRadiusSegments").numVal();
 		globalThree.radiusSegments = radiusSegments;
 
-		var nodePathSegments = $("div#threeNodePathSegments input").numVal();
+		var nodePathSegments = $("#threeNodePathSegments").numVal();
 		globalThree.nodePathSegments = nodePathSegments;
 
-		var warpStart = $("div#threeWarpStart input").numVal();
+		var warpStart = $("#threeWarpStart").numVal();
 		globalThree.warpStart = warpStart;
-		var weftStart = $("div#threeWeftStart input").numVal();
+		var weftStart = $("#threeWeftStart").numVal();
 		globalThree.weftStart = weftStart;
 
-		var warpThreads = $("div#threeShowWarpThreads input").numVal();
+		var warpThreads = $("#threeShowWarpThreads").numVal();
 		globalThree.warpThreads = warpThreads;
-		var weftThreads = $("div#threeShowWeftThreads input").numVal();
+		var weftThreads = $("#threeShowWeftThreads").numVal();
 		globalThree.weftThreads = weftThreads;
 
+		var showPathNodes = $("#threeShowPathNodes").prop("checked");
+		globalThree.showPathNodes = showPathNodes;
+
+		var showWireframe = $("#threeShowWireframe").prop("checked");
+		globalThree.showWireframe = showWireframe;
 
 		if ( globalWeave.weave2D8 !== undefined && globalWeave.weave2D8.length && globalWeave.weave2D8[0] !== undefined && globalWeave.weave2D8[0].length ){
 
@@ -9507,6 +9593,13 @@ $(document).ready ( function(){
 		camToSave.position = camera.position.clone();
 		camToSave.rotation = camera.rotation.clone();
 		camToSave.controlCenter = controls.target.clone();
+
+		var cameraPos = camera.position;
+		// var cameraPos = globalModel.camera.getWorldPosition();
+
+		debug("Camera X", Math.round(cameraPos.x * 1000)/1000, "three");
+		debug("Camera Y", Math.round(cameraPos.y * 1000)/1000, "three");
+		debug("Camera Z", Math.round(cameraPos.z * 1000)/1000, "three");
 
 	}
 
@@ -9946,8 +10039,8 @@ $(document).ready ( function(){
 			var x, y, i, state, arrX, arrY, drawX, drawY, code, color, colors, r, g, b, a, patternX, patternY, rectW, rectH, opacity;
 			var xTranslated, yTranslated, gradientOrientation, index;
 
-			var ctxW = ctx.canvas.clientWidth * g_pixelRatio;
-			var ctxH = ctx.canvas.clientHeight * g_pixelRatio;
+			var ctxW = Math.floor(ctx.canvas.clientWidth * g_pixelRatio);
+			var ctxH = Math.floor(ctx.canvas.clientHeight * g_pixelRatio);
 
 			var imagedata = ctx.createImageData(ctxW, ctxH);
       		var pixels = new Uint32Array(imagedata.data.buffer);
@@ -9993,7 +10086,7 @@ $(document).ready ( function(){
 					gradientOrientation = "h";
 					drawY = 0;
 					rectW = g_pointW;
-					rectH = g_patternElementSize * g_pixelRatio;
+					rectH = Math.round(g_patternElementSize * g_pixelRatio);
 
 					for ( i = drawStartIndex; i < drawLastIndex; ++i) {
 
@@ -10008,7 +10101,7 @@ $(document).ready ( function(){
 				} else {
 
 					drawX = 0;
-					rectW = g_patternElementSize * g_pixelRatio;
+					rectW = Math.round(g_patternElementSize * g_pixelRatio);
 					rectH = g_pointW;
 					gradientOrientation = "v";
 
@@ -10059,6 +10152,7 @@ $(document).ready ( function(){
 		selected : "a",
 		marked : false,
 		rightClicked : false,
+		gradientL : 60,
 
 		defaults : {
 
@@ -10129,7 +10223,9 @@ $(document).ready ( function(){
 
 			var codeA, codeB, newPattern;
 
-			if ( this.marked ) {
+			if ( this.marked && code !== 0 && code !== "0" ) {
+
+				globalHistory.recording = false;
 
 				codeA = code;
 				codeB = this.marked;
@@ -10148,6 +10244,8 @@ $(document).ready ( function(){
 					globalPattern.set(19, "weft", newPattern, false);
 				}
 
+				globalHistory.recording = true;
+				globalHistory.addStep();
 				renderAll();
 				
 			}
@@ -10213,7 +10311,6 @@ $(document).ready ( function(){
 			var light2 = color.lighten(20).toString();
 			var dark2 = color.darken(50).toString();
 			
-
 			var color32 = hexToColor32(hex, alpha);
 			var dark32 = hexToColor32(dark, alpha);
 			var light32 = hexToColor32(light, alpha);
@@ -10221,18 +10318,19 @@ $(document).ready ( function(){
 			var darker32 = hexToColor32(dark, alpha);
 			var bright32 = hexToColor32(bright, alpha);
 
-			var rgba = color.toRgb();
+			var rgba = hexToRgba1(hex);
+
 			var rgba_str = color.toRgbString();
 			var yarn = yarnNumber;
 			var system = yarnNumberSystem;
 			var luster = yarnLuster;
 
 			//var gradient = gradient32Arr(g_pointW, 0, dark, 0.25, hex, 0.5, light, 0.75, hex, 1, dark);
-
 			// var lineargradient = gradient32Arr(60, 0, "#FFFFCC", 0.30, hex, 0.50, hex, 0.70, hex, 1, "#330000");
 			//var lineargradient = gradient32Arr(60, 0, "#FFFFCC", 0.50, hex, 1, "#330000");
 
-			var lineargradient = gradient32Arr(60, 0, light2, 0.50, hex, 1, dark2);
+			var lineargradient = gradient32Arr(this.gradientL, 0, light2, 0.50, hex, 1, dark2);
+			var gradientData = getGradientData(this.gradientL, 0, light2, 0.50, hex, 1, dark2);
 
 			this.colors[code] = {
 				hex : hex,
@@ -10250,10 +10348,13 @@ $(document).ready ( function(){
 				yarn : yarn,
 				system : system,
 				luster : luster,
-				lineargradient : lineargradient
+				lineargradient : lineargradient,
+				gradientData : gradientData,
 			};
 
-			$("#palette-chip-"+code+" .colorBox").css("background-image", "none").css("background-color", hex);
+			if ( code !== 0 && code !== "0"){
+				$("#palette-chip-"+code+" .colorBox").css("background-image", "none").css("background-color", hex);
+			}
 
 			if ( (hex || yarnNumber || yarnNumberSystem) && renderWeave ){
 				globalPattern.render8(7);
@@ -10281,6 +10382,10 @@ $(document).ready ( function(){
 			$("#yarnsystemselect").val(this.colors[code].system);
 			$("#yarnlusterinput input").val(this.colors[code].luster);
 
+		},
+
+		hideColorPicker(){
+			colorPickerPopup.hide();
 		}
 
 	};
@@ -11313,8 +11418,8 @@ $(document).ready ( function(){
 		frameW : 0,
 		frameH : 0,
 
-		minPPG : 1 * g_pixelRatio,
-		maxPPG : 16 * g_pixelRatio,
+		minPPG : Math.max(1, Math.floor(1 * g_pixelRatio)),
+		maxPPG : Math.floor(16 * g_pixelRatio),
 
 		autoTrim : true,
 
@@ -11555,8 +11660,8 @@ $(document).ready ( function(){
 			var x, y, i, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, gradient, code, gradientOrientation;
 			var xTranslated, yTranslated;
 
-			var ctxW = ctx.canvas.clientWidth * g_pixelRatio;
-			var ctxH = ctx.canvas.clientHeight * g_pixelRatio;
+			var ctxW = Math.floor(ctx.canvas.clientWidth * g_pixelRatio);
+			var ctxH = Math.floor(ctx.canvas.clientHeight * g_pixelRatio);
 
 			var arrW = 0;
 			var arrH = 0;
@@ -11578,8 +11683,12 @@ $(document).ready ( function(){
 
       		// Draw Background Check
 			if ( drawAreaW < ctxW || drawAreaH < ctxH ){
+
 				var pgW = g_pointPlusGrid;
 				var pgH = g_pointPlusGrid;
+
+				console.log([pgW, pgH, ctxW, ctxH, scrollX, scrollY]);
+
 				for (y = 0; y < ctxH; ++y) {
 					yTranslated = Math.floor((y-scrollY)/pgH);
 					i = (ctxH - y - 1) * ctxW;
@@ -12581,11 +12690,8 @@ $(document).ready ( function(){
 		scrollX : 0,
 		scrollY : 0,
 
-		simulationMode: "bicount",
-		simulationAlgorithm: 1,
-
 		screenDPI: 110,
-		smoothing: 3,
+		smoothing: 16,
 
 		warpSize : 3,
 		weftSize : 3,
@@ -12599,7 +12705,7 @@ $(document).ready ( function(){
 		weftDensity : 55,
 
 		reedFill : 1,
-		dentingSpace : 0.05,
+		dentingSpace : 0.03,
 
 		seamless : true,
 
@@ -12607,16 +12713,42 @@ $(document).ready ( function(){
 
 		drawStyle : "flat",
 
-		weftNumberJitter : 0.01, // 0.01
-		warpNumberJitter : 0.01, // 0.01
-		warpPosJitter : 0.03, // 0.03
-		weftPosJitter : 0.03, // 0.5
+		weftThicknessJitter : 0.05, // 0.01
+		warpThicknessJitter : 0.05, // 0.01
+		warpPosJitter : 0.05, // 0.03
+		weftPosJitter : 0.05, // 0.5
 
 		repatWpx : 0,
 		repeatHpx : 0,
 		repeatWmm : 0,
 		repeatHmm : 0,
 
+		warpThins: 10,
+		warpThicks: 40,
+		warpNeps: 80,
+
+		weftThins: 10,
+		weftThicks: 40,
+		weftNeps: 80,
+
+		warpWiggleRange : 0.05,
+		warpWiggleInc : 0.025,
+		weftWiggleRange : 0.5,
+		weftWiggleInc : 0.035,
+
+		warpFloatLiftPercent : 100,
+		weftFloatLiftPercent : 100,
+		warpFloatDeflectionPercent : 100,
+		weftFloatDeflectionPercent : 100,
+
+		mode: "scaled",
+		bgcolor: "black",
+		algorithm: 1,
+		multicount : false,
+		downscale : false,
+
+		calcFabricImperfecitons : false,
+		calcYarnImperfecitons : false,
 
 		update : function(){
 
@@ -12630,7 +12762,7 @@ $(document).ready ( function(){
 
 		onTabSelect : function(){
 
-			if ( this.needUpdate && this.simulationMode == "quick" ){
+			if ( this.needUpdate && this.mode == "quick" ){
 				this.render();
 			}
 
@@ -12653,11 +12785,14 @@ $(document).ready ( function(){
 
 		},
 
-		applyParameters : function(){
+		applyFabricParameters : function(){
 
-			this.simulationMode = $("#simulationmode").val();
+			this.mode = $("#simulationmode").val();
 			this.simulationRenderingMode = $("#simulationrenderingmode").val();
-			this.simulationAlgorithm = $("#simulationalgorithm").val();
+			this.algorithm = $("#simulationalgorithm").val();
+			this.bgcolor = $("#simulationbg").val();
+			this.multicount = $("#simulationmulticount").prop("checked");
+			this.downscale = $("#simulationdownscale").prop("checked");
 
 			this.warpSize = $("#warpsizeinput input").numVal();
 			this.weftSize = $("#weftsizeinput input").numVal();
@@ -12671,16 +12806,17 @@ $(document).ready ( function(){
 			this.smoothing = $("#simulationsmoothinginput input").numVal();
 			this.reedFill = $("#reedfillinput input").numVal();
 
-			this.warpNumberJitter = $("#simulationwarpnumberjitter input").numVal();
-			this.weftNumberJitter = $("#simulationweftnumberjitter input").numVal();
-			this.warpPosJitter = $("#simulationwarpposjitter input").numVal();
-			this.weftPosJitter = $("#simulationweftposjitter input").numVal();
-
-			this.update();
+			// this.update();
 
 		},
 
-		updateParameterInputs : function(){
+		updateFabricParameterInputs : function(){
+
+			$("#simulationmode").val(this.mode);
+			$("#simulationalgorithm").val(this.algorithm);
+			$("#simulationbg").val(this.bgcolor);
+			$("#simulationmulticount").prop("checked", this.multicount);
+			$("#simulationdownscale").prop("checked", this.downscale);
 
 			$("#warpsizeinput input").val(this.warpSize);
 			$("#weftsizeinput input").val(this.weftSize);
@@ -12693,23 +12829,79 @@ $(document).ready ( function(){
 			$("#screendpiinput input").val(this.screenDPI);
 			$("#simulationsmoothinginput input").val(this.smoothing);
 
-			$("#simulationwarpnumberjitter input").val(this.warpNumberJitter);
-			$("#simulationweftnumberjitter input").val(this.weftNumberJitter);
-			$("#simulationwarpposjitter input").val(this.warpPosJitter);
-			$("#simulationweftposjitter input").val(this.weftPosJitter);
-
-			$("#simulationalgorithm option[value=\""+this.simulationAlgorithm+"\"]").prop("selected", true);
-			$("#simulationrenderingmod option[value=\""+this.simulationRenderingMode+"\"]").prop("selected", true);
-			$("#simulationmode option[value=\""+this.simulationMode+"\"]").prop("selected", true);
+			$("#simulationalgorithm option[value=\""+this.algorithm+"\"]").prop("selected", true);
+			$("#simulationrenderingmode option[value=\""+this.simulationRenderingMode+"\"]").prop("selected", true);
+			$("#simulationmode option[value=\""+this.mode+"\"]").prop("selected", true);
+			$("#simulationbg option[value=\""+this.bgcolor+"\"]").prop("selected", true);
 
 			$("#reedfillinput input").val(this.reedFill);
 
 		},
 
+		applyImperfectionParameters : function(){
+
+			this.warpPosJitter = $("#simulationwarpposjitter input").numVal();
+			this.weftPosJitter = $("#simulationpickposjitter input").numVal();
+
+			this.warpWiggleRange = $("#simulationwarpwigglerange input").numVal();
+			this.weftWiggleRange = $("#simulationweftwigglerange input").numVal();
+			this.warpWiggleInc = $("#simulationwarpwiggleinc input").numVal();
+			this.weftWiggleInc = $("#simulationweftwiggleinc input").numVal();
+
+			this.warpFloatLiftPercent = $("#simulationwarpfloatliftpercent input").numVal();
+			this.warpFloatDeflectionPercent = $("#simulationwarpfloatdeflectionpercent input").numVal();
+
+			this.weftFloatLiftPercent = $("#simulationweftfloatliftpercent input").numVal();
+			this.weftFloatDeflectionPercent = $("#simulationweftfloatdeflectionpercent input").numVal();
+
+			this.warpThins = $("#warpthins input").numVal();
+			this.warpThicks = $("#warpthicks input").numVal();
+			this.warpNeps = $("#warpneps input").numVal();
+
+			this.weftThins = $("#weftthins input").numVal();
+			this.weftThicks = $("#weftthicks input").numVal();
+			this.weftNeps = $("#weftneps input").numVal();
+
+			this.warpThicknessJitter = $("#simulationwarpthicknessjitter input").numVal();
+			this.weftThicknessJitter = $("#simulationweftthicknessjitter input").numVal();
+
+			// this.update();
+
+		},
+
+		updateImperfectionParametersInputs : function(){
+
+			$("#simulationwarpposjitter input").val(this.warpPosJitter);
+			$("#simulationpickposjitter input").val(this.weftPosJitter);
+
+			$("#simulationwarpwigglerange input").val(this.warpWiggleRange);
+			$("#simulationwarpwiggleinc input").val(this.warpWiggleInc);
+			$("#simulationweftwigglerange input").val(this.weftWiggleRange);
+			$("#simulationweftwiggleinc input").val(this.weftWiggleInc);
+
+			$("#simulationwarpfloatliftpercent input").val(this.warpFloatLiftPercent);
+			$("#simulationwarpfloatdeflectionpercent input").val(this.warpFloatDeflectionPercent);
+
+			$("#simulationweftfloatliftpercent input").val(this.weftFloatLiftPercent);
+			$("#simulationweftfloatdeflectionpercent input").val(this.weftFloatDeflectionPercent);
+
+			$("#warpthins input").val(this.warpThins);
+			$("#warpthicks input").val(this.warpThicks);
+			$("#warpneps input").val(this.warpNeps);
+
+			$("#weftthins input").val(this.weftThins);
+			$("#weftthicks input").val(this.weftThicks);
+			$("#weftneps input").val(this.weftNeps);
+
+			$("#simulationwarpthicknessjitter input").val(this.warpThicknessJitter);
+			$("#simulationweftthicknessjitter input").val(this.weftThicknessJitter);
+
+		},
+
 		render : function(){
 
-				var ctxW = g_simulationCanvas.clientWidth * g_pixelRatio;
-				var ctxH = g_simulationCanvas.clientHeight * g_pixelRatio;
+				var ctxW = Math.floor(g_simulationCanvas.clientWidth * g_pixelRatio);
+				var ctxH = Math.floor(g_simulationCanvas.clientHeight * g_pixelRatio);
 				this.renderTo(g_simulationContext, ctxW, ctxH, globalWeave.weave2D8, "bl", this.scrollX, this.scrollY, false, false, "yarn");
 				this.needUpdate = false;
 
@@ -12720,17 +12912,23 @@ $(document).ready ( function(){
 			// console.log(arguments);
 			// console.log(["renderGraph2D8", ctxTarget]);
 
+			debugTime("simulationDrawOld");
+
 			var graphId = getGraphId(ctxTarget.canvas.id);
 			debugTime("renderTo > " + graphId);
 
 			//ctxTarget.clearRect(0, 0, ctxW, ctxH);
 
-			var x, y, i, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
+			var x, y, i, j, c, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
 			var dark32, light32;
-			var warpSize, weftSize, warpSpace, weftSpace;
 			var floatS;
 			var intersectionW, intersectionH;
 			var colorCode;
+			var simulationBGColor;
+			var nodeThickness, leftWarpNodeThickness, rightWarpNodeThickness, tNodeHT, bNodeHT, leftWarpNodeX, rightWarpNodeX, bottomWeftNodeX, topWeftNodeX;
+			var n, nodeX, nodeY, il, ir, ib, it, nodeHT, bNodeHT, tNodeHT, lNodeHT, rNodeHT, centerNode, iFirst, iLast, lNodeX, rNodeX, bNodeY, tNodeY, floatSAbs;
+			var warpBackFloats, weftBackFloats, fabricBackFloats, floatSizeToRender;
+			var warpFaceFloats, weftFaceFloats, fabricFaceFloats;
 
 			var arrW = 0;
 			var arrH = 0;
@@ -12742,18 +12940,24 @@ $(document).ready ( function(){
 
 				var warpRepeat = [arrW, globalPattern.warp.length].lcm();
 				var weftRepeat = [arrH, globalPattern.weft.length].lcm();
-	      		var simulationMode = this.simulationMode;
+	      		var mode = this.mode;
 	      		var screenDPI = this.screenDPI;
+	      		var bgcolor = this.bgcolor;
+	      		
 
-	      		if ( simulationMode == "quick" ){
+	      		var imagedata = ctxTarget.createImageData(ctxW, ctxH);
 
-					var imagedata = ctxTarget.createImageData(ctxW, ctxH);
+	      		if ( mode === "quick0" ){
+
 		      		var pixels = new Uint32Array(imagedata.data.buffer);
 
-	      			warpSize = this.warpSize;
-					weftSize = this.weftSize;
-					warpSpace = this.warpSpace;
-					weftSpace = this.weftSpace;
+					simulationBGColor = globalColors[bgcolor+"32"];
+					drawRectBuffer(g_origin, pixels, 0, 0, ctxW, ctxH, ctxW, ctxH, "color32", simulationBGColor);
+
+	      			var warpSize = this.warpSize;
+					var weftSize = this.weftSize;
+					var warpSpace = this.warpSpace;
+					var weftSpace = this.weftSpace;
 
 					var halfWarpSpace = Math.floor(warpSpace/2);
 					var halfWeftSpace = Math.floor(weftSpace/2);
@@ -12767,7 +12971,7 @@ $(document).ready ( function(){
 					var xIntersections = Math.ceil(ctxW/intersectionW);
 					var yIntersections = Math.ceil(ctxH/intersectionH);
 
-					var colorStyle = "gradient";
+					var fillStyle = "gradient";
 
 					var yarnColors = {
 						warp: [],
@@ -12777,7 +12981,7 @@ $(document).ready ( function(){
 					var warpColors = globalPattern.colors("warp");
 					var weftColors = globalPattern.colors("weft");
 
-					if ( colorStyle == "color32" ){
+					if ( fillStyle == "color32" ){
 
 						warpColors.forEach(function(code,i){
 							color = globalPalette.colors[code];
@@ -12789,7 +12993,7 @@ $(document).ready ( function(){
 							yarnColors.weft[code] = color.color32;
 						});
 
-					} else if ( colorStyle == "gradient" ){
+					} else if ( fillStyle == "gradient" ){
 
 						warpColors.forEach(function(code,i){
 							color = globalPalette.colors[code];
@@ -12804,11 +13008,10 @@ $(document).ready ( function(){
 					}
 
 					// warp full threads
-					drawRectBuffer(g_origin, pixels, 0, 0, ctxW, ctxH, ctxW, ctxH, "rgba", globalColors.rgba.white);
 					for ( x = 0; x < xIntersections; ++x) {
 						drawX = x * intersectionW + halfWarpSpace;
 						code = globalPattern.warp[x % globalPattern.warp.length];
-						drawRectBuffer(g_origin, pixels, drawX, 0, warpSize, ctxH, ctxW, ctxH, colorStyle, yarnColors.warp[code], 1, "h");
+						drawRectBuffer(g_origin, pixels, drawX, 0, warpSize, ctxH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
 						
 					}
 
@@ -12816,7 +13019,7 @@ $(document).ready ( function(){
 					for ( y = 0; y < yIntersections; ++y) {
 						drawY = y * intersectionH + halfWeftSpace;
 						code = globalPattern.weft[y % globalPattern.weft.length];
-						drawRectBuffer(g_origin, pixels, 0, drawY, ctxW, weftSize, ctxW, ctxH, colorStyle, yarnColors.weft[code], 1, "v");
+						drawRectBuffer(g_origin, pixels, 0, drawY, ctxW, weftSize, ctxW, ctxH, fillStyle, yarnColors.weft[code], 1, "v");
 					}
 
 					// warp floats
@@ -12829,81 +13032,152 @@ $(document).ready ( function(){
 							arrY = loopNumber(y, arrH);
 							drawY = y * intersectionH;
 							if (arr2D8[arrX][arrY]){
-								drawRectBuffer(g_origin, pixels, drawX, drawY, warpSize, intersectionH, ctxW, ctxH, colorStyle, yarnColors.warp[code], 1, "h");
+								drawRectBuffer(g_origin, pixels, drawX, drawY, warpSize, intersectionH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
 							}
 						}
 					}
 
 					ctxTarget.putImageData(imagedata, 0, 0);
 
-	      		} else if ( simulationMode == "bicount" || simulationMode == "multicount" ){
+	      		} else if ( mode === "quick" ){
+
+	      			var pixels = imagedata.data;
+
+					simulationBGColor = globalColors.rgba[bgcolor];
+					drawRectBuffer4(g_origin, pixels, 0, 0, ctxW, ctxH, ctxW, ctxH, "rgba", simulationBGColor);
+
+	      			var warpSize = this.warpSize;
+					var weftSize = this.weftSize;
+					var warpSpace = this.warpSpace;
+					var weftSpace = this.weftSpace;
+
+					var halfWarpSpace = Math.floor(warpSpace/2);
+					var halfWeftSpace = Math.floor(weftSpace/2);
+
+					intersectionW = warpSize + warpSpace;
+					intersectionH = weftSize + weftSpace;
+
+					var repeatW = warpRepeat * intersectionW;
+					var repeatH = weftRepeat * intersectionH;
+
+					var xIntersections = Math.ceil(ctxW/intersectionW);
+					var yIntersections = Math.ceil(ctxH/intersectionH);
+
+					var fillStyle = "gradient";
+
+					var yarnColors = {
+						warp: [],
+						weft: [],
+					};
+
+					var warpColors = globalPattern.colors("warp");
+					var weftColors = globalPattern.colors("weft");
+
+					if ( fillStyle == "rgba" ){
+
+						warpColors.forEach(function(code,i){
+							color = globalPalette.colors[code];
+							yarnColors.warp[code] = color.rgba;
+						});
+
+						weftColors.forEach(function(code,i){
+							color = globalPalette.colors[code];
+							yarnColors.weft[code] = color.rgba;
+						});
+
+					} else if ( fillStyle == "gradient" ){
+
+						warpColors.forEach(function(code,i){
+							color = globalPalette.colors[code];
+							// yarnColors.warp[code] = getSubGradient(color.lineargradient, warpSize);
+							yarnColors.warp[code] = getSubGradientData(color.gradientData, warpSize);
+						});
+
+						weftColors.forEach(function(code,i){
+							color = globalPalette.colors[code];
+							// yarnColors.weft[code] = getSubGradient(color.lineargradient, weftSize);
+							yarnColors.weft[code] = getSubGradientData(color.gradientData, weftSize);
+						});
+
+					}
+
+					// warp full threads
+					for ( x = 0; x < xIntersections; ++x) {
+						drawX = x * intersectionW + halfWarpSpace;
+						code = globalPattern.warp[x % globalPattern.warp.length];
+						drawRectBuffer4(g_origin, pixels, drawX, 0, warpSize, ctxH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
+						
+					}
+
+					// weft full threads
+					for ( y = 0; y < yIntersections; ++y) {
+						drawY = y * intersectionH + halfWeftSpace;
+						code = globalPattern.weft[y % globalPattern.weft.length];
+						drawRectBuffer4(g_origin, pixels, 0, drawY, ctxW, weftSize, ctxW, ctxH, fillStyle, yarnColors.weft[code], 1, "v");
+					}
+
+					// warp floats
+					for ( x = 0; x < xIntersections; ++x) {
+						arrX = loopNumber(x, arrW);
+						drawX = x * intersectionW + halfWarpSpace;
+						code = globalPattern.warp[x % globalPattern.warp.length];
+						color = globalPalette.colors[code];
+						for ( y = 0; y < yIntersections; ++y) {
+							arrY = loopNumber(y, arrH);
+							drawY = y * intersectionH;
+							if (arr2D8[arrX][arrY]){
+								drawRectBuffer4(g_origin, pixels, drawX, drawY, warpSize, intersectionH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
+							}
+						}
+					}
+
+					ctxTarget.putImageData(imagedata, 0, 0);
+
+	      		} else if ( mode === "scaled" ){
 
 	      			var jitter, drawSingleRepeat, testingMode;
-	      			var m, sx, sy, lx, ly, floatL, code;
-					var floatNode, floatGradient, nodeColor32, ytpPos, yarnThickness, floatNodeRelativePos;
+                    var m, sx, sy, lx, ly, floatL, nodei;
+                    var floatNode, floatGradient, nodeColor32, ytpPos, yarnThickness, floatNodeRelativePos, floatLift;
 
-	      			var smoothingUpscale = this.smoothing;
+                    var smoothingUpscale = this.smoothing;
+                    var downscale = this.downscale;
+                    var multicount = this.multicount;
+                    var algorithm = this.algorithm;
 
-	      			if ( this.simulationAlgorithm == 1 || this.simulationAlgorithm == 3){
+                    var warpDensity = this.warpDensity;
+                    var weftDensity = this.weftDensity;
 
-	      				drawSingleRepeat = true;
-	      				testingMode = true;
+                    intersectionW = screenDPI / warpDensity * smoothingUpscale;
+                    intersectionH = screenDPI / weftDensity * smoothingUpscale;
 
-	      			} else {
+                    var upscaleW = downscale ? ctxW * smoothingUpscale : ctxW;
+                    var upscaleH = downscale ? ctxH * smoothingUpscale : ctxH;
 
-	      				drawSingleRepeat = false;
-	      				testingMode = false;
+                    var xNodes = Math.ceil(upscaleW / intersectionW);
+                    var yNodes = Math.ceil(upscaleH / intersectionH);
 
-	      			}
+                    var repeatWmm = Math.round(warpRepeat / screenDPI * 25.4);
+                    var repeatHmm = Math.round(warpRepeat / screenDPI * 25.4);
 
-	      			var warpDensity = this.warpDensity;
-					var weftDensity = this.weftDensity;
+                    this.repeatWpx = Math.round(warpRepeat / warpDensity * screenDPI);
+                    this.repeatHpx = Math.round(weftRepeat / weftDensity * screenDPI);
 
-					intersectionW = screenDPI / warpDensity * smoothingUpscale;
-					intersectionH = screenDPI / weftDensity * smoothingUpscale;
-
-					var upscaleW = drawSingleRepeat ? intersectionW * warpRepeat : ctxW * smoothingUpscale;
-					var upscaleH = drawSingleRepeat ? intersectionH * weftRepeat : ctxH * smoothingUpscale;
-
-					var xNodes = drawSingleRepeat ? warpRepeat : Math.floor(upscaleW / intersectionW);
-					var yNodes = drawSingleRepeat ? weftRepeat : Math.floor(upscaleH / intersectionH);
-
-					var repeatWmm = Math.round(warpRepeat / screenDPI * 25.4);
-					var repeatHmm = Math.round(warpRepeat / screenDPI * 25.4);
-
-					this.repeatWpx = Math.round(warpRepeat / warpDensity * screenDPI);
-					this.repeatHpx = Math.round(weftRepeat / weftDensity * screenDPI);
-
-					this.repeatWmm = repeatWmm;
-					this.repeatHmm = repeatHmm;
-
-					// Upscale Canvas --------------------------------------------------
-					g_upscaleContext = getCtx(10, "upscale-canvas", "g_upscaleCanvas", upscaleW, upscaleH, false);
-					g_upscaleCanvas.width = upscaleW;
-					g_upscaleCanvas.height = upscaleH;
-
-					var upscaleImageData = g_upscaleContext.createImageData(upscaleW, upscaleH);
-					var upscalePixels = new Uint32Array(upscaleImageData.data.buffer);
+                    this.repeatWmm = repeatWmm;
+                    this.repeatHmm = repeatHmm;
 
 		      		// Basic Physical Values ------------------------------------------
 
-		      		var warpPosJitter = this.warpPosJitter * smoothingUpscale;
-		      		var weftPosJitter = this.weftPosJitter * smoothingUpscale;
-
-					var warpXPositions = [];
-					var weftYPositions = [];
-					var warpYarnThickness = [];
-					var weftYarnThickness = [];
 					var warpPatternTranslated = [];
 					var weftPatternTranslated = [];
-					var warpPattern32 = new Uint32Array(xNodes);
-					var weftPattern32 = new Uint32Array(yNodes);
 
-					var warpBackPattern32 = new Uint32Array(xNodes);
-					var weftBackPattern32 = new Uint32Array(yNodes);
+					var warpThicknessProfile = new Float32Array(xNodes * yNodes);
+					var weftThicknessProfile = new Float32Array(xNodes * yNodes);
 
-					var interWarpSpace, interWeftSpace, thicknessJitter;
-					var interWarpSpaceJitter = 0;
+					var warpPositionProfile = new Float32Array(xNodes * yNodes);
+					var weftPositionProfile = new Float32Array(xNodes * yNodes);
+
+					var warpDeflectionProfile = new Float32Array(xNodes * yNodes);
+					var weftDeflectionProfile = new Float32Array(xNodes * yNodes);
 
 					var dentingEffect = [];
 					if ( this.reedFill == 1 ){
@@ -12919,61 +13193,18 @@ $(document).ready ( function(){
 					}
 					var dentingSpacePx = this.dentingSpace / 25.4 * screenDPI * smoothingUpscale;
 
-					for (x = 0; x < xNodes; ++x) {
-
-						colorCode = globalPattern.warp[x % globalPattern.warp.length];
-						color = globalPalette.colors[colorCode];
-
-						if ( simulationMode == "bicount" ){
-							yarnThickness = yarnDia(this.warpNumber, "nec", "px", screenDPI) * smoothingUpscale;
-						} else if ( simulationMode == "multicount" ){
-							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
-						}
-
-						thicknessJitter = 1 + getRandom(-this.warpNumberJitter, this.warpNumberJitter);
-						warpYarnThickness[x] =  Math.round(yarnThickness * thicknessJitter);
-						warpXPositions[x] = intersectionW * ( x + 0.5 ) - warpYarnThickness[x] / 2 + dentingSpacePx * dentingEffect[x % this.reedFill];
-						warpPattern32[x] = color.color32;
-						warpBackPattern32[x] = color.dark32;
-						warpPatternTranslated[x] = colorCode;
-
-					}
-
-					yarnThickness = yarnDia(this.weftNumber, "nec", "px", screenDPI) * smoothingUpscale;
-
-					for (y = 0; y < yNodes; ++y) {
-						
-						colorCode = globalPattern.weft[y % globalPattern.weft.length];
-						color = globalPalette.colors[colorCode];
-
-						if ( simulationMode == "bicount" ){
-							yarnThickness = yarnDia(this.weftNumber, "nec", "px", screenDPI) * smoothingUpscale;
-						} else if ( simulationMode == "multicount" ){
-							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
-						}
-
-						thicknessJitter = 1 + getRandom(-this.weftNumberJitter, this.weftNumberJitter);
-						weftYarnThickness[y] =  Math.round(yarnThickness * thicknessJitter);
-						weftYPositions[y] = intersectionH * ( y + 0.5 ) - weftYarnThickness[y] / 2;
-						weftPattern32[y] = color.color32;
-						weftBackPattern32[y] = color.dark32;
-						weftPatternTranslated[y] = colorCode;
-
-					}
-
 					// Nep 1mm-5mm
 					// thick 50% fault 6mm-30mm
 					// thin 50% fault : 4mm-20mm
 
-					var warpYarnThickness2D = newArray2D(xNodes, yNodes, 1);
-					var weftYarnThickness2D = newArray2D(xNodes, yNodes, 1);
+					// 60s IPI 10,40,80
 
 					var totalWarpYarnKmInView = ctxH / screenDPI * xNodes / 39.37 / 1000;
 					var totalWeftYarnKmInView = ctxW / screenDPI * yNodes / 39.37 / 1000;
 
-					var warpYarnThinPlaces = Math.round(10 * totalWarpYarnKmInView);
-					var warpYarnThickPlaces = Math.round(40 * totalWarpYarnKmInView);
-					var warpYarnNeps = Math.round(80 * totalWarpYarnKmInView);
+					var warpYarnThinPlaces = Math.round(this.warpThins * totalWarpYarnKmInView);
+					var warpYarnThickPlaces = Math.round(this.warpThicks * totalWarpYarnKmInView);
+					var warpYarnNeps = Math.round(this.warpNeps * totalWarpYarnKmInView);
 
 					var warpYarnThinPlaceMinLength = Math.round(4 / 25.4 * warpDensity);
 					var warpYarnThinPlaceMaxLength = Math.round(20 / 25.4 * warpDensity);
@@ -12984,9 +13215,9 @@ $(document).ready ( function(){
 					var warpYarnNepMinLength = Math.round(1 / 25.4 * warpDensity);
 					var warpYarnNepMaxLength = Math.round(5 / 25.4 * warpDensity);
 
-					var weftYarnThinPlaces = Math.round(10 * totalWeftYarnKmInView);
-					var weftYarnThickPlaces = Math.round(40 * totalWeftYarnKmInView);
-					var weftYarnNeps = Math.round(80 * totalWeftYarnKmInView);
+					var weftYarnThinPlaces = Math.round(this.weftThins * totalWeftYarnKmInView);
+					var weftYarnThickPlaces = Math.round(this.weftThicks * totalWeftYarnKmInView);
+					var weftYarnNeps = Math.round(this.weftNeps * totalWeftYarnKmInView);
 
 					var weftYarnThinPlaceMinLength = Math.round(4 / 25.4 * weftDensity);
 					var weftYarnThinPlaceMaxLength = Math.round(20 / 25.4 * weftDensity);
@@ -12997,21 +13228,8 @@ $(document).ready ( function(){
 					var weftYarnNepMinLength = Math.round(1 / 25.4 * weftDensity);
 					var weftYarnNepMaxLength = Math.round(5 / 25.4 * weftDensity);
 
-					addImperfectionToYarnThicknessProfile2D(warpYarnThickness2D, "warp", warpYarnThinPlaces, warpYarnThinPlaceMinLength, warpYarnThinPlaceMaxLength, -0.5 );
-					addImperfectionToYarnThicknessProfile2D(warpYarnThickness2D, "warp", warpYarnThickPlaces, warpYarnThickPlaceMinLength, warpYarnThickPlaceMaxLength, 0.5 );
-					addImperfectionToYarnThicknessProfile2D(warpYarnThickness2D, "warp", warpYarnNeps, warpYarnNepMinLength, warpYarnNepMaxLength, 1 );
-
-					addImperfectionToYarnThicknessProfile2D(weftYarnThickness2D, "weft", weftYarnThinPlaces, weftYarnThinPlaceMinLength, weftYarnThinPlaceMaxLength, -0.5 );
-					addImperfectionToYarnThicknessProfile2D(weftYarnThickness2D, "weft", weftYarnThickPlaces, weftYarnThickPlaceMinLength, weftYarnThickPlaceMaxLength, 0.5 );
-					addImperfectionToYarnThicknessProfile2D(weftYarnThickness2D, "weft", weftYarnNeps, weftYarnNepMinLength, weftYarnNepMaxLength, 1 );
-
-					debugTime("globalFloats.find");
-
+					// Global Floats
 					globalFloats.find(arr2D8, scrollX, scrollY, xNodes, yNodes);
-
-					debugTimeEnd("globalFloats.find");
-
-					debugTime("floatGradients-Prep");
 
 					var floatGradients = [];
 
@@ -13023,197 +13241,863 @@ $(document).ready ( function(){
 					var subShadei;
 					var subShade32;
 					var gradient;
+				
+					// New Uint32Array Profiles
+					var warpPosJitter = 0;
+					var weftPosJitter = 0;
+					var warpThicknessJitter = 0;
+					var weftThicknessJitter;
 
-					debugTimeEnd("floatGradients-Prep");
+					var warpNodePosJitter = 0;
+					var weftNodePosJitter = 0;
+					var warpNodeThicknessJitter = 0;
+					var weftNodeThicknessJitter = 0;
 
-					debugTime("floatGradients-warp");
+					var warpFloatLiftPercent = 0;
+					var weftFloatLiftPercent = 0;
+	      			var warpFloatDeflectionPercent = 0;
+	      			var weftFloatDeflectionPercent = 0;
 
-					for (var c = 0; c < warpColors.length; c++) {
-						code = warpColors[c];
-						gradient = globalPalette.colors[code].lineargradient;
-						for (var i = 0; i < globalFloats.warp.face[0].length; i++) {
-							floatL = globalFloats.warp.face[0][i];
-							floatGradients[code+"-"+floatL] = new Uint32Array(floatL);
-							for (var nodei = 0; nodei < floatL; nodei++) {
-								shadei = Math.ceil(gradient.length/(floatL+1)*(nodei+1))-1;
-								shade32 = gradient[shadei];
-								floatGradients[code+"-"+floatL][nodei] = shade32;
-							}
-						}
-						floatGradients[code+"-light"] = gradient[1];
-						floatGradients[code+"-dark"] = gradient[gradient.length-1];
+					var warpWiggleRange = 0;
+					var warpWiggleInc = 0
+					var warpWiggleFrequency = 0;
+					var warpWiggle = 0;
+
+					var weftWiggleRange = 0;
+					var weftWiggleInc = 0;
+					var warpWiggleFrequency = 0;
+					var weftWiggle = 0;
+
+					if ( this.calcFabricImperfecitons ){
+
+						warpPosJitter = this.warpPosJitter;
+						weftPosJitter = this.weftPosJitter;
+						warpThicknessJitter = this.warpThicknessJitter;
+						weftThicknessJitter = this.weftThicknessJitter;
+
+						warpNodePosJitter = this.warpNodePosJitter;
+						weftNodePosJitter = this.weftNodePosJitter;
+						warpNodeThicknessJitter = this.warpNodeThicknessJitter;
+						weftNodeThicknessJitter = this.weftNodeThicknessJitter;
+						
+						warpFloatLiftPercent = this.warpFloatLiftPercent;
+						weftFloatLiftPercent = this.weftFloatLiftPercent;
+		      			warpFloatDeflectionPercent = this.warpFloatDeflectionPercent;
+		      			weftFloatDeflectionPercent = this.weftFloatDeflectionPercent;
+
+						warpWiggleRange = this.warpWiggleRange;
+						warpWiggleInc = this.warpWiggleInc;
+						warpWiggleFrequency = this.warpWiggleFrequency;
+
+						weftWiggleRange = this.weftWiggleRange;
+						weftWiggleInc = this.weftWiggleInc;
+						weftWiggleFrequency = this.weftWiggleFrequency;
+
 					}
 
-					debugTimeEnd("floatGradients-warp");
+					for (x = 0; x < xNodes; ++x) {
 
-					debugTime("floatGradients-weft");
+						if ( this.calcFabricImperfecitons ){
 
-					for (var c = 0; c < weftColors.length; c++) {
-						code = weftColors[c];
-						gradient = globalPalette.colors[code].lineargradient;
-						for (var i = 0; i < globalFloats.weft.face[0].length; i++) {
-							floatL = globalFloats.weft.face[0][i];
-							floatGradients[code+"-"+floatL] = new Uint32Array(floatL);
-							for (var nodei = 0; nodei < floatL; nodei++) {
-								shadei = Math.ceil(gradient.length/(floatL+1)*(nodei+1))-1;
-								shade32 = gradient[shadei];
-								floatGradients[code+"-"+floatL][nodei] = shade32;
-							}
+							warpPosJitter = warpPosJitter ? smoothingUpscale * getRandom(-warpPosJitter, warpPosJitter) : 0;
+							warpThicknessJitter = warpThicknessJitter ? smoothingUpscale * getRandom(-warpThicknessJitter, warpThicknessJitter) : 0;
+
 						}
-						floatGradients[code+"-light"] = gradient[1];
-						floatGradients[code+"-dark"] = gradient[gradient.length-1];
+
+						colorCode = globalPattern.warp[x % globalPattern.warp.length];
+						color = globalPalette.colors[colorCode];
+						if ( multicount ){
+							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
+						} else {
+							yarnThickness = yarnDia(this.warpNumber, "nec", "px", screenDPI) * smoothingUpscale;
+						}
+						warpPatternTranslated[x] = colorCode;
+
+						for (y = 0; y < yNodes; ++y) {
+
+							if ( this.calcFabricImperfecitons ){
+
+								warpWiggle = Math.round(Math.random()) < warpWiggleFrequency ? warpWiggle+warpWiggleInc : warpWiggle-warpWiggleInc;
+								warpWiggle = limitNumber(warpWiggle, -warpWiggleRange, warpWiggleRange);
+								
+								warpNodePosJitter = warpNodePosJitter ? getRandom(-warpNodePosJitter, warpNodePosJitter) * smoothingUpscale / 2 : 0;
+								warpNodeThicknessJitter = warpNodeThicknessJitter ? smoothingUpscale * getRandom(-warpNodeThicknessJitter, warpNodeThicknessJitter) / 2 : 0;
+
+							}
+							
+							i = y * xNodes + x;
+
+							// Warp Node Position							
+							
+							floatS = globalFloats.warpFloatWeave[x][y];
+							floatSAbs = Math.abs(floatS);
+							floatNode = globalFloats.warpFloatNodeWeave[x][y];
+							warpPositionProfile[i] += Math.round( intersectionW * ( x + 0.5 ) + dentingSpacePx * dentingEffect[x % this.reedFill] + warpPosJitter + warpNodePosJitter + warpWiggle * smoothingUpscale);
+
+							// Warp Node Thickness	
+							
+							warpThicknessProfile[i] = Math.round(yarnThickness + warpThicknessJitter + warpNodeThicknessJitter);
+
+							// Intersection Deflection
+							if ( floatNode === 0 ){
+								weftDeflectionProfile[i] += smoothingUpscale * weftFloatDeflectionPercent / 100;
+							}
+
+							if ( floatNode == floatSAbs - 1){
+								weftDeflectionProfile[i] -= smoothingUpscale * weftFloatDeflectionPercent / 100;
+							}
+
+						}
 					}
 
-					debugTimeEnd("floatGradients-weft");
+					for (y = 0; y < yNodes; ++y) {
 
-					debugTime("simulation-draw-white-bg");
+						if ( this.calcFabricImperfecitons ){
 
-					//drawRectBuffer(g_origin, upscalePixels, 0, 0, upscaleW, upscaleH, upscaleW, upscaleH, "color32", globalColors.white32);
+							weftPosJitter = weftPosJitter ? smoothingUpscale * getRandom(-weftPosJitter, weftPosJitter) : 0;
+							weftThicknessJitter = weftThicknessJitter ? smoothingUpscale * getRandom(-weftThicknessJitter, weftThicknessJitter) : 0;
 
-					debugTimeEnd("simulation-draw-white-bg");
+						}
+
+						colorCode = globalPattern.weft[y % globalPattern.weft.length];
+						color = globalPalette.colors[colorCode];
+						if ( multicount ){
+							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
+						} else {
+							yarnThickness = yarnDia(this.weftNumber, "nec", "px", screenDPI) * smoothingUpscale;
+						}
+
+						weftPatternTranslated[y] = colorCode;
+
+						for (x = 0; x < xNodes; ++x) {
+
+							if ( this.calcFabricImperfecitons ){
+
+								weftWiggle = Math.round(Math.random()) < weftWiggleFrequency ? weftWiggle+weftWiggleInc : weftWiggle-weftWiggleInc;
+								weftWiggle = limitNumber(weftWiggle, -weftWiggleRange, weftWiggleRange);
+								
+								weftNodePosJitter = weftNodePosJitter ? getRandom(-weftNodePosJitter, weftNodePosJitter) * smoothingUpscale / 2 : 0;
+								weftNodeThicknessJitter = weftNodeThicknessJitter ? smoothingUpscale * getRandom(-weftNodeThicknessJitter, weftNodeThicknessJitter) / 2 : 0;
+
+							}
+							
+							i = y * xNodes + x;	
+
+							// Weft Node Position
+							floatS = globalFloats.weftFloatWeave[x][y];
+							floatSAbs = Math.abs(floatS);
+							floatNode = globalFloats.weftFloatNodeWeave[x][y];
+							weftPositionProfile[i] += Math.round( intersectionH * ( y + 0.5 ) + weftPosJitter + weftNodePosJitter + weftWiggle * smoothingUpscale);
+
+							// Weft Node Thickness	
+							weftThicknessProfile[i] = Math.round(yarnThickness + weftThicknessJitter + weftNodeThicknessJitter);
+
+							// Intersection Deflection
+							if ( floatNode === 0 ){
+								warpDeflectionProfile[i] += smoothingUpscale * warpFloatDeflectionPercent / 100;
+							}
+
+							if ( floatNode == floatSAbs - 1){
+								warpDeflectionProfile[i] -= smoothingUpscale * warpFloatDeflectionPercent / 100;
+							}
+
+						}
+					}
+
+					// console.log(warpDeflectionProfile);
+					// console.log(weftDeflectionProfile);
+
+					for (n = 0; n < 2; ++n) {
+
+						// warp Float Deflection Normalize
+						for (x = 0; x < xNodes; ++x) {
+							for (y = 1; y < yNodes-1; ++y) {
+								i = y * xNodes + x;
+								j = (y+1) * xNodes + x;
+								warpDeflectionProfile[i] = (warpDeflectionProfile[i] + warpDeflectionProfile[j])/2;
+								warpDeflectionProfile[j] = (warpDeflectionProfile[i] + warpDeflectionProfile[j])/2;
+							}
+
+						}
+
+						// warp Float Deflection Normalize
+						for (y = 0; y < yNodes; ++y) {
+							for (x = 1; x < xNodes-1; ++x) {
+								i = y * xNodes + x;
+								j = y * xNodes + x + 1;
+								weftDeflectionProfile[i] = (weftDeflectionProfile[i] + weftDeflectionProfile[j])/2;
+								weftDeflectionProfile[j] = (weftDeflectionProfile[i] + weftDeflectionProfile[j])/2;
+							}
+
+						}
+
+						// warp Float Deflection Normalize
+						for (x = 0; x < xNodes; ++x) {
+							for (y = 1; y < yNodes-1; ++y) {
+								i = y * xNodes + x;
+								j = (y-1) * xNodes + x;
+								warpDeflectionProfile[i] = (warpDeflectionProfile[i] + warpDeflectionProfile[j])/2;
+								warpDeflectionProfile[j] = (warpDeflectionProfile[i] + warpDeflectionProfile[j])/2;
+							}
+
+						}
+
+						// warp Float Deflection Normalize
+						for (y = 0; y < yNodes; ++y) {
+							for (x = 1; x < xNodes-1; ++x) {
+								i = y * xNodes + x;
+								j = y * xNodes + x - 1;
+								weftDeflectionProfile[i] = (weftDeflectionProfile[i] + weftDeflectionProfile[j])/2;
+								weftDeflectionProfile[j] = (weftDeflectionProfile[i] + weftDeflectionProfile[j])/2;
+							}
+
+						}
+
+					}
+
+					// node deflections
+					for (x = 0; x < xNodes; ++x) {
+						for (y = 0; y < yNodes; ++y) {
+
+							i = y * xNodes + x;
+							weftPositionProfile[i] += weftDeflectionProfile[i];
+							warpPositionProfile[i] += warpDeflectionProfile[i];
+
+						}
+
+					}
+
+					var affectingFloatS, affectedFloatS, floatCenter, xDeflection, yDeflection, lFloatS, rFloatS, bFloatS, tFloatS;
+
+					
+					/*
+					// Affecting Warp, Affected Weft Floating Deflection
+					for (x = 1; x < xNodes-1; ++x) {
+						for (y = 1; y < yNodes-1; ++y) {
+
+							floatS = globalFloats.warpFloatWeave[x][y];
+							floatSAbs = Math.abs(floatS);
+							floatNode = globalFloats.warpFloatNodeWeave[x][y];
+							floatCenter = floatS/2;
+
+							lFloatS = globalFloats.weftFloatWeave[x-1][y];
+							rFloatS = globalFloats.weftFloatWeave[x+1][y];
+
+							bFloatS = globalFloats.warpFloatWeave[x][y-1];
+							tFloatS = globalFloats.warpFloatWeave[x][y+1];
+
+							yDeflection = floatSAbs > 1 ? (floatCenter - floatNode) * smallerRatio(lFloatS, rFloatS) : 0;
+
+							i = y * xNodes + x;
+							// weftPositionProfile[i] += yDeflection * floatDeflectionPercent / 100;
+						}
+
+					}
+					*/
+
+					addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnThinPlaces, warpYarnThinPlaceMinLength, warpYarnThinPlaceMaxLength, -25,  -25);
+					addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnThickPlaces, warpYarnThickPlaceMinLength, warpYarnThickPlaceMaxLength, 50, 50 );
+					addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnNeps, warpYarnNepMinLength, warpYarnNepMaxLength, 60, 120 );
+
+					addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnThinPlaces, weftYarnThinPlaceMinLength, weftYarnThinPlaceMaxLength, -25, -25 );
+					addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnThickPlaces, weftYarnThickPlaceMinLength, weftYarnThickPlaceMaxLength, 50, 50 );
+					addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnNeps, weftYarnNepMinLength, weftYarnNepMaxLength, 60, 120 );
+
+					if ( bgcolor === "white" ){
+						simulationBGColor = globalColors.white32;
+					} else if ( bgcolor === "grey" ){
+						simulationBGColor = globalColors.grey32;
+					} else {
+						simulationBGColor = globalColors.black32;
+					} 
 
 					var drawWarpFaceFloats = true;
 					var drawWarpBackFloats = true;
 					var drawWeftFaceFloats = true;
 					var drawWeftBackFloats = true;
 
-					debugTime("simulation-draw-warp-bg");
+					warpFaceFloats = globalFloats.warp.face;
+                    weftFaceFloats = globalFloats.weft.face;
+                    fabricFaceFloats = warpFaceFloats.concat(weftFaceFloats).unique().sort((a,b) => a-b);
 
-					for (x = 0; x < xNodes; ++x) {
-						sx = warpXPositions[x];
-						for (y = 0; y < yNodes; ++y) {
-							sy = y * intersectionH;
-							floatS = globalFloats.warpFloatWeave[x][y];
-							if ( floatS < 0 ){
-								jitter = getRandom(-warpPosJitter, warpPosJitter);
-								drawRectBuffer(g_origin, upscalePixels, sx+jitter, sy, warpYarnThickness[x], intersectionH, upscaleW, upscaleH, "color32", warpBackPattern32[x]);
-							}
-						}
-					}
+					warpBackFloats = globalFloats.warp.back;
+					weftBackFloats = globalFloats.weft.back;
+					fabricBackFloats = warpBackFloats.concat(weftBackFloats).unique().sort((a,b) => a-b);
 
-					debugTimeEnd("simulation-draw-warp-bg");
-					debugTime("simulation-draw-weft-bg");
+					// Upscale Canvas --------------------------------------------------
+					g_upscaleContext = getCtx(10, "upscale-canvas", "g_upscaleCanvas", upscaleW, upscaleH, false);
+					g_upscaleCanvas.width = upscaleW;
+					g_upscaleCanvas.height = upscaleH;
 
-					for (y = 0; y < yNodes; ++y) {
-						sy = weftYPositions[y];
-						for (x = 0; x < xNodes; ++x) {
-							sx = x * intersectionW;
-							floatS = globalFloats.weftFloatWeave[x][y];
-							if ( floatS < 0 ){
-								jitter = getRandom(-weftPosJitter, weftPosJitter);
-								drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, weftYarnThickness[y], upscaleW, upscaleH, "color32", weftBackPattern32[y]);
-							}
-						}
-					}
+					var uPixels = g_upscaleContext.createImageData(upscaleW, upscaleH);
+					var uPixels8 = uPixels.data;
+                    var uPixels32 = new Uint32Array(uPixels8.buffer);
 
-					debugTimeEnd("simulation-draw-weft-bg");
+                    if ( algorithm == 1 ){
 
-					if ( drawWarpFaceFloats ){
-
-						for (x = 0; x < xNodes; x++) {
-							code = warpPatternTranslated[x];
-							color = globalPalette.colors[code];
-							sx = warpXPositions[x];
-							floatNode = 0;
-
-							for (y = 0; y < yNodes; y++) {
-								sy = y * intersectionH;
-								floatS = globalFloats.warpFloatWeave[x][y];
-								if ( floatS > 0 ){
-									floatGradient = floatGradients[code+"-"+floatS];	
-									jitter = getRandom(-warpPosJitter, warpPosJitter);
-									if ( floatS > 2 ){
-										jitter -= Math.sin(floatNode/(floatS-1) * Math.PI) * warpPosJitter * 2;
-									}
-									nodeColor32 = floatGradient[floatS-floatNode-1];
-									
-									yarnThickness = warpYarnThickness[x] * warpYarnThickness2D[x][y];
-									drawRectBuffer(g_origin, upscalePixels, sx+jitter-yarnThickness/2, sy, yarnThickness, intersectionH, upscaleW, upscaleH, "color32", nodeColor32);
-
-									floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
-
-									if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
-										drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667-yarnThickness/2, sy, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-										drawRectBuffer(g_origin, upscalePixels, sx+jitter-yarnThickness/2, sy+intersectionH/2, yarnThickness/3, intersectionH/2, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-									} else if ( floatNodeRelativePos < 0.5 ){
-
-										drawRectBuffer(g_origin, upscalePixels, sx+jitter+yarnThickness*0.667-yarnThickness/2, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-
-									} else if ( floatNodeRelativePos > 0.5 ){
-
-										drawRectBuffer(g_origin, upscalePixels, sx+jitter-yarnThickness/2, sy, yarnThickness/3, intersectionH, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-
-									}
-
-									floatNode++;
-
-								} else {
-									floatNode = 0;
+                    	for (c = 0; c < warpColors.length; c++) {
+							code = warpColors[c];
+							gradient = globalPalette.colors[code].lineargradient;
+							for (i = 0; i < globalFloats.warp.face.length; i++) {
+								floatL = globalFloats.warp.face[i];
+								floatGradients[code+"-"+floatL] = new Uint32Array(floatL);
+								for (nodei = 0; nodei < floatL; nodei++) {
+									shadei = Math.ceil(gradient.length/(floatL+1)*(nodei+1))-1;
+									shade32 = gradient[shadei];
+									floatGradients[code+"-"+floatL][nodei] = shade32;
 								}
 							}
-
+							floatGradients[code+"-light"] = gradient[1];
+							floatGradients[code+"-dark"] = gradient[gradient.length-1];
 						}
 
-					}
-
-					if ( drawWeftFaceFloats ){
-						for (y = 0; y < yNodes; y++) {
-							code = weftPatternTranslated[y];
-							color = globalPalette.colors[code];
-							sy = weftYPositions[y];
-							floatNode = 0;
-
-							for (x = 0; x < xNodes; x++) {
-								sx = x * intersectionW;
-								floatS = globalFloats.weftFloatWeave[x][y];
-								if ( floatS > 0 ){
-									floatGradient = floatGradients[code+"-"+floatS];	
-									jitter = getRandom(-weftPosJitter, weftPosJitter);
-									if ( floatS > 2 ){
-										jitter += Math.sin(floatNode/(floatS-1) * Math.PI) * weftPosJitter * 2;
-									}
-									nodeColor32 = floatGradient[floatNode];
-									
-
-									yarnThickness = weftYarnThickness[y] * weftYarnThickness2D[x][y];
-									drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness, upscaleW, upscaleH, "color32", nodeColor32);
-
-									floatNodeRelativePos = Math.round(floatNode/(floatS-1)*10)/10;
-
-									if ( floatS === 1 || floatNodeRelativePos == 0.5 ){
-										drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-										drawRectBuffer(g_origin, upscalePixels, sx+intersectionW/2, sy+jitter, intersectionW/2, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-									} else if ( floatNodeRelativePos < 0.5 ){
-
-										drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter+yarnThickness*0.667, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-
-									} else if ( floatNodeRelativePos > 0.5 ){
-
-										drawRectBuffer(g_origin, upscalePixels, sx, sy+jitter, intersectionW, yarnThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-
-									}
-
-									floatNode++;
-
-								} else {
-									floatNode = 0;
+						for (c = 0; c < weftColors.length; c++) {
+							code = weftColors[c];
+							gradient = globalPalette.colors[code].lineargradient;
+							for (i = 0; i < globalFloats.weft.face.length; i++) {
+								floatL = globalFloats.weft.face[i];
+								floatGradients[code+"-"+floatL] = new Uint32Array(floatL);
+								for (nodei = 0; nodei < floatL; nodei++) {
+									shadei = Math.ceil(gradient.length/(floatL+1)*(nodei+1))-1;
+									shade32 = gradient[shadei];
+									floatGradients[code+"-"+floatL][nodei] = shade32;
 								}
 							}
-
+							floatGradients[code+"-light"] = gradient[1];
+							floatGradients[code+"-dark"] = gradient[gradient.length-1];
 						}
-					}
 
-					
-					
-					if ( testingMode ){
+						drawRectBuffer(g_origin, uPixels32, 0, 0, upscaleW, upscaleH, upscaleW, upscaleH, "color32", simulationBGColor);
 
-						ctxTarget.putImageData(upscaleImageData, 0, ctxH-upscaleH);
+						for (n = fabricBackFloats.length - 1; n >= 0; n--) {
+
+							floatSizeToRender = fabricBackFloats[n];
+
+							if ( drawWarpBackFloats && warpBackFloats.indexOf(floatSizeToRender) !== -1 ){
+
+	                            for (x = 0; x < xNodes; ++x) {
+	                                for (y = 0; y < yNodes; ++y) {
+
+	                                    floatS = globalFloats.warpFloatWeave[x][y];
+	                                    floatSAbs = Math.abs(floatS);
+
+	                                    if ( floatS == -fabricBackFloats[n] ){
+
+	                                        i = y * xNodes + x;
+	                                        ib = (y-1) * xNodes + x;
+	                                        it = (y+1) * xNodes + x;
+
+	                                        code = warpPatternTranslated[x];
+	                                        color = globalPalette.colors[code];
+
+	                                        floatNode = globalFloats.warpFloatNodeWeave[x][y];
+	                                        nodeThickness = warpThicknessProfile[i];
+	                                        nodeHT = nodeThickness/2;
+	                                        //nodeColor32 = floatGradients[code+"-dark"];
+
+	                                        nodeColor32 = color.color32;
+
+	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+											nodeX = warpPositionProfile[i] + floatLift;
+											//nodeX = warpPositionProfile[i];
+							                nodeY = weftPositionProfile[i];
+
+	                                        bNodeHT = y ? weftThicknessProfile[ib]/2 : 0;
+	                                        tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
+
+	                                        bNodeY = y ? weftPositionProfile[ib] : 0;
+	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+
+	                                        sx = nodeX - nodeHT;
+	                                        sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
+											ly = (tNodeY - tNodeHT + nodeY + nodeHT)/2;
+
+	                                        floatL = ly - sy + 1;
+
+	                                        drawRectBuffer(g_origin, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "color32", nodeColor32);
+
+	                                    }
+	                                }
+	                            }
+
+	                        }
+
+	                        if ( drawWeftBackFloats && weftBackFloats.indexOf(floatSizeToRender) !== -1 ){
+						
+								for (y = 0; y < yNodes; y++) {
+									
+									for (x = 0; x < xNodes; x++) {
+
+										floatS = globalFloats.weftFloatWeave[x][y];
+										floatSAbs = Math.abs(floatS);
+
+										if ( floatS == -fabricBackFloats[n]  ){
+
+											i = y * xNodes + x;
+											il = y * xNodes + x - 1;
+											ir = y * xNodes + x + 1;
+
+											iFirst = y * xNodes;
+											iLast = y * xNodes + xNodes - 1;
+
+											code = weftPatternTranslated[y];
+											color = globalPalette.colors[code];
+
+											floatNode = globalFloats.weftFloatNodeWeave[x][y];
+											nodeThickness = weftThicknessProfile[i];
+											nodeHT = nodeThickness/2;
+											//nodeColor32 = floatGradients[code+"-dark"];
+
+											nodeColor32 = color.color32;
+
+											floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+											nodeX = warpPositionProfile[i];
+							               	nodeY = weftPositionProfile[i] + floatLift;
+							                //nodeY = weftPositionProfile[i];
+
+											lNodeHT = x ? warpThicknessProfile[il]/2 : 0;
+											rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
+
+											lNodeX = x ? warpPositionProfile[il] : 0;
+											rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+
+											sy = nodeY - nodeHT;
+											sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
+											lx = (rNodeX - rNodeHT + nodeX + nodeHT)/2;
+
+											floatL = lx - sx + 1;
+
+											drawRectBuffer(g_origin, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "color32", nodeColor32);
+
+										}
+
+									}
+
+								}
+							}
+	                    }
+
+
+						for (n = 0; n < fabricFaceFloats.length; n++) {
+
+							floatSizeToRender = fabricFaceFloats[n];
+
+							if ( drawWarpFaceFloats && warpFaceFloats.indexOf(floatSizeToRender) !== -1 ){
+
+	                            for (x = 0; x < xNodes; ++x) {
+	                                for (y = 0; y < yNodes; ++y) {
+
+	                                    floatS = globalFloats.warpFloatWeave[x][y];
+	                                    floatSAbs = Math.abs(floatS);
+
+	                                    if ( floatS == fabricFaceFloats[n] ){
+
+	                                        i = y * xNodes + x;
+							                ib = (y-1) * xNodes + x;
+							                it = (y+1) * xNodes + x;
+
+							                code = warpPatternTranslated[x];
+							                color = globalPalette.colors[code];
+
+							                
+
+							                floatNode = globalFloats.warpFloatNodeWeave[x][y];
+							                nodeThickness = warpThicknessProfile[i];
+							                nodeHT = nodeThickness/2;
+							                floatGradient = floatGradients[code+"-"+floatS];
+							                nodeColor32 = floatGradient[floatS-floatNode-1];
+
+											floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+											nodeX = warpPositionProfile[i] + floatLift;
+							                //nodeX = warpPositionProfile[i];
+							                nodeY = weftPositionProfile[i];
+
+							                bNodeHT = y ? weftThicknessProfile[ib]/2 : 0;
+							                tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
+
+							                bNodeY = y ? weftPositionProfile[ib] : 0;
+							                tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+
+							                sx = nodeX - nodeHT;
+							                sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
+											ly = (tNodeY - tNodeHT + nodeY + nodeHT)/2;
+
+							                floatL = ly - sy + 1;
+
+							                drawRectBuffer(g_origin, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "color32", nodeColor32);
+
+							                centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
+							                if ( floatNode == centerNode ){
+							                    drawRectBuffer(g_origin, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL/2, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+							                    drawRectBuffer(g_origin, uPixels32, sx, sy+floatL/2, nodeThickness/3, floatL/2, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+							                } else if ( floatNode < centerNode ){
+							                    drawRectBuffer(g_origin, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+							                } else if ( floatNode > centerNode){
+							                    drawRectBuffer(g_origin, uPixels32, sx, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+							                }
+
+	                                    }
+	                                }
+	                            }
+
+	                        }
+
+	                        if ( drawWeftFaceFloats && weftFaceFloats.indexOf(floatSizeToRender) !== -1 ){
+						
+								for (y = 0; y < yNodes; y++) {
+									
+									for (x = 0; x < xNodes; x++) {
+
+										floatS = globalFloats.weftFloatWeave[x][y];
+										floatSAbs = Math.abs(floatS);
+
+										if ( floatS == fabricFaceFloats[n]  ){
+
+											i = y * xNodes + x;
+											il = y * xNodes + x - 1;
+											ir = y * xNodes + x + 1;
+
+											iFirst = y * xNodes;
+											iLast = y * xNodes + xNodes - 1;
+
+											code = weftPatternTranslated[y];
+											color = globalPalette.colors[code];
+
+											
+											floatNode = globalFloats.weftFloatNodeWeave[x][y];
+											nodeThickness = weftThicknessProfile[i];
+											nodeHT = nodeThickness/2;
+											floatGradient = floatGradients[code+"-"+floatS];
+
+											nodeColor32 = floatGradient[floatNode];
+
+											floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+
+											nodeX = warpPositionProfile[i];
+											nodeY = weftPositionProfile[i] + floatLift;
+											//nodeY = weftPositionProfile[i];
+
+											lNodeHT = x ? warpThicknessProfile[il]/2 : 0;
+											rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
+
+											lNodeX = x ? warpPositionProfile[il] : 0;
+											rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+
+											sy = nodeY - nodeHT;
+											sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
+											lx = (rNodeX - rNodeHT + nodeX + nodeHT)/2;
+
+											floatL = lx - sx + 1;
+
+											drawRectBuffer(g_origin, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "color32", nodeColor32);
+
+											centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
+											if ( floatNode == centerNode ){
+												drawRectBuffer(g_origin, uPixels32, sx, sy+nodeThickness*0.667, floatL/2, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+												drawRectBuffer(g_origin, uPixels32, sx+floatL/2, sy, floatL/2, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+											} else if ( floatNode < centerNode ){
+												drawRectBuffer(g_origin, uPixels32, sx, sy+nodeThickness*0.667, floatL, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+											} else if ( floatNode > centerNode){
+												drawRectBuffer(g_origin, uPixels32, sx, sy, floatL, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+											}
+
+										} 
+
+									}
+
+								}
+							}
+	                    }
+
+                    } else if ( algorithm == 2 ){
+
+                    	var gradientData;
+
+                    	// Float Gradient Data
+	                    for (c = 0; c < warpColors.length; c++) {
+	                        code = warpColors[c];
+	                        gradientData = globalPalette.colors[code].gradientData;
+	                        for (i = 0; i < globalFloats.warp.face.length; i++) {
+	                            floatL = globalFloats.warp.face[i];
+	                            floatGradients[code+"-"+floatL] = [];
+	                            for (nodei = 0; nodei < floatL; nodei++) {
+	                                shadei = Math.ceil(globalPalette.gradientL/(floatL+1)*(nodei+1))-1;
+	                                shade32 = getPixelRGBA(gradientData, shadei);
+	                                floatGradients[code+"-"+floatL][nodei] = shade32;
+	                            }
+	                        }
+	                        floatGradients[code+"-light"] = getPixelRGBA(gradientData, 1);
+	                        floatGradients[code+"-dark"] = getPixelRGBA(gradientData, globalPalette.gradientL-1);
+	                    }
+
+	                    for (c = 0; c < weftColors.length; c++) {
+	                        code = weftColors[c];
+	                        gradientData = globalPalette.colors[code].gradientData;
+	                        for (i = 0; i < globalFloats.weft.face.length; i++) {
+	                            floatL = globalFloats.weft.face[i];
+	                            floatGradients[code+"-"+floatL] = [];
+	                            for (nodei = 0; nodei < floatL; nodei++) {
+	                                shadei = Math.ceil(globalPalette.gradientL/(floatL+1)*(nodei+1))-1;
+	                                shade32 = getPixelRGBA(gradientData, shadei);
+	                                floatGradients[code+"-"+floatL][nodei] = shade32;
+	                            }
+	                        }
+	                        floatGradients[code+"-light"] = getPixelRGBA(gradientData, 1);
+	                        floatGradients[code+"-dark"] = getPixelRGBA(gradientData, globalPalette.gradientL-1);
+	                    }
+	                    
+	                    drawRectBuffer4(g_origin, uPixels8, uPixels32, 0, 0, upscaleW, upscaleH, upscaleW, upscaleH, "rgba", simulationBGColor);
+
+	                    for (n = fabricBackFloats.length - 1; n >= 0; n--) {
+
+	                        floatSizeToRender = fabricBackFloats[n];
+
+	                        if ( drawWarpBackFloats && warpBackFloats.indexOf(floatSizeToRender) !== -1 ){
+
+	                            for (x = 0; x < xNodes; ++x) {
+	                                for (y = 0; y < yNodes; ++y) {
+
+	                                    floatS = globalFloats.warpFloatWeave[x][y];
+	                                    floatSAbs = Math.abs(floatS);
+
+	                                    if ( floatS == -fabricBackFloats[n] ){
+
+	                                        i = y * xNodes + x;
+	                                        ib = (y-1) * xNodes + x;
+	                                        it = (y+1) * xNodes + x;
+
+	                                        code = warpPatternTranslated[x];
+	                                        color = globalPalette.colors[code];
+
+	                                        floatNode = globalFloats.warpFloatNodeWeave[x][y];
+	                                        nodeThickness = warpThicknessProfile[i];
+	                                        nodeHT = nodeThickness/2;
+	                                        //nodeColor32 = floatGradients[code+"-dark"];
+
+	                                        nodeColor32 = color.rgba;
+
+	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+	                                        nodeX = warpPositionProfile[i] + floatLift;
+	                                        //nodeX = warpPositionProfile[i];
+	                                        nodeY = weftPositionProfile[i];
+
+	                                        bNodeHT = y ? weftThicknessProfile[ib]/2 : 0;
+	                                        tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
+
+	                                        bNodeY = y ? weftPositionProfile[ib] : 0;
+	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+
+	                                        sx = nodeX - nodeHT;
+	                                        sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
+	                                        ly = (tNodeY - tNodeHT + nodeY + nodeHT)/2;
+
+	                                        floatL = ly - sy + 1;
+
+	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "rgba", nodeColor32);
+
+	                                    }
+	                                }
+	                            }
+
+	                        }
+
+	                        if ( drawWeftBackFloats && weftBackFloats.indexOf(floatSizeToRender) !== -1 ){
+	                    
+	                            for (y = 0; y < yNodes; y++) {
+	                                
+	                                for (x = 0; x < xNodes; x++) {
+
+	                                    floatS = globalFloats.weftFloatWeave[x][y];
+	                                    floatSAbs = Math.abs(floatS);
+
+	                                    if ( floatS == -fabricBackFloats[n]  ){
+
+	                                        i = y * xNodes + x;
+	                                        il = y * xNodes + x - 1;
+	                                        ir = y * xNodes + x + 1;
+
+	                                        iFirst = y * xNodes;
+	                                        iLast = y * xNodes + xNodes - 1;
+
+	                                        code = weftPatternTranslated[y];
+	                                        color = globalPalette.colors[code];
+
+	                                        floatNode = globalFloats.weftFloatNodeWeave[x][y];
+	                                        nodeThickness = weftThicknessProfile[i];
+	                                        nodeHT = nodeThickness/2;
+	                                        //nodeColor32 = floatGradients[code+"-dark"];
+
+	                                        nodeColor32 = color.rgba;
+
+	                                        floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+	                                        nodeX = warpPositionProfile[i];
+	                                        nodeY = weftPositionProfile[i] + floatLift;
+	                                        //nodeY = weftPositionProfile[i];
+
+	                                        lNodeHT = x ? warpThicknessProfile[il]/2 : 0;
+	                                        rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
+
+	                                        lNodeX = x ? warpPositionProfile[il] : 0;
+	                                        rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+
+	                                        sy = nodeY - nodeHT;
+	                                        sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
+	                                        lx = (rNodeX - rNodeHT + nodeX + nodeHT)/2;
+
+	                                        floatL = lx - sx + 1;
+
+	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "rgba", nodeColor32);
+
+	                                    }
+
+	                                }
+
+	                            }
+	                        }
+	                    }
+
+	                    for (n = 0; n < fabricFaceFloats.length; n++) {
+
+	                        floatSizeToRender = fabricFaceFloats[n];
+
+	                        if ( drawWarpFaceFloats && warpFaceFloats.indexOf(floatSizeToRender) !== -1 ){
+
+	                            for (x = 0; x < xNodes; ++x) {
+	                                for (y = 0; y < yNodes; ++y) {
+
+	                                    floatS = globalFloats.warpFloatWeave[x][y];
+	                                    floatSAbs = Math.abs(floatS);
+
+	                                    if ( floatS == fabricFaceFloats[n] ){
+
+	                                        i = y * xNodes + x;
+	                                        ib = (y-1) * xNodes + x;
+	                                        it = (y+1) * xNodes + x;
+
+	                                        code = warpPatternTranslated[x];
+	                                        color = globalPalette.colors[code];
+	                                     
+	                                        floatNode = globalFloats.warpFloatNodeWeave[x][y];
+	                                        nodeThickness = warpThicknessProfile[i];
+	                                        nodeHT = nodeThickness/2;
+	                                        floatGradient = floatGradients[code+"-"+floatS];
+	                                        nodeColor32 = floatGradient[floatS-floatNode-1];
+
+	                                        floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+	                                        nodeX = warpPositionProfile[i] + floatLift;
+	                                        //nodeX = warpPositionProfile[i];
+	                                        nodeY = weftPositionProfile[i];
+
+	                                        bNodeHT = y ? weftThicknessProfile[ib]/2 : 0;
+	                                        tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
+
+	                                        bNodeY = y ? weftPositionProfile[ib] : 0;
+	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+
+	                                        sx = nodeX - nodeHT;
+	                                        sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
+	                                        ly = (tNodeY - tNodeHT + nodeY + nodeHT)/2;
+
+	                                        floatL = ly - sy + 1;
+
+	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "rgba", nodeColor32);
+
+	                                        centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
+	                                        if ( floatNode == centerNode ){
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL/2, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy+floatL/2, nodeThickness/3, floatL/2, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                        } else if ( floatNode < centerNode ){
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                        } else if ( floatNode > centerNode){
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                        }
+
+	                                    }
+	                                }
+	                            }
+
+	                        }
+
+	                        if ( drawWeftFaceFloats && weftFaceFloats.indexOf(floatSizeToRender) !== -1 ){
+	                    
+	                            for (y = 0; y < yNodes; y++) {
+	                                
+	                                for (x = 0; x < xNodes; x++) {
+
+	                                    floatS = globalFloats.weftFloatWeave[x][y];
+	                                    floatSAbs = Math.abs(floatS);
+
+	                                    if ( floatS == fabricFaceFloats[n]  ){
+
+	                                        i = y * xNodes + x;
+	                                        il = y * xNodes + x - 1;
+	                                        ir = y * xNodes + x + 1;
+
+	                                        iFirst = y * xNodes;
+	                                        iLast = y * xNodes + xNodes - 1;
+
+	                                        code = weftPatternTranslated[y];
+	                                        color = globalPalette.colors[code];
+
+	                                        
+	                                        floatNode = globalFloats.weftFloatNodeWeave[x][y];
+	                                        nodeThickness = weftThicknessProfile[i];
+	                                        nodeHT = nodeThickness/2;
+	                                        floatGradient = floatGradients[code+"-"+floatS];
+
+	                                        nodeColor32 = floatGradient[floatNode];
+
+	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+
+	                                        nodeX = warpPositionProfile[i];
+	                                        nodeY = weftPositionProfile[i] + floatLift;
+	                                        //nodeY = weftPositionProfile[i];
+
+	                                        lNodeHT = x ? warpThicknessProfile[il]/2 : 0;
+	                                        rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
+
+	                                        lNodeX = x ? warpPositionProfile[il] : 0;
+	                                        rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+
+	                                        sy = nodeY - nodeHT;
+	                                        sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
+	                                        lx = (rNodeX - rNodeHT + nodeX + nodeHT)/2;
+
+	                                        floatL = lx - sx + 1;
+
+	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "rgba", nodeColor32);
+
+	                                        centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
+	                                        if ( floatNode == centerNode ){
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy+nodeThickness*0.667, floatL/2, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx+floatL/2, sy, floatL/2, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                        } else if ( floatNode < centerNode ){
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy+nodeThickness*0.667, floatL, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                        } else if ( floatNode > centerNode){
+	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, floatL, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                        }
+
+	                                    } 
+
+	                                }
+
+	                            }
+	                        }
+	                    }
+
+                    }
+					
+					debugTimeEnd("simulationDrawOld");
+
+					if ( !downscale || smoothingUpscale == 1 ){
+
+						ctxTarget.putImageData(uPixels, 0, ctxH-upscaleH);
 
 					} else {
 
-						debugTime("simulation-downscale");
+						debugTime("simulationResize");
 
-						g_upscaleContext.putImageData(upscaleImageData, 0, 0);
+						g_upscaleContext.putImageData(uPixels, 0, 0);
 						window.pica().resize(g_upscaleCanvas, ctxTarget.canvas, {
 					
 							quality: 3,
@@ -13224,6 +14108,8 @@ $(document).ready ( function(){
 							transferable: true
 						
 						}).then(function () {
+
+							debugTimeEnd("simulationResize");
 
 							if ( globalModel.fabric.texture !== undefined ){
 
@@ -13239,8 +14125,6 @@ $(document).ready ( function(){
 								globalModel.render();
 
 							}
-
-							debugTimeEnd("simulation-downscale");
 
 						}).catch(function (err) {
 						
@@ -13447,8 +14331,8 @@ $(document).ready ( function(){
 			this.graph = false;
 			this.stopSelectionAnimation();
 			var ctx = g_weaveLayer1Context;
-			var ctxW = ctx.canvas.clientWidth * g_pixelRatio;
-			var ctxH = ctx.canvas.clientHeight * g_pixelRatio;
+			var ctxW = Math.floor(ctx.canvas.clientWidth * g_pixelRatio);
+			var ctxH = Math.floor(ctx.canvas.clientHeight * g_pixelRatio);
 			ctx.clearRect(0, 0, ctxW, ctxH);
 
 		},
@@ -13509,8 +14393,8 @@ $(document).ready ( function(){
 		render : function(){
 
 			var ctx = g_weaveLayer1Context;
-			var ctxW = ctx.canvas.clientWidth * g_pixelRatio;
-			var ctxH = ctx.canvas.clientHeight * g_pixelRatio;
+			var ctxW = Math.floor(ctx.canvas.clientWidth * g_pixelRatio);
+			var ctxH = Math.floor(ctx.canvas.clientHeight * g_pixelRatio);
 			ctx.clearRect(0, 0, ctxW, ctxH);
 			var imagedata = ctx.createImageData(ctxW, ctxH);
       		var pixels = new Uint32Array(imagedata.data.buffer);
@@ -13521,7 +14405,7 @@ $(document).ready ( function(){
 			var yUnits = Math.abs(this.lastRow - this.startRow) + 1;
 			var xOffset = globalWeave.scrollX + (Math.min(this.startCol, this.lastCol) - 1) * unitW;
 			var yOffset = globalWeave.scrollY + (Math.min(this.startRow, this.lastRow) - 1) * unitH;
-			var lineThickness = g_pixelRatio;
+			var lineThickness = Math.floor(g_pixelRatio);
 			var selectionColor32 = rgbaToColor32(0, 0, 0, 255);
 			selectionBoxOnBuffer(pixels, unitW, unitH, xUnits, yUnits, xOffset, yOffset, ctxW, ctxH, lineThickness, selectionColor32);
 
@@ -13649,7 +14533,9 @@ $(document).ready ( function(){
 		warp: undefined,
 		weft: undefined,
 		warpFloatWeave: undefined,
+		warpFloatNodeWeave: undefined,
 		weftFloatWeave: undefined,
+		weftFloatNodeWeave: undefined,
 		ends: undefined,
 		picks: undefined,
 
@@ -13669,15 +14555,19 @@ $(document).ready ( function(){
 			var iLastPick = this.picks - 1;
 			var iLastEnd = this.ends - 1;
 			
-			this.warp = { face: [[]], back: [[]] };
-			this.weft = { face: [[]], back: [[]] };
+			this.warp = { face: [], back: [] };
+			this.weft = { face: [], back: [] };
+
 			this.warpFloatWeave = newArray2D(this.ends, this.picks);
 			this.weftFloatWeave = newArray2D(this.ends, this.picks);
+			this.warpFloatNodeWeave = newArray2D(this.ends, this.picks);
+			this.weftFloatNodeWeave = newArray2D(this.ends, this.picks);
 
 			// --------------
 			// Warp Floats
 			// --------------
 			for (x = 0; x < this.ends; x++){
+
 				loopingFloat = arr2D8[x][0] == arr2D8[x][iLastPick];
 				loopingFloatSize = 0;
 				floatSize = 0;
@@ -13730,10 +14620,10 @@ $(document).ready ( function(){
 				}
 			}
 
-			this.warp.back[0].sort((a,b) => a-b);
-			this.warp.face[0].sort((a,b) => a-b);
-			this.weft.back[0].sort((a,b) => a-b);
-			this.weft.face[0].sort((a,b) => a-b);
+			this.warp.back.sort((a,b) => a-b);
+			this.warp.face.sort((a,b) => a-b);
+			this.weft.back.sort((a,b) => a-b);
+			this.weft.face.sort((a,b) => a-b);
 
 		},
 
@@ -13827,17 +14717,16 @@ $(document).ready ( function(){
 
 			var floatVal = side == "face" ? floatS : -floatS;
 
-			if ( typeof this[yarnSet][side][floatS] === "undefined" ) {
-				this[yarnSet][side][0].push(floatS);
-				//this[yarnSet][side][floatS] = [];
+			if ( this[yarnSet][side].indexOf(floatS) === -1 ){
+				this[yarnSet][side].push(floatS);
 			}
-			//this[yarnSet][side][floatS].push([endi, picki]);
 			
 			if ( yarnSet == "warp" ){
 				for (i = 0; i < floatS; i++) {
 					fx = endi;
 					fy = loopNumber(i + picki, this.picks);
 					this.warpFloatWeave[fx][fy] = floatVal;
+					this.warpFloatNodeWeave[fx][fy] = i;
 				}
 			}
 
@@ -13846,6 +14735,7 @@ $(document).ready ( function(){
 					fx = loopNumber(i + endi, this.ends);
 					fy = picki;
 					this.weftFloatWeave[fx][fy] = floatVal;
+					this.weftFloatNodeWeave[fx][fy] = i;
 				}
 			}
 
@@ -14713,7 +15603,7 @@ $(document).ready ( function(){
 
 			if ( gmy.patternPainting ){
 
-				globalPattern.set(122, gmy.patternDrawSet, gmy.patternDrawCopy);
+				globalPattern.set(122, gmy.patternDrawSet, gmy.patternDrawCopy, true, 0, false, false);
 				gmy.patternPainting = false;
 				globalMouse.reset();
 
@@ -14735,6 +15625,10 @@ $(document).ready ( function(){
 			
 				globalSelection.clear();
 			
+			}
+
+			if ( colorPickerPopup.isVisible() ){
+				globalPalette.hideColorPicker();
 			}
 
 		}
