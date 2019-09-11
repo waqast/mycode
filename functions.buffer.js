@@ -2,6 +2,8 @@ function drawRectBuffer(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, colo
 
 	//console.log([sx, sy, w, h]);
 
+	//console.log(arguments);
+
 	var i, x, y, a;
 
 	if (origin === "br"){
@@ -167,7 +169,7 @@ function drawRectBuffer4(origin, pixels8, pixels32, sx, sy, w, h, ctxW, ctxH, fi
 
 			if ( fillType === "rgba" ){
 
-				var color32 = 255 << 24 | (0.5 + color.b) << 16 | (0.5 + color.g) << 8 | (0.5 + color.r);
+				var color32 = 255 << 24 | color.b << 16 | color.g << 8 | color.r;
 
 				for (y = sy; y <= ly; ++y) {
 					for (x = sx; x <= lx; ++x) {
@@ -176,16 +178,26 @@ function drawRectBuffer4(origin, pixels8, pixels32, sx, sy, w, h, ctxW, ctxH, fi
 					}
 				}
 
-			} else if ( fillType === "rgba_mix"){
+			} else if ( fillType === "rgba_mix_0"){
 
-				var mix, i4;
+				var mix;
 
 				for (y = sy; y <= ly; ++y) {
 					for (x = sx; x <= lx; ++x) {
-						i = ctxW * y + x;
-						i4 = i*4;
-						mix = mixRGBA2([pixels8[i4],pixels8[i4+1],pixels8[i4+2]], [color.r,color.g,color.b,color.a]);
-						pixels32[i] =  255 << 24 | mix[2] << 16 | mix[1] << 8 | mix[0];
+						i = (ctxW * y + x) * 4;
+						mix = mixRGBA2([pixels8[i],pixels8[i+1],pixels8[i+2]], [color.r,color.g,color.b,color.a]);
+						pixels32[i/4] =  255 << 24 | mix[2] << 16 | mix[1] << 8 | mix[0];
+					}
+				}
+			} else if ( fillType === "rgba_mix"){
+
+				var mix;
+
+				for (y = ly-1; y >= sy; y--) {
+					for (x = lx-1; x >= sx; x--) {
+						i = (ctxW * y + x) * 4;
+						mix = mixRGBA2([pixels8[i],pixels8[i+1],pixels8[i+2]], [color.r,color.g,color.b,color.a]);
+						pixels32[i/4] =  255 << 24 | mix[2] << 16 | mix[1] << 8 | mix[0];
 					}
 				}
 
@@ -224,11 +236,20 @@ function drawRectBuffer4(origin, pixels8, pixels32, sx, sy, w, h, ctxW, ctxH, fi
 		
 }
 
-function drawSubpixel(origin, pixels, x, y, rgba){
+function drawSubpixel(origin, pixels8, pixels32, x, y, rgba, ctxW, ctxH){
 
+	var i;
 
+	var x0 = Math.floor(x);
+	var x1 = x - x0;
 
+	var y0 = Math.floor(y);
+	var y1 = y - y0;
 
+	var a00 = (x1-x0);
+
+	i = ctxW * y + x;
+	pixels32[i] =  255 << 24 | color.b << 16 | color.g << 8 | color.r;
 
 }
 
@@ -345,35 +366,35 @@ function drawRectBufferSubpixel(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillTy
 		
 }
 
-function drawGridOnBuffer(pixels, pointW, pointH, xMinor, yMinor, xMajor, yMajor, minorColor32, majorColor32, xOffset, yOffset, ctxW, ctxH, thick){
+function drawGridOnBuffer(origin, pixels, pointW, pointH, xMinor, yMinor, xMajor, yMajor, minorColor32, majorColor32, xOffset, yOffset, ctxW, ctxH, thick){
 	//logTime("Grid");
 	var x, y, sx, sy;
 	if (xMinor){
 		var xMinorW = pointW * xMinor;
 		sx = Math.floor(xOffset % xMinorW) - thick;
 		for (x = sx; x < ctxW; x += xMinorW) {
-			drawRectBuffer(g_origin, pixels, x, 0, thick, ctxH, ctxW, ctxH, "color32", minorColor32);
+			drawRectBuffer(origin, pixels, x, 0, thick, ctxH, ctxW, ctxH, "color32", minorColor32);
 		}
 	}
 	if (yMinor){
 		var yMinorH = pointH * yMinor;
 		sy = Math.floor(yOffset % yMinorH) - thick;
 		for (y = sy; y < ctxH; y += yMinorH) {
-			drawRectBuffer(g_origin, pixels, 0, y, ctxW, thick, ctxW, ctxH, "color32", minorColor32);
+			drawRectBuffer(origin, pixels, 0, y, ctxW, thick, ctxW, ctxH, "color32", minorColor32);
 		}
 	}
 	if (xMajor){
 		var xMajorW = pointW * xMajor;
 		sx = Math.floor(xOffset % xMajorW) - thick;
 		for (x = sx; x < ctxW; x += xMajorW) {
-			drawRectBuffer(g_origin, pixels, x, 0, thick, ctxH, ctxW, ctxH, "color32", majorColor32);
+			drawRectBuffer(origin, pixels, x, 0, thick, ctxH, ctxW, ctxH, "color32", majorColor32);
 		}
 	}
 	if (yMajor){
 		var yMajorW = pointH * yMajor;
 		sy = Math.floor(yOffset % yMajorW) - thick;
 		for (y = sy; y < ctxH; y += yMajorW) {
-			drawRectBuffer(g_origin, pixels, 0, y, ctxW, thick, ctxW, ctxH, "color32", majorColor32);
+			drawRectBuffer(origin, pixels, 0, y, ctxW, thick, ctxW, ctxH, "color32", majorColor32);
 		}
 	}
 	//logTimeEnd("Grid");

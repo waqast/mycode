@@ -29,8 +29,6 @@ var ga_YarnCounts = [g_YarnNumberDefault].repeat(52);
 var g_simulationDrawMethod = "quick";
 var g_layoutPattern = "2E";
 
-var g_origin = "bl";
-
 var g_warpSize = 2;
 var g_weftSize = 2;
 var g_warpSpace = 0;
@@ -42,7 +40,6 @@ var g_warpDensity = 110;
 var g_weftDensity = 70;
 var g_screenDPI = 110;
 var g_simulationZoom = 1;
-var g_smoothingUpscale = 8;
 
 var g_graphZoom = 7;
 var g_showGrid = true;
@@ -63,15 +60,12 @@ var g_tieupW = 96;
 var g_artworkWeaveArray_imported = [];
 var g_artworkLoadedSrc = "";
 
-var g_liftingMode = "weave"; // "weave", "pegplan", "treadling"
-
 var g_boxSpace = 1;
 var g_boxShadow = 2;
 
 var boxShadowColor = "#666666";
 var boxShadowColorFocus = "#333333";
 
-var g_simulationRenderingMode = "3d";
 var g_simulationRepeat = "seamless";
 var g_weaveRepeat = "seamless";
 
@@ -89,9 +83,9 @@ var g_gridMinor = 1;
 var g_gridMajor = 8;
 var g_patternElementPadding = 0;
 
-var g_LockDraft = false;
+var g_LockThreading = false;
 var g_LockLifting = false;
-var g_LockDraftToTreadling = false;
+var g_LockThreadingToTreadling = false;
 
 var g_fileLoaded = false;
 var g_fileLoadedName = "";
@@ -108,7 +102,7 @@ var g_appVersion = "4";
 var g_patternElementSize = 16;
 
 var g_interfaceLoadCheckCount = 0;
-var g_interfaceLoadCheckTotal = 12;
+var g_interfaceLoadCheckTotal = 9;
 var g_scrollbarW = 15;
 var g_simulationBackgroundPosition = [];
 
@@ -140,7 +134,7 @@ var g_pickNumUnderMouse = "";
 var g_weaveStateUnderMouse = "";
 
 var g_weaveCanvas, g_weaveContext,
-	g_draftCanvas, g_draftContext,
+	g_threadingCanvas, g_threadingContext,
 	g_liftingCanvas, g_liftingContext,
 	g_tieupCanvas, g_tieupContext,
 	g_warpCanvas, g_warpContext,
@@ -155,68 +149,16 @@ var g_weaveCanvas, g_weaveContext,
 	g_tempCanvas3, g_tempContext3,
 	g_tempCanvas4, g_tempContext4,
 
-	g_upscaleCanvas, g_upscaleContext,
-	g_simulationRepeatCanvas, g_simulationRepeatContext,
+	g_simulationDrawCanvas, g_simulationDrawContext,
+	g_modelTextureCanvas, g_modelTextureContext,
 
 	g_simulationCanvas, g_simulationContext,
-	g_artworkCanvas, g_artworkContext,
-	g_threeCanvas, g_threeContext;
-
-var globalColors = {
-
-	black32: rgbaToColor32(0,0,0),
-	black5032: rgbaToColor32(0,0,0,127),
-	white32: rgbaToColor32(255,255,255),
-	red32: rgbaToColor32(255,0,0),
-	green32: rgbaToColor32(0,255,0),
-	blue32: rgbaToColor32(0,0,255),
-
-	grey32: rgbaToColor32(127,127,127),
-
-	BGLight32: rgbaToColor32(255,255,255,64),
-	BGDark32: rgbaToColor32(0,0,0,13),
-
-	gridLight32: rgbaToColor32(153,153,153,255),
-	gridDark32: rgbaToColor32(51,51,51,255),
-
-	rgba:{
-		black: {r:0, g:0, b:0, a:1},
-		black50: {r:0, g:0, b:0, a:0.5},
-		white: {r:255, g:255, b:255, a:1},
-		red: {r:255, g:0, b:0, a:1},
-		green: {r:0, g:255, b:0, a:1},
-		blue: {r:0, g:0, b:255, a:1},
-		grey: {r:127, g:127, b:127, a:1}
-	},
-	
-	rgba_str: {
-
-		black 	: "rgba(0,0,0,1)",
-		white 	: "rgba(255,255,255,1)",
-		grey	: "rgba(192,192,192,1)",
-		red 	: "rgba(255,0,0,1)",
-		green 	: "rgba(0,255,0,1)",
-		blue 	: "rgba(0,0,255,1)",
-
-		red1 : "rgba(255,0,0,1)",
-		red2 : "rgba(255,0,0,0.5)",
-		red3 : "rgba(255,0,0,0.33)",
-
-		green1 : "rgba(0,255,0,1)",
-		green2 : "rgba(0,255,0,0.5)",
-		green3 : "rgba(0,255,0,0.33)",
-
-		blue1 : "rgba(0,0,255,1)",
-		blue2 : "rgba(0,0,255,0.5)",
-		blue3 : "rgba(0,0,255,0.33)"
-	}
-
-};
+	g_artworkCanvas, g_artworkContext;
 
 // ----------------------------------------------------------------------------------
 // On Load
 // ----------------------------------------------------------------------------------
-var dhxWins, dhxLayout, layoutMenu, layoutToolbar;
+var dhxWins, dhxLayout, layoutMenu;
 
 $(document).ready ( function(){
 
@@ -227,7 +169,7 @@ $(document).ready ( function(){
 	// DEVICE PIXEL RATIO ADJUSTMENT
 	// ----------------------------------------------------------------------------------
 	var g_pixelRatio = wd_getPixelRatio();
-	console.log(["pixelRatio",g_pixelRatio]);
+	
 	//g_pointW *= g_pixelRatio;
 	//g_pointPlusGrid *= g_pixelRatio;
 	//g_gridThickness *= g_pixelRatio;
@@ -247,6 +189,7 @@ $(document).ready ( function(){
 		// checkAppLoadingDelay();
 
 		g_interfaceLoadCheckCount++;
+		debug("UI Load Checkpoints", g_interfaceLoadCheckCount);
 
 		// console.log(["Load Checks", g_interfaceLoadCheckCount, g_interfaceLoadCheckTotal]);
 
@@ -254,24 +197,19 @@ $(document).ready ( function(){
 		
 		if (g_interfaceLoadCheckCount >= g_interfaceLoadCheckTotal) {
 
-			globalHistory.recording = false;
+			globalHistory.stop();
 
 			createLayout(2, false);
 			createPaletteLayout();
 
-			var sessionCode = store.session("activeProjectCode");
-			if ( sessionCode ){
-				// console.log("Loading Session Code");
-				importProjectCode(1, sessionCode);
+			app.restoreConfigurations(false, false);
+
+			var sessionState = store.session(app.stateStorageID);
+
+			if ( sessionState ){
+				app.setState(1, sessionState);
 			} else {
-				// console.log("Loading Auto Project");
-				autoProject();
-			}
-
-			var appSettings = localStorage.wdappsettings;
-
-			if ( appSettings ){
-				applyApplicationSettings(appSettings, false);
+				app.generateState();
 			}
 
 			renderAll();
@@ -280,13 +218,16 @@ $(document).ready ( function(){
 			globalHistory.disableRedo();
 			$("div.main-overlay").hide();
 
-			globalPalette.selectChip("a");
+			app.palette.selectChip("a");
 
-			globalHistory.recording = true;
+			globalHistory.start();
 
-			globalHistory.addStep(9);
+			globalHistory.record(9);
 
-			$(".xcheckbox").tinyToggle();	
+			$(".xcheckbox").tinyToggle();
+			debug("pixelRatio",g_pixelRatio);
+
+			activateSpinnerCounters();
 
 		}
 
@@ -316,17 +257,6 @@ $(document).ready ( function(){
 	} */
 
 	// ----------------------------------------------------------------------------------
-	// Auto Project
-	// ----------------------------------------------------------------------------------
-	function autoProject() {
-		globalPalette.setRandom(false, false);
-		autoPattern();
-		var newWeave2D8 = weaveTextToWeave2D8("UD_DU");
-		globalWeave.setGraph2D8("weave", newWeave2D8);
-		setProjectName(g_projectName, false);		
-	}
-
-	// ----------------------------------------------------------------------------------
 	// Window Resize
 	// ----------------------------------------------------------------------------------
 	window.addEventListener("resize", function(event){
@@ -349,6 +279,7 @@ $(document).ready ( function(){
 	    };
 
 	dhxLayout = new dhtmlXLayoutObject(dhxLayoutData);
+
 	var mainTabbar = dhxLayout.cells("a").attachTabbar({
 		mode: "top",
 		arrows_mode: "auto",
@@ -356,7 +287,7 @@ $(document).ready ( function(){
 			{ id: "weave", text: "Weave", active: true },
 			{ id: "artwork", text: "Artowrk" },
 			{ id: "simulation", text: "Simulation" },
-			{ id: "three", text: "3D" },
+			{ id: "three", text: "3D Weave" },
 			{ id: "model", text: "Model" }
 
 		]
@@ -387,68 +318,21 @@ $(document).ready ( function(){
 	});
 	layoutMenu.attachEvent("onClick", layoutMenuClick);
 
-	layoutToolbar = dhxLayout.attachToolbar({
-		icons_path: "img/icons/",
-		xml: "xml/toolbar_main.xml",
-		onload: function() {
-			interfaceLoadCheck(2);
-		}
-	});
-	layoutToolbar.attachEvent("onClick", layoutToolbarClick);
-
-	dhxLayout.attachEvent("onPanelResizeFinish", function(names){
-		//console.log("onPanelResizeFinish");
-	    createWeaveLayout(3);
-	    createArtworkLayout(2);
-	    createSimulationLayout(2);
-	    createThreeLayout(2);
-	    createModelLayout(2);
-	});
-
 	dhxLayout.attachEvent("onResizeFinish", function(){
+
+		debug("ResizeFinish", "TRUE");
+
 	    createLayout(1);
+
 	});
 
 	mainTabbar.attachEvent("onSelect", function(id, lastId){
 
 		mainTabbar.setSizes();
-
-	    if ( id == "weave" ){
-
-	    	globalTabs.active = "weave";
-	    	createWeaveLayout(22);
-	    	globalStatusbar.set("weaveIntersection", "-", "-");
-	    
-	    } else if ( id == "artwork"){
-
-	    	globalTabs.active = "artwork";
-	    	createArtworkLayout(3);
-	    	globalStatusbar.set("artworkIntersection", "-", "-");
-	    	globalStatusbar.set("artworkColor", "-", "-");
-	    	globalStatusbar.set("artworkColorCount");
-	    
-	    } else if ( id == "simulation"){
-
-	    	globalTabs.active = "simulation";
-	    	globalSimulation.onTabSelect();
-
-	    } else if ( id == "three"){
-
-	    	globalTabs.active = "three";
-	    	globalStatusbar.set("threeIntersection", 0, 0);
-
-	    } else if ( id == "model"){
-
-	    	globalTabs.active = "model";
-	    	globalModel.onTabSelect();
-
-	    }
-
-	    // console.log(["activeTab", globalTabs.active]);
-
-	    globalStatusbar.switchTo(globalTabs.active);
-
-	    updateAppSettings();
+		app.tabs.active = id;
+	    globalStatusbar.switchTo(id);
+	    g(id).onTabSelect();
+	    app.saveConfigurations(1);
 
 	    return true;
 
@@ -457,17 +341,8 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Debug Window
 	// ----------------------------------------------------------------------------------
-	$("<div>", {id: "debug-system", class: "debug-tab"})
-	.append($("<ul>", { class: "debug-list"}))
-	.appendTo("#noshow");
 
-	$("<div>", {id: "debug-three", class: "debug-tab"})
-	.append($("<ul>", { class: "debug-list"}))
-	.appendTo("#noshow");
-
-	$("<div>", {id: "debug-model", class: "debug-tab"})
-	.append($("<ul>", { class: "debug-list"}))
-	.appendTo("#noshow");
+	var debugTabs = ["debug-system", "debug-three", "debug-model", "debug-simulation", "debug-live", "debug-tests"];
 
 	var debugWin = dhxLayout.dhxWins.createWindow({
 	    id:"debugWin",
@@ -482,29 +357,84 @@ $(document).ready ( function(){
 	    modal: false,
 	    caption: "Debug",
 	    header:true
-
 	});
-
 	debugWin.stick();
 	debugWin.bringToTop();
 	debugWin.button("minmax").hide();
-
-	debugWin.button("close").attachEvent("onClick", function() {
-		debugWin.hide();
-	});
-
-	var debugTabbar = debugWin.attachTabbar({
-		tabs: [
-			{ id: "d1", text: "System", active: true },
-			{ id: "d2", text: "3D" },
-			{ id: "d3", text: "Model" }
-		]
-	});
-	
+	debugWin.button("close").attachEvent("onClick", function() { debugWin.hide();});
+	var debugTabbar = debugWin.attachTabbar();
 	debugTabbar.setArrowsMode("auto");
-	debugTabbar.tabs("d1").attachObject("debug-system");
-	debugTabbar.tabs("d2").attachObject("debug-three");
-	debugTabbar.tabs("d3").attachObject("debug-model");
+	debugTabs.forEach(function(tabId, i){
+		$("<div>", {id: tabId, class: "debug-tab"})
+		.append($("<ul>", { class: "debug-list"}))
+		.appendTo("#noshow");
+		var j = i+1;
+		var name = tabId.split("-")[1];
+		debugTabbar.addTab("d"+j, name, null, null, !i, false);
+		debugTabbar.tabs("d"+j).attachObject(tabId);
+	});
+
+	function debugInput(type, title, values, tab = "system", callback){
+
+		var directUpdate = !values ? true : false;
+
+		if ( directUpdate ){
+
+			var ref = eval(title);
+			if ( type == "number"){
+				values = Number(ref);
+			}
+
+		}
+
+		var debugTab = $("#debug-"+tab);
+		var debugList = debugTab.find("ul.debug-list");
+		
+		var button = $("<div>", {class: "item-button debug-bold"});
+		var input = $('<input>', {class: "item-input", type: 'text', val: values });
+
+		$("<li>")
+			.append($("<div>", {class: "item-title debug-bold"}).text(title))
+			.append(button.text("SET"))
+			.append(input)
+			.appendTo(debugList);
+
+		
+		button.click(function(e) {
+
+			var newVal = Number(input.val());
+
+			if ( directUpdate ){
+				eval ( title +"="+ newVal );
+			}
+
+			callback(input.val());
+		});
+
+	}
+
+	function debugOutput(title, tab = "system", callback){
+
+		var debugTab = $("#debug-"+tab);
+		var debugList = debugTab.find("ul.debug-list");
+		
+		var button = $("<div>", {class: "item-button debug-bold"});
+		var input = $('<input>', {class: "item-input", type: 'text', val: "" });
+
+		$("<li>")
+			.append($("<div>", {class: "item-title debug-bold"}).text(title))
+			.append(button.text("GET"))
+			.append(input)
+			.appendTo(debugList);
+
+		
+		button.click(function(e) {
+
+			callback(input);
+
+		});
+
+	}
 
 	debugWin.hide();
 
@@ -512,45 +442,41 @@ $(document).ready ( function(){
 
 		var debugTab = $("#debug-"+tab);
 		var debugList = debugTab.find("ul.debug-list");
-		var item = debugTab.find("div.item-title").textEquals(title);
+		var itemValue = debugTab.find(".item-title").textEquals(title);
+		var itemExist = itemValue.length;
+		var isNumber = !isNaN(value);
 
-		if ( item.length ){
+		if ( itemExist ){
 
-			var parent = item.parent();			
-			var count = Number(parent.data("count")) + 1;
-			parent.data("count", count);
+			var item = itemValue.parent();
+			var count = Number(item.data("count")) + 1;
+			item.data("count", count);
+			item.find(".item-value").addClass('debug-bold').text(value);
+			item.find(".item-count").addClass('debug-bold').text(count);
 
-			item.addClass("debug-bold");
-			item.siblings("div.item-value").text(value).addClass("debug-bold");
-			item.siblings("div.item-count").text(count).addClass("debug-bold");
+			if ( isNumber ){
 
-			if (!isNaN(value)){
-
-				var sum = Number(parent.data("sum")) + Number(value);
-				parent.data("sum", sum);
+				var sum = Number(item.data("sum")) + Number(value);
+				item.data("sum", sum);
 				var avg = Math.round(sum / count * 100)/100;
+				item.find(".item-avg").addClass('debug-bold').text(avg);
 
-				var currentMin = Number(item.siblings("div.item-min").text());
-				var currentMax = Number(item.siblings("div.item-max").text());
-				if ( currentMin > value ){ item.siblings("div.item-min").text(value).addClass("debug-bold"); }
-				if ( currentMax < value ){ item.siblings("div.item-max").text(value).addClass("debug-bold"); }
-				item.siblings("div.item-avg").text(avg).addClass("debug-bold");
+				if ( count == 1 ){
+					item.find(".item-min, .item-max, item-avg").text(value).addClass("debug-bold");
+				} else {
+					var currentMin = Number(item.find(".item-min").text());
+					var currentMax = Number(item.find(".item-max").text());
+					if ( currentMin > value ){ item.find(".item-min").text(value).addClass("debug-bold"); }
+					if ( currentMax < value ){ item.find(".item-max").text(value).addClass("debug-bold"); }
+				}
 
 			}
-			
+
 		} else {
 
-			if ( isNaN(value) ){
+			if ( isNumber ){
 
-				$("<li data-count="+1+">")
-				.append($("<div>", {class: "item-title debug-bold"}).text(title))
-				.append($("<div>", {class: "item-count debug-bold"}).text(1))
-				.append($("<div>", {class: "item-value debug-bold"}).text(value))
-				.appendTo(debugList);
-
-			} else {
-
-				$("<li data-sum="+value+" data-count="+1+">")
+				$("<li data-sum="+value+" data-count='1'>")
 				.append($("<div>", {class: "item-title debug-bold"}).text(title))
 				.append($("<div>", {class: "item-count debug-bold"}).text(1))
 				.append($("<div>", {class: "item-avg debug-bold"}).text(value))
@@ -559,40 +485,128 @@ $(document).ready ( function(){
 				.append($("<div>", {class: "item-value debug-bold"}).text(value))
 				.appendTo(debugList);
 
+			} else {
+
+				$("<li data-count='1'>")
+				.append($("<div>", {class: "item-title debug-bold"}).text(title))
+				.append($("<div>", {class: "item-count debug-bold"}).text(1))
+				.append($("<div>", {class: "item-value debug-bold"}).text(value))
+				.appendTo(debugList);
+
 			}
-			
+
 		}
+
 		$.doTimeout("debugNormal", 5000, function(){
 			debugList.find("div").removeClass("debug-bold");
 		});
+
 	}
 
-	$(document).on("dblclick", ".debug-tab div.item-title", function(evt){
-		
-		var value = $(this).siblings("div.item-value").text();
-		$(this).siblings("div.item-count").text(1);
-		var parent = $(this).parent();
-		parent.data("count", 1);
-		parent.data("sum", value);
-		if ( $(this).siblings("div.item-min").length ){
-			$(this).siblings("div.item-min").text(value);
-			$(this).siblings("div.item-max").text(value);
-			$(this).siblings("div.item-avg").text(value);
-		}
-
+	$(document).on("dblclick", ".debug-tab .item-title", function(evt){
+		var item = $(this).parent();	
+		item.find(".item-value, .item-min, .item-max, .item-avg, .item-count").text("-");
+		item.find(".item-count").text(0);
+		item.data("count", 0);
+		item.data("sum", 0);
 	});
 
 	var globalDebugTime = {};
 	function debugTime(ref){
-	    var timestamp = window.performance && window.performance.now && window.performance.timing && window.performance.timing.navigationStart ? window.performance.now() + window.performance.timing.navigationStart : Date.now();
-	    globalDebugTime[ref] = timestamp;
+	    globalDebugTime[ref] = performance.now();
 	}
-	function debugTimeEnd(ref){
-	    var timestamp = new Date();
-	    var ms = timestamp - globalDebugTime[ref];
-	    debug(ref, Math.round(ms*100)/100);
+	function debugTimeEnd(ref, tab = "system"){
+	    var ms = performance.now() - globalDebugTime[ref];
+	    ms = ms < 10 ? Math.round(ms*100)/100 : Math.round(ms);
+	    debug(ref, ms, tab);
 	    delete globalDebugTime[ref];
 	}
+
+	debugInput("number", "Test 02", "0", "tests", function(val){
+
+		console.log("hi");
+		// //dhtmlx.message.position = "bottom";
+		// //dhtmlx.message("Shafts Limits 256");
+		// globalThree.disposeScene();
+		
+	});
+
+	debugInput("number", "globalThree.fabric.rotation.x", "0", "tests", function(val){
+		globalThree.fabric.rotation.x = val/180*Math.PI;
+		globalThree.render();
+	});
+
+	debugInput("number", "globalThree.fabric.rotation.y", "0", "tests", function(val){
+		globalThree.fabric.rotation.y = val/180*Math.PI;
+		globalThree.render();
+	});
+
+	debugInput("number", "globalThree.fabric.rotation.z", "0", "tests", function(val){
+		globalThree.fabric.rotation.z = val/180*Math.PI;
+		globalThree.render();
+	});	
+
+	debugOutput("Palette Hex String", "tests", function(input){
+
+		input.val(app.palette.hexString());
+		
+	});
+
+	debugOutput("Palette Sorted", "tests", function(input){
+
+		input.val(app.palette.sortBy());
+		
+	});
+
+	debugOutput("Remove Fabric", "tests", function(input){
+		globalThree.clearFabric();
+		input.val("Done");
+	});
+
+	debugOutput("rotateFabric", "tests", function(input){
+
+		globalThree.fabric.rotation.x = 0;
+		globalThree.fabric.rotation.y = 0;
+		globalThree.fabric.rotation.z = 0;
+
+		input.val("Done");
+		
+	});	
+
+	debugOutput("confirmselected", "tests", function(input){
+
+		globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
+		globalThree.render();
+		
+	});	
+
+	debugOutput("addpass", "tests", function(input){
+
+		globalThree.composer.addPass( globalThree.outlinePass );
+		globalThree.render();
+		
+	});	
+
+	debugOutput("addBox", "tests", function(input){
+		globalThree.scene.add(globalThree.cube1);
+		globalThree.render();
+	});	
+
+	debugOutput("selectedBox", "tests", function(input){
+
+		globalThree.outlinePassSelected.push(globalThree.cube1);
+		globalThree.render();
+		
+	});	
+
+	debugOutput("selectedFabric", "tests", function(input){
+
+		console.log(globalThree.fabric.children[3]);
+
+		globalThree.outlinePassSelected.push(globalThree.fabric.children[3]);
+		globalThree.render();
+		
+	});
 
 	// ----------------------------------------------------------------------------------
 	// AutoWeave Window
@@ -661,34 +675,95 @@ $(document).ready ( function(){
 		icons_path: "img/icons/",
 		xml: "xml/toolbar_model.xml",
 		onload: function() {
+
 			interfaceLoadCheck(4);
+
+			modelToolbar.addButton("toolbar-model-scene", 0, "Scene", "walls-36.png", "walls-36-dis.png");
+			modelToolbar.addButton("toolbar-model-lights", 1, "Lights", "light-setup-36.png", "light-setup-36-dis.png");
+			modelToolbar.addButton("toolbar-model-model", 2, "Model", "models-3d-36.png", "models-3d-36-dis.png");
+
+			modelToolbar.addButton("toolbar-model-weave-texture", 3, "Weave Texture", "weave-texture-36.png", "weave-texture-36-dis.png");
+			modelToolbar.addButton("toolbar-model-image-texture", 4, "Image Texture", "image-texture-36.png", "image-texture-36-dis.png");
+
+			modelToolbar.addButtonTwoState("toolbar-model-autorotate", 5, "Auto Rotate", "model-autorotate.png", "model-autorotate.png");
+			modelToolbar.addButton("toolbar-model-reset-position", 6, "Reset Position", "reset-position-36.png", "reset-position-36.png");
+			
+			modelToolbar.addButton("toolbar-model-save-image", 7, "Save Image", "save-36.png", "save-36-dis.png");
+
+			popForms.create({
+				toolbar: modelToolbar,
+				toolbarButton: "toolbar-model-scene",
+				htmlId: "pop-model-scene",
+				css: "xform-small",
+				parent: globalModel.params,
+				child: "scene",
+				onApply: function(){
+					globalModel.setEnvironment();
+				},
+			});
+
+			popForms.create({
+				toolbar: modelToolbar,
+				toolbarButton: "toolbar-model-model",
+				htmlId: "pop-model-model",
+				css: "xform-small",
+				parent: globalModel.params,
+				child: "model",
+				onLoad: function(){
+					popForms.addOption("modelGltfId", 1, "Model 1");
+					popForms.addOption("modelGltfId", 2, "Model 2");
+					popForms.addOption("modelGltfId", 3, "Model 3");
+					popForms.addOption("modelGltfId", 4, "Model 4");
+					popForms.addOption("modelGltfId", 5, "Model 5");
+					popForms.addOption("modelGltfId", 6, "Model 6");
+					popForms.addOption("modelGltfId", 7, "Model 7");
+					popForms.addOption("modelGltfId", 8, "Model 8");
+					popForms.addOption("modelGltfId", 9, "Model 9");
+					popForms.addOption("modelGltfId", 10, "Model 10");
+					popForms.addOption("modelGltfId", 11, "Model 11");
+					popForms.addOption("modelGltfId", 12, "Model 12");
+				},
+				onApply: function(){
+					globalModel.setModel();
+				}
+			});
+
+			popForms.create({
+				toolbar: modelToolbar,
+				toolbarButton: "toolbar-model-lights",
+				htmlId: "pop-model-lights",
+				css: "xform-small",
+				parent: globalModel.params,
+				child: "lights",
+				onApply: function(){
+					globalModel.setLights();
+				}
+			});
+
 		}
+
 	});
 
 	modelToolbar.attachEvent("onClick", function(id) {
 
-		if (id == "toolbar-model-object-01") {
-			globalModel.loadModel(1);
-		} else if (id == "toolbar-model-object-02") {
-			globalModel.loadModel(2);
-		} else if (id == "toolbar-model-object-03") {
-			globalModel.loadModel(3);
-		} else if (id == "toolbar-model-object-04") {
-			globalModel.loadModel(4);
-		} else if (id == "toolbar-model-object-05") {
-			globalModel.loadModel(5);
-		} else if (id == "toolbar-model-object-06") {
-			globalModel.loadModel(6);
-		} else if (id == "toolbar-model-object-07") {
-			globalModel.loadModel(7);
-		} else if (id == "toolbar-model-object-08") {
-			globalModel.loadModel(8);
-		} else if (id == "toolbar-model-object-09") {
-			globalModel.loadModel(9);
-		} else if (id == "toolbar-model-object-10") {
-			globalModel.loadModel(100);
+		if ( id == "toolbar-model-weave-texture" ){
+			globalModel.renderTexture();
+		} else if ( id == "toolbar-model-save-image" ){
+			if ( globalModel.sceneCreated ){
+				saveCanvasAsImage(g_modelCanvas, "model3d.png");
+			}
+		} else if ( id == "toolbar-model-reset-position" ){
+			globalModel.animateSceneTo([0,0,0], globalModel.params.cameraPos, globalModel.params.controlsTarget);
 		}
 
+	});
+
+	modelToolbar.attachEvent("onStateChange", function(id, state) {
+
+		if ( id == "toolbar-model-autorotate" ){
+			globalModel.autoRotate = state;
+		}
+		
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -699,51 +774,125 @@ $(document).ready ( function(){
 		xml: "xml/toolbar_three.xml",
 		onload: function() {
 
-			var threeSettingsPop = new dhtmlXPopup({
-				toolbar: threeToolbar,
-				id: "toolbar-three-settings"
-			});
-			threeSettingsPop.attachObject("three-parameters");
-
-			interfaceLoadCheck(4);
-
-			$("#three-parameters .button-primary").click(function(e) {
-				if (e.which === 1) {
-					buildFabric();
-				}
-				return false;
-			});
-
-			$("#three-parameters .button-close").click(function(e) {
-				if (e.which === 1) {
-					threeSettingsPop.hide();
-				}
-				return false;
-			});
-
-		}
-	});
-
-	threeToolbar.attachEvent("onClick", function(id) {
-
-		if (id == "toolbar-three-render") {
+			threeToolbar.addButton("toolbar-three-scene", 0, "Scene", "walls-36.png", "walls-36-dis.png");
+			threeToolbar.addButton("toolbar-three-structure", 1, "Structure", "structure-36.png", "structure-36.png");
+			threeToolbar.addButton("toolbar-three-render", 2, "Render", "play-button-36.png", "play-button-36.png");
 			
-			buildFabric();
+			threeToolbar.addButtonTwoState("toolbar-three-mouse-outline", 3, "Outline", "mouse-outline-36.png", "mouse-outline-36.png");
+			threeToolbar.addButtonTwoState("toolbar-three-mouse-highlight", 4, "Highlight", "mouse-highlight-36.png", "mouse-highlight-36.png");
+			threeToolbar.addButton("toolbar-three-reset-position", 5, "Reset Position", "reset-position-36.png", "reset-position-36.png");
+			threeToolbar.addButton("toolbar-three-change-view", 6, "Change View", "change-view-36.png", "change-view-36.png");
+
+			threeToolbar.addButton("toolbar-three-save-image", 7, "Save Image", "save-36.png", "save-36-dis.png");
+			threeToolbar.addButton("toolbar-three-export-gltf", 7, "Export GLTF", "export-36.png", "export-36.png");
+			
+			popForms.create({
+				toolbar: threeToolbar,
+				toolbarButton: "toolbar-three-scene",
+				htmlId: "pop-three-scene",
+				css: "xform-small",
+				parent: globalThree.params,
+				child: "scene",
+				onApply: function(){
+					if ( globalThree.sceneCreated ){
+						globalThree.setBgColor(globalThree.params.bgColor);
+						globalThree.swithCameraTo(globalThree.params.projection);
+						globalThree.axes.visible = globalThree.params.showAxes;
+						globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
+						globalThree.render();
+					} else {
+						globalThree.createScene();
+					}
+				},
+			});
+
+			popForms.create({
+				toolbar: threeToolbar,
+				toolbarButton: "toolbar-three-structure",
+				htmlId: "pop-three-structure",
+				css: "xform-small",
+				parent: globalThree.params,
+				child: "structure",
+				onApply: function(){
+					if ( globalThree.sceneCreated ){
+						globalThree.setBgColor(globalThree.params.bgColor);
+						globalThree.swithCameraTo(globalThree.params.projection);
+						globalThree.axes.visible = globalThree.params.showAxes;
+						globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
+						globalThree.render();
+					} else {
+						globalThree.createScene();
+					}
+				},
+			});
+
+			threeToolbar.attachEvent("onClick", function(id) {
+
+				if (id == "toolbar-three-render") {
+					
+					globalThree.buildFabric();
+
+				} else if (id == "toolbar-three-save-image"){
+
+					if ( globalThree.sceneCreated ){
+						saveCanvasAsImage(g_threeCanvas, "weave3d.png");
+					}
+
+				} else if ( id == "toolbar-three-reset-position" ){
+
+					globalThree.resetPosition();
+									
+				} else if ( id == "toolbar-three-change-view" ){
+					
+					globalThree.changeView();
+				
+				} else if ( id == "toolbar-three-export-gltf" ){
+
+					globalThree.resetPosition(function(){
+
+						globalThree.params.showAxes = false;
+						globalThree.axes.visible = false;
+						globalThree.render();
+
+						var options = {
+							trs: false,
+							onlyVisible: true,
+							truncateDrawRange: false,
+							binary: false,
+							forceIndices: false,
+							forcePowerOfTwoTextures: false
+						};
+					
+						var exporter = new THREE.GLTFExporter();
+						exporter.parse( globalThree.fabric, function ( gltf ) {
+							if ( gltf instanceof ArrayBuffer ) {
+								saveArrayBufferAsFile( gltf, 'scene.glb' );
+							} else {
+								var output = JSON.stringify( gltf, null, 2 );
+								saveStringAsFile( output, 'weave3d.gltf' );
+							}
+						}, options );
+
+					});
+					
+				}
+
+			});
+
+			threeToolbar.attachEvent("onStateChange", function(id, state) {
+
+				if ( id == "toolbar-three-mouse-highlight"){
+					globalThree.mouseOverHighlight = state;
+				} else if ( id == "toolbar-three-mouse-outline"){
+					globalThree.mouseOverOutline = state;
+				}
+				
+			});
 
 		}
-		
-
 	});
 
-	threeToolbar.attachEvent("onStateChange", function(id, state) {
-
-		if ( id == "toolbar-three-mouse-highlight"){
-
-			globalThree.mouseOverHighlight = state;
-
-		}
-		
-	});
+	
 
 	// ----------------------------------------------------------------------------------
 	// Artwork Toolbar
@@ -925,11 +1074,11 @@ $(document).ready ( function(){
 
 		} else if ( id == "toolbar-weave-grid-show" ){
 
-			globalWeave.setProps(6, "showGrid", state);		
+			globalWeave.setProps(6, {showGrid: state});		
 
 		} else if ( id == "toolbar-weave-lock-shafts" ){
 
-			globalWeave.lockDraft(state);
+			globalWeave.lockThreading(state);
 
 		} else if ( id == "toolbar-weave-lock-pegs" ){
 
@@ -938,9 +1087,9 @@ $(document).ready ( function(){
 				g_LockLiftingArray = zipWeave(globalWeave.weave2D.rotate2D8("r")).split("x");
 			}
 
-		} else if ( id == "toolbar-weave-lock-draft-to-treadling" ){
+		} else if ( id == "toolbar-weave-lock-threading-to-treadling" ){
 
-			g_LockDraftToTreadling = state;
+			g_LockThreadingToTreadling = state;
 
 		}
 	
@@ -949,8 +1098,8 @@ $(document).ready ( function(){
 	function setGraphTool(tool){
 	
 		if ( g_graphTool !== tool ){
-			globalWeave.render2D8(12, globalMouse.graph);
-			globalMouse.reset();
+			globalWeave.render2D8(12, app.mouse.graph);
+			app.mouse.reset();
 			graphReserve.clear();
 			g_graphTool = tool;
 			setToolbarDropDown(weaveToolbar, "toolbar-weave-tool", "toolbar-weave-tool-"+tool);
@@ -958,8 +1107,8 @@ $(document).ready ( function(){
 			if ( tool !== "line" ){
 				
 				g_graphLineStarted = false;
-				gmy.lineX1 = false;
-				gmy.liney1 = false;
+				app.storage.lineX1 = false;
+				app.storage.liney1 = false;
 			
 			}
 
@@ -1033,15 +1182,15 @@ $(document).ready ( function(){
 		// Weave Draw Style	
 		} else if ( id == "toolbar-weave-draw-style-graph"){
 
-			globalWeave.setProps(7, "graphDrawStyle", "graph");
+			globalWeave.setProps(7, {graphDrawStyle: "graph"});
 
 		} else if ( id == "toolbar-weave-draw-style-color"){
 			
-			globalWeave.setProps(8, "graphDrawStyle", "color");
+			globalWeave.setProps(8, {graphDrawStyle: "color"});
 
 		} else if ( id == "toolbar-weave-draw-style-yarn"){
 
-			globalWeave.setProps(9, "graphDrawStyle", "yarn");
+			globalWeave.setProps(9, {graphDrawStyle: "yarn"});
 
 		} else if ( id == "toolbar-weave-autoweave"){
 
@@ -1055,93 +1204,56 @@ $(document).ready ( function(){
 	// Simulation Toolbar
 	// ----------------------------------------------------------------------------------
 	var simulationToolbar = simulationTab.attachToolbar({
-		icons_path: "img/icons/",
 		xml: "xml/toolbar_simulation.xml",
+		icons_path: "img/icons/",
 		onload: function() {
-			
-			// ----- Fabric Parameters POP -----
-			var settingPop = new dhtmlXPopup({
+
+			simulationToolbar.addButton("toolbar-simulation-structure", 0, "Structure", "structure-36.png", "structure-36.png");
+			simulationToolbar.addButton("toolbar-simulation-yarn", 1, "Yarn", "yarn-36.png", "yarn-36.png");
+			simulationToolbar.addButton("toolbar-simulation-behaviour", 2, "Behaviour", "random-36.png", "random-36.png");
+			simulationToolbar.addButton("toolbar-simulation-render", 3, "Render", "simulation-render-36.png", "simulation-render-36.png");
+			simulationToolbar.addButton("toolbar-simulation-save", 4, "Save Image", "save-36.png", "save-36-dis.png");
+			simulationToolbar.addButton("toolbar-simulation-save-image", 5, "Save Image2", "save-36.png", "save-36-dis.png");
+
+			popForms.create({
 				toolbar: simulationToolbar,
-				id: "toolbar-simulation-fabric-parameters"
-			});
-			settingPop.attachObject("simulation-parameters");
-
-			settingPop.attachEvent("onShow", function(id) {
-				globalSimulation.updateFabricParameterInputs();
-				$("#simulation-parameters .button-primary").text("Save");
+				toolbarButton: "toolbar-simulation-structure",
+				htmlId: "pop-simulation-structure",
+				css: "xform-small",
+				parent: globalSimulation.params,
+				child: "structure"
 			});
 
-			$("#simulation-parameters .button-primary").click(function(e) {
-				if (e.which === 1) {
-
-					if ( $(this).text() == "Render" ){
-						globalSimulation.render(6);
-						$(this).text("Save");
-					} else {
-						globalSimulation.applyFabricParameters();
-						$(this).text("Render");
-					}
-
-				}
-				return false;
-			});
-
-			$("#simulation-parameters .button-close").click(function(e) {
-				if (e.which === 1) {
-					settingPop.hide();
-				}
-				return false;
-			});
-
-			// ----- Yarn Parameters POP -----
-			var imperfectionParamsPop = new dhtmlXPopup({
+			popForms.create({
 				toolbar: simulationToolbar,
-				id: "toolbar-simulation-imperfection-parameters"
-			});
-			imperfectionParamsPop.attachObject("imperfection-parameters");
-
-			imperfectionParamsPop.attachEvent("onShow", function(id) {
-				globalSimulation.updateImperfectionParametersInputs();
-				$("#imperfection-parameters .button-primary").text("Save");
+				toolbarButton: "toolbar-simulation-yarn",
+				htmlId: "pop-simulation-yarn",
+				css: "xform-small",
+				parent: globalSimulation.params,
+				child: "yarn"
 			});
 
-			$("#imperfection-parameters .button-primary").click(function(e) {
-				if (e.which === 1) {
-					if ( $(this).text() == "Render" ){
-						globalSimulation.render(6);
-						$(this).text("Save");
-					} else {
-						globalSimulation.applyImperfectionParameters();
-						$(this).text("Render");
-					}
+			popForms.create({
+				toolbar: simulationToolbar,
+				toolbarButton: "toolbar-simulation-behaviour",
+				htmlId: "pop-simulation-behaviour",
+				css: "xform-small",
+				parent: globalSimulation.params,
+				child: "behaviour"
+			});
+
+		},
+		onClick: function(id) {
+			if (id == "toolbar-simulation-save") {
+				showSimulationSaveModal();
+			} else if (id == "toolbar-simulation-render") {
+				globalSimulation.render(6);
+			} else if ( id == "toolbar-simulation-save-image" ){
+				if ( globalSimulation.created ){
+					saveCanvasAsImage(g_simulationCanvas, "simulation.png");
 				}
-				return false;
-			});
-
-			$("#imperfection-parameters .button-close").click(function(e) {
-				if (e.which === 1) {
-					imperfectionParamsPop.hide();
-				}
-				return false;
-			});
-
-			interfaceLoadCheck(7);
-
+			}
 		}
-	});
-
-	simulationToolbar.attachEvent("onClick", function(id) {
-
-		if (id == "toolbar-simulation-fullscreen") {
-			simulationFullscreen();
-		} else if (id == "toolbar-simulation-save") {
-			showSimulationSaveModal();
-		} else if (id == "toolbar-simulation-reset-position") {
-			//resetQuickSimulationPosition();
-		} else if (id == "toolbar-simulation-render") {
-			globalSimulation.render(6);
-		}
-
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -1149,15 +1261,21 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function layoutMenuClick(id) {
     
-    var newTreadling, newDraft, newTieup;
+    var newTreadling, newThreading, newTieup;
 
 		globalSelection.clear_old(3);
 
 		if (id == "palette_generate_random") {
 
-			globalPalette.setRandom();
+			app.palette.setRandom();
 
-		} else if (id == "palette_load_default") {
+		} else if (id == "palette_set_default") {
+
+			app.palette.setDefault();
+
+		} else if ( id == "palette_sort_hue" ){
+
+			app.palette.sortBy("hue");
 
 		} else if (id == "weave_clear") {
 
@@ -1399,19 +1517,15 @@ $(document).ready ( function(){
 
 			showModalWindow("About", "about-modal");
 
-		} else if (id == "simulation_view_fullscreen") {
-
-			simulationFullscreen();
-
 		} else if (id == "menu_main_tieup_clear") {
 
 			newTieup = newArray2D(2, 2, 1);
 			globalWeave.setGraph2D8("tieup", newTieup);
 
-		} else if (id == "menu_main_draft_clear") {
+		} else if (id == "menu_main_threading_clear") {
 
-			newDraft = newArray2D(2, 2, 1);
-			globalWeave.setGraph2D8("draft", newDraft);
+			newThreading = newArray2D(2, 2, 1);
+			globalWeave.setGraph2D8("threading", newThreading);
 
 		} else if (id == "menu_main_treadling_clear") {
 
@@ -1428,25 +1542,37 @@ $(document).ready ( function(){
 			newTreadling = globalWeave.lifting2D8.flip2D8("x");
 			globalWeave.setGraph2D8("lifting", newTreadling);
 
-		} else if (id == "menu_main_draft_flip_vertical") {
+		} else if (id == "menu_main_threading_flip_vertical") {
 
-			newDraft = globalWeave.draft2D8.flip2D8("y");
-			globalWeave.setGraph2D8("draft", newDraft);
+			newThreading = globalWeave.threading2D8.flip2D8("y");
+			globalWeave.setGraph2D8("threading", newThreading);
 
-		} else if (id == "menu_main_draft_flip_horizontal") {
+		} else if (id == "menu_main_threading_flip_horizontal") {
 
-			newDraft = globalWeave.draft2D8.flip2D8("x");
-			globalWeave.setGraph2D8("draft", newDraft);
+			newThreading = globalWeave.threading2D8.flip2D8("x");
+			globalWeave.setGraph2D8("threading", newThreading);
 
-		} else if (id == "menu_main_draft_copy_to_treadling") {
+		} else if (id == "menu_main_threading_copy_to_treadling") {
 
-			newTreadling = globalWeave.draft2D8.rotate2D8("l").flip2D8("x");
+			newTreadling = globalWeave.threading2D8.rotate2D8("l").flip2D8("x");
 			globalWeave.setGraph2D8("lifting", newTreadling);
 
-		} else if (id == "menu_main_treadling_copy_to_draft") {
+		} else if (id == "menu_main_treadling_copy_to_threading") {
 
-			newDraft = globalWeave.lifting2D8.rotate2D8("r").flip2D8("y");
-			globalWeave.setGraph2D8("draft", newDraft);
+			newThreading = globalWeave.lifting2D8.rotate2D8("r").flip2D8("y");
+			globalWeave.setGraph2D8("threading", newThreading);
+
+		} else if ( id == "menu-main-debug-window"){
+
+			debugWin.show();
+
+		} else if (id == "menu-main-edit-undo") {
+
+			globalHistory.gotoPrevStep();
+
+		} else if (id == "menu-main-edit-redo") {
+
+			globalHistory.gotoNextStep();
 
 		}
 
@@ -1487,7 +1613,7 @@ $(document).ready ( function(){
 	  	var pixels = new Uint32Array(imagedata.data.buffer);
 		for (x = 0; x < ctxW; ++x) {
 			for (y = 0; y < ctxH; ++y) {
-				drawRectBuffer(g_origin, pixels, x, y, 1, 1, ctxW, ctxH, "rgba", globalColors.rgba.red, 1);
+				drawRectBuffer(app.origin, pixels, x, y, 1, 1, ctxW, ctxH, "rgba", app.colors.rgba.red, 1);
 			}
 		}
 		ctx.putImageData(imagedata, 0, 0);
@@ -1505,7 +1631,7 @@ $(document).ready ( function(){
 			if (e.which === 1 && g_fileLoaded) {
 				g_fileLoaded = false;
 				if ( buttonIndex === 0 ){
-					globalWeave.lockDraft(false);
+					globalWeave.lockThreading(false);
 					globalWeave.set(29, g_weaveArray_imported);
 				} else if ( buttonIndex == 1 ){
 					globalSelection.action = "copy";
@@ -1537,7 +1663,7 @@ $(document).ready ( function(){
 
 				if ( buttonIndex === 0 ){
 				
-					globalWeave.lockDraft(false);
+					globalWeave.lockThreading(false);
 					
 					applyWeaveToArtworkColor(g_artworkWeaveArray_imported, artworkColorIndex, 0, 0);
 
@@ -1759,7 +1885,7 @@ $(document).ready ( function(){
 
 	$(document).on("dblclick", ".weave-library-list li", function(evt){
 
-		if ( globalTabs.active == "weave" && artworkColorsWindow.isHidden() ){
+		if ( app.tabs.active == "weave" && artworkColorsWindow.isHidden() ){
 			var weaveLibrary = $(this).attr("data-weave-library");
 			var weaveIndex = $(this).attr("data-weave-index");
 			globalWeaves.selected = globalWeaves[weaveLibrary][weaveIndex];
@@ -1923,7 +2049,7 @@ $(document).ready ( function(){
 
 			if (e.which === 1) {
 				var projectCode = $("#project-code-import-textarea").val();
-				if ( validateProjectCode(projectCode) ){
+				if ( app.validateState(projectCode) ){
 
 					hideModalWindow();
 					showPartialImportProjectModal(projectCode);
@@ -1953,8 +2079,8 @@ $(document).ready ( function(){
 
 		showModalWindow("Pattern Code", "pattern-code-modal");
 
-		var warpPattern = zipPattern(globalPattern.warp);
-		var weftPattern = zipPattern(globalPattern.weft);
+		var warpPattern = compress1D(globalPattern.warp);
+		var weftPattern = compress1D(globalPattern.weft);
 
 		$("#pattern-code-warp").val(warpPattern);
 		$("#pattern-code-weft").val(weftPattern);
@@ -1967,8 +2093,8 @@ $(document).ready ( function(){
 				var warpPattern = $("#pattern-code-warp").val();
 				var weftPattern = $("#pattern-code-weft").val();
 
-				globalPattern.set(1, "warp", unZipPattern(warpPattern), false);
-				globalPattern.set(2, "weft", unZipPattern(weftPattern));
+				globalPattern.set(1, "warp", decompress1D(warpPattern), false);
+				globalPattern.set(2, "weft", decompress1D(weftPattern));
 
 				return false;
 			}
@@ -2026,7 +2152,7 @@ $(document).ready ( function(){
 				setProjectName(projectName);
 				g_projectNotes = projectNotes;
 				$("#project-properties-notes").val(projectNotes);
-				store.session("activeProjectCode", getProjectCode(1));
+				store.session(app.stateStorageID, app.getState(1));
 				return false;
 			}
 		});
@@ -2075,7 +2201,7 @@ $(document).ready ( function(){
 
 		if (history) {
 			if ( g_projectName !== oldProjectName){
-				globalHistory.addStep(1);
+				globalHistory.record(1);
 			}
 		}
 		
@@ -2158,23 +2284,28 @@ $(document).ready ( function(){
 
 	function setLiftingMode(mode, render = true){
 
-		var lastMode = g_liftingMode;
+		console.log(["setLiftingMode", mode]);
+
+		var lastMode = globalWeave.liftingMode;
 		if (lastMode !== mode){
-			g_liftingMode = mode;
+			globalWeave.liftingMode = mode;
 			if ( mode == "pegplan" && lastMode == "treadling"){
 				globalWeave.convertTreadlingToPegplan(false);
 			} else if ( mode.in("pegplan", "treadling") && lastMode == "weave" ){
-				globalWeave.setPartsFromWeave(false);
+				globalWeave.setPartsFromWeave();
 			} else if ( mode == "treadling" && lastMode == "pegplan" ){
 				globalWeave.convertPegplanToTieupTreadling(false);
 			}
 			setToolbarDropDown(weaveToolbar, "toolbar-lifting-mode", "toolbar-lifting-mode-"+mode);
 
+			app.saveConfigurations(2);
+
 			if ( render ){
-				globalHistory.addStep(2);
+				globalHistory.record(2);
 				createWeaveLayout(15, render);
 			}
 		}
+
 	}
 
 	// -------------------------------------------------------------
@@ -2305,7 +2436,7 @@ $(document).ready ( function(){
 			if (e.which === 1) {
 
 				var projectTitle = $("#project-save-to-library-name").val();
-				var projectCode = getProjectCode(2);
+				var projectCode = app.getState(2);
 
 				saveProjectToLibrary(projectCode, projectTitle);
 
@@ -2370,7 +2501,7 @@ $(document).ready ( function(){
 
 					if (projectFileName.match(/^[a-zA-Z]+[0-9a-zA-Z._-]+$/i)) {
 
-						var file = new File([getProjectCode(5)], projectFileName, {type: "text/plain;charset=utf-8"});
+						var file = new File([app.getState(5)], projectFileName, {type: "text/plain;charset=utf-8"});
 						saveAs(file);
 						hideModalWindow();
 
@@ -2388,7 +2519,7 @@ $(document).ready ( function(){
 		} else {
 
 			showModalWindow("Downlaod Project", "project-code-save-modal");
-			$("#project-code-save-textarea").val(getProjectCode(4));
+			$("#project-code-save-textarea").val(app.getState(4));
 
 		}
 
@@ -2412,7 +2543,7 @@ $(document).ready ( function(){
 				var projectFileName = $("#project-save-file-name").val();
 				if (projectFileName.match(/^[a-zA-Z]+[0-9a-zA-Z._-]+$/i)) {
 
-					var file = new File([getProjectCode(5)], projectFileName, {type: "text/plain;charset=utf-8"});
+					var file = new File([app.getState(5)], projectFileName, {type: "text/plain;charset=utf-8"});
 					saveAs(file);
 					hideModalWindow();
 
@@ -2603,31 +2734,31 @@ $(document).ready ( function(){
 
 			globalWeave.seamlessWeave = !state;
 			globalWeave.render2D8(1, "weave");
-			updateAppSettings();
+			app.saveConfigurations(3);
 
-		} else if ( id == "view-seamless-draft"){
+		} else if ( id == "view-seamless-threading"){
 
-			globalWeave.seamlessDraft = !state;
-			globalWeave.render2D8(1, "draft");
-			updateAppSettings();
+			globalWeave.seamlessThreading = !state;
+			globalWeave.render2D8(1, "threading");
+			app.saveConfigurations(4);
 
 		} else if ( id == "view-seamless-lifting"){
 
 			globalWeave.seamlessLifting = !state;
 			globalWeave.render2D8(1, "lifting");
-			updateAppSettings();
+			app.saveConfigurations(5);
 
 		} else if ( id == "view-seamless-warp"){
 
 			globalPattern.seamlessWarp = !state;
 			globalPattern.render8(1, "warp");
-			updateAppSettings();
+			app.saveConfigurations(6);
 
 		} else if ( id == "view-seamless-weft"){
 
 			globalPattern.seamlessWeft = !state;
 			globalPattern.render8(1, "weft");
-			updateAppSettings();
+			app.saveConfigurations(7);
 
 		}
 
@@ -2695,140 +2826,6 @@ $(document).ready ( function(){
 	});
 
 	// ----------------------------------------------------------------------------------
-	// Layout Toolbar
-	// ----------------------------------------------------------------------------------
-	function layoutToolbarClick(id) {
-
-		if (id == "toolbar-main-project-new") {
-
-			showProjectNewModal();
-
-		} else if (id == "toolbar-main-project-open") {
-
-			openFileDialog("project");
-
-		} else if (id == "toolbar-main-project-properties") {
-
-			showProjectPropertiesModal();
-
-		} else if (id == "toolbar-main-project-save") {
-
-			showProjectSaveModal();
-
-		} else if (id == "toolbar-main-project-print") {
-
-			printProject();
-
-		} else if (id == "toolbar-main-edit-undo") {
-
-			globalHistory.gotoPrevStep();
-
-		} else if (id == "toolbar-main-edit-redo") {
-
-			globalHistory.gotoNextStep();
-
-		} else if (id == "toolbar-main-test-01") {
-
-			var code = "2(3(UD2U3D2(5U1D)3U1D)3U1D)2(3(UD2U3D2(5U1D)3U1D)3U1D)2(3(UD2U3D2(5U1D)3U1D)3U1D)2(3(UD2U3D2(5U1D)3U1D)3U1D)";
-			//var code = "2(2(UD2U3D2(5UD)3UD)UD2U3D2(5UD)2(3UD))";
-			//var code = "4(2U2D3U3D4(2U2D))6U6D6U6D";
-			//var code = "UDUDUDUDUUUDDDUUUDDDUDUDUDUDUDUDUDUD";
-			//var code = "3(UD)U2(D3U2D)2(2(2(DU)))D";
-			//var code = "2(2(2(DU)))2(3D3U)2(2(DU))";
-			//var code = "2(1U1D2(4(2U3D)5U5D))";
-			//var code = "2(U2(4(D2U2D)D2(2U)U2(2D))D)";
-			
-			//var code = "16(2U3D2U3D)";
-			//var code = "2(2(2(3(UD2U2D2(D4UU)D3UD)3UD)))";
-
-			code = "DUUUUUDUUUUUDUUUUUDUUUUUDUUUUU";
-
-			//console.log(compress1D_B(code));
-			console.log(compress1D_B(code).join(""));
-			console.log(compress1D_A(code).join(""));
-			console.log(compress1D(code));
-
-		} else if (id == "toolbar-main-test-02") {
-
-			console.log( Math.sin(0/7 * Math.PI));
-			console.log( Math.sin(1/7 * Math.PI));
-			console.log( Math.sin(2/7 * Math.PI));
-			console.log( Math.sin(3/7 * Math.PI));
-			console.log( Math.sin(4/7 * Math.PI));
-			console.log( Math.sin(5/7 * Math.PI));
-			console.log( Math.sin(6/7 * Math.PI));
-			console.log( Math.sin(7/7 * Math.PI));
-
-		} else if (id == "toolbar-main-test-03") {
-
-			globalSimulation.renderTest1();
-
-		} else if (id == "toolbar-main-test-04") {
-
-			//globalWeave.weave2D8 = weave8ToWeave2D8(globalWeave.weave8);
-
-			globalSimulation.renderTest2();
-
-		} else if (id == "toolbar-main-test-05") {
-
-			globalSimulation.renderTest3();
-
-		} else if (id == "toolbar-main-test-06") {
-
-			debugTime("flip8");
-			var weave8Flip = globalWeave.weave8.transform8("flipy");
-			debugTimeEnd("flip8");
-
-		} else if (id == "toolbar-main-test-07") {
-			
-			console.log(["globalPalette", globalPalette.selected, globalPalette.rightClicked, globalPalette.marked]);
-
-		} else if (id == "toolbar-main-test-08") {
-
-			//globalModel.materials.fabric.map.repeat.set(4.5, 2.5);
-			//globalModel.materials.fabric.map.needsUpdate = true;
-			//globalModel.render();
-
-			showTextAreaModal("Weave Code");
-			//saveCanvasAsImage(g_simulationRepeatCanvas, "simulation.png");
-
-		} else if (id == "toolbar-main-test-09") {
-
-			setLoadingbar(0, "testid", true, "Tesing Loadingbar");
-
-		} else if (id == "toolbar-main-test-10") {
-
-			var camera1 = globalModel.camera.position;
-			var camera2 = globalModel.camera.getWorldPosition();
-
-			console.log(camera1);
-			console.log(camera2);
-
-			/*
-			debugTime("gzip");
-			var input = weave2D8ToWeave8(globalWeave.weave2D8);
-			var output = pako.gzip(input,{ to: "string" });
-			var outputToinput = pako.ungzip(output);
-			debugTimeEnd("gzip");
-			//console.log(output);
-			//console.log(outputToinput);
-
-			var input = "test string";
-			var output = pako.gzip(input,{ to: "string" });
-			console.log("compressed gzip string:" + output);
-			var originalInput = pako.ungzip(output,{ to: "string" });
-			console.log("uncompressed string:" + originalInput);
-			*/
-
-		} else if (id == "toolbar-main-debug-window") {
-
-			debugWin.show();
-
-		} 
-
-	}
-
-	// ----------------------------------------------------------------------------------
 	// Resize Weave Group
 	// ----------------------------------------------------------------------------------
 	function resetPatternStyles() {
@@ -2861,8 +2858,8 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 
 	$("#bgcolor-container").click(function() {
-		if (globalPalette.selected !== "BL") {
-			setBackgroundColor(globalPalette.selected, true);
+		if (app.palette.selected !== "BL") {
+			setBackgroundColor(app.palette.selected, true);
 		}
 	});
 
@@ -2891,7 +2888,7 @@ $(document).ready ( function(){
 
 	paletteContextMenu.attachEvent("onBeforeContextMenu", function(zoneId, ev) {
 
-		var element = $("#palette-chip-"+globalPalette.rightClicked);
+		var element = $("#palette-chip-"+app.palette.rightClicked);
 		var isInPattern = element.find(".warpArrow").is(":visible") || element.find(".weftArrow").is(":visible");
 
 		if ( isInPattern ) {
@@ -2922,16 +2919,16 @@ $(document).ready ( function(){
 	$(document).on("mousedown", ".palette-chip", function(evt){
 		var code = $(this).attr("id").slice(-1);
 		if (evt.which === 1){
-			globalPalette.selectChip(code);
+			app.palette.selectChip(code);
 		} else if (evt.which === 3) {
-			globalPalette.rightClicked = code;
+			app.palette.rightClicked = code;
 		}
 	});
 
 	$(document).on("dblclick", ".palette-chip", function(evt){
 		var code = $(this).attr("id").slice(-1);
 		if ( code !== "0"){
-			globalPalette.showColorPicker(code);	
+			app.palette.showColorPicker(code);	
 		}
 	});
 
@@ -2951,16 +2948,16 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function paletteContextMenuClick(id) {
 
-		var code = globalPalette.rightClicked;
+		var code = app.palette.rightClicked;
 
 		if (id == "palette_context_swap") {
 
-			globalPalette.markChip(code);
+			app.palette.markChip(code);
 
 		} else if (id == "palette_context_edit") {
 
-			globalPalette.clearSelection();
-			globalPalette.showColorPicker(code);
+			app.palette.clearSelection();
+			app.palette.showColorPicker(code);
 				
 		}
 
@@ -2974,12 +2971,13 @@ $(document).ready ( function(){
 	var colorPicker = new dhtmlXColorPicker({parent: "palette-color-picker"});
 	$("#palette-color-parameters .button-primary").click(function(e) {
 		if (e.which === 1) {
-			var code = globalPalette.selected;
+			var code = app.palette.selected;
 			var hex = colorPicker.getSelectedColor()[0];
 			var yarn = $("#yarnnumberinput input").numVal();
 			var system = $("#yarnsystemselect").val();
 			var luster = $("#yarnlusterinput input").numVal();
-			globalPalette.setChip(code, hex, yarn, system, luster);
+			var eccentricity = $("#yarneccentricityinput input").numVal();
+			app.palette.setChip(code, hex, yarn, system, luster, eccentricity);
 		}
 		return false;
 	});
@@ -3102,19 +3100,19 @@ $(document).ready ( function(){
 
 		} else if (id == "pattern_context_insert_left") {
 
-			globalPattern.insert("warp", globalPalette.selected, threadi-1);
+			globalPattern.insert("warp", app.palette.selected, threadi-1);
 
 		} else if (id == "pattern_context_insert_right") {
 
-			globalPattern.insert("warp", globalPalette.selected, threadi);
+			globalPattern.insert("warp", app.palette.selected, threadi);
 
 		} else if (id == "pattern_context_insert_above") {
 
-			globalPattern.insert("weft", globalPalette.selected, threadi);
+			globalPattern.insert("weft", app.palette.selected, threadi);
 
 		} else if (id == "pattern_context_insert_below") {
 
-			globalPattern.insert("weft", globalPalette.selected, threadi-1);
+			globalPattern.insert("weft", app.palette.selected, threadi-1);
 
 		} else if (id == "pattern_context_stripe_resize") {
 
@@ -3122,7 +3120,7 @@ $(document).ready ( function(){
 
 		} else if (id == "pattern_context_fill_stripe") {
 
-			fillStripe(yarnSet, elementIndex, globalPalette.selected);
+			fillStripe(yarnSet, elementIndex, app.palette.selected);
 
 		} else if ( id == "pattern_context_fill"){
 
@@ -3134,7 +3132,7 @@ $(document).ready ( function(){
 
 		} else if (id == "pattern_context_select_color") {
 
-			globalPalette.selectChip(colorCode);
+			app.palette.selectChip(colorCode);
 
 		} else if (id == "pattern_context_stripe_delete") {
 
@@ -3149,7 +3147,7 @@ $(document).ready ( function(){
 
 		var stripeData = getStripeData(globalPattern[yarnSet], memberElementIndex);
 		var stripeSize = stripeData[2];
-		var stripeArray = filledArray(globalPalette.selected, stripeSize);
+		var stripeArray = filledArray(app.palette.selected, stripeSize);
 		var newPattern = paste1D_old(stripeArray, globalPattern[yarnSet], stripeData[0]);
 		globalPattern.set(21, yarnSet, newPattern);
 
@@ -3205,7 +3203,7 @@ $(document).ready ( function(){
 			var newYarnNumber= Number(yarnCountInput.val());
 			if (e.which === 1) {
 				var yarnNumberArray = [newYarnNumber].repeat(52);
-				globalPalette.set(false, yarnNumberArray, false, true);
+				app.palette.set(false, yarnNumberArray, false, true);
 				hideModalWindow();
 				return false;
 			}
@@ -3414,14 +3412,14 @@ $(document).ready ( function(){
 		if (id == "selection_context_paste") {
 
 			globalSelection.paste_action = "paste";
-			mouse = getMouseFromClientXY("weave", globalMouse.currentx, globalMouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
+			mouse = getMouseFromClientXY("weave", app.mouse.currentx, app.mouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 			globalSelection.pasteStartCol = mouse.col;
 			globalSelection.pasteStartRow = mouse.row;
 
 		} else if (id == "selection_context_fill") {
 
 			globalSelection.paste_action = "fill";
-			mouse = getMouseFromClientXY("weave", globalMouse.currentx, globalMouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
+			mouse = getMouseFromClientXY("weave", app.mouse.currentx, app.mouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 			globalSelection.pasteStartCol = mouse.col;
 			globalSelection.pasteStartRow = mouse.row;
 
@@ -3441,7 +3439,7 @@ $(document).ready ( function(){
 	selectionContextMenu.attachEvent("onHide", function(id) {
 
 		globalSelection.moveTargetBox = true;
-		var mouse = getMouseFromClientXY("weave", globalMouse.currentx, globalMouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
+		var mouse = getMouseFromClientXY("weave", app.mouse.currentx, app.mouse.currenty, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 		globalSelection.pasteStartCol = mouse.col;
 		globalSelection.pasteStartRow = mouse.row;
 
@@ -3462,7 +3460,7 @@ $(document).ready ( function(){
 	//weaveContextMenu.addContextZone("weave-container");
 	//weaveContextMenu.addContextZone("tieup-container");
 	//weaveContextMenu.addContextZone("lifting-container");
-	//weaveContextMenu.addContextZone("draft-container");
+	//weaveContextMenu.addContextZone("threading-container");
 
 	weaveContextMenu.attachEvent("onHide", function(id) { });
 
@@ -3536,8 +3534,8 @@ $(document).ready ( function(){
 
 	weaveContextMenu.attachEvent("onClick", function(id) {
 
-		var endNum = globalMouse.endNum;
-		var pickNum = globalMouse.pickNum;
+		var endNum = app.mouse.endNum;
+		var pickNum = app.mouse.pickNum;
 		var endIndex = endNum - 1;
 		var pickIndex = pickNum - 1;
 
@@ -3626,69 +3624,6 @@ $(document).ready ( function(){
 	});
 
 	// ----------------------------------------------------------------------------------
-	// Reset Simulation Position
-	// ----------------------------------------------------------------------------------
-	function resetQuickSimulationPosition() {
-		var simBgTop = $("#simulation-frame").height() - g_simulationHeight;
-		$("#simulation-group").css({
-			"background-repeat": "repeat",
-			"background-position": "0px " + simBgTop,
-			"width": "100%",
-			"height": "100%",
-		});
-	}
-
-	// ----------------------------------------------------------------------------------
-	// Simulation Full Screen
-	// ----------------------------------------------------------------------------------
-	function simulationFullscreen() {
-
-		$("body").append("<div id=\"simulation-fullscreen-wrapper\"><div id=\"simulation-fullscreen-close-button\"></div></div>");
-
-		$("#simulation-fullscreen-wrapper").css({
-			"position": "absolute",
-			top: 0,
-			left: 0,
-			"background-image": "url(\"" + g_simulationDataUrl + "\")",
-			"background-size": g_simulationWidth / g_pixelRatio + "px " + g_simulationHeight / g_pixelRatio,
-			"background-color": "#FF0",
-			width: window.innerWidth,
-			height: window.innerHeight,
-			"z-index": 9999
-		});
-
-		$("#simulation-fullscreen-wrapper").backgroundDraggable({
-			bound: false
-		});
-
-		$("div#simulation-fullscreen-close-button").click(function() {
-			$("div#simulation-fullscreen-wrapper").remove();
-			$(this).off("click");
-			$("div#simulation-fullscreen-wrapper").off("click");
-			$("div#simulation-fullscreen-wrapper").off("mousemove");
-		});
-
-		fullscreenCloseButtonHide();
-
-		$("div#simulation-fullscreen-wrapper").on("click mousemove", function() {
-			$("div#simulation-fullscreen-close-button").show();
-			fullscreenCloseButtonHide();
-		});
-
-	}
-
-	function fullscreenCloseButtonHide(){
-		$.doTimeout("fullscreenCloseButtonHide", 1000, function(){
-			if ( $("div#simulation-fullscreen-close-button").length ){
-				var overClose = $("div#simulation-fullscreen-close-button").is(":hover");
-				if ( !overClose ) {
-	    			$("div#simulation-fullscreen-close-button").hide();
-				}
-			}
-		});
-	}
-
-	// ----------------------------------------------------------------------------------
 	// Disable Right Click
 	// ----------------------------------------------------------------------------------
 	$(document).on("contextmenu", function(e) {
@@ -3731,43 +3666,42 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Spinners
 	// ----------------------------------------------------------------------------------
-	$(".spinner-counter").spinner("delay", 1).spinner("changed", function(e, newVal, oldVal) {
+	function activateSpinnerCounters(){
 
-	}).spinner("changing", function(e, newVal, oldVal) {
+		$(".spinner-counter").spinner("delay", 1).spinner("changed", function(e, newVal, oldVal) {
 
-		if (this.attributes["data-min"] !== undefined){
+			console.log("changed");
+
+		}).spinner("changing", function(e, newVal, oldVal) {
+			if (this.attributes["data-min"] !== undefined){
+				var dmin = this.attributes["data-min"].value;
+				this.value = newVal <= dmin ? dmin : newVal;
+			}
+			if (this.attributes["data-max"] !== undefined){
+				var dmax = this.attributes["data-max"].value;
+				this.value = newVal >= dmax ? dmax : newVal;
+			}
+		});
+
+		$(".static-spinner-counter")
+		//.spinner("delay", 5) //delay in ms
+		.spinner("changed", function(e, newVal, oldVal) {
+			//trigger lazed, depend on delay option.
+			//validateSimulation(22);
+
+		})
+		.spinner("changing", function(e, newVal, oldVal) {
+			//trigger immediately
 			var dmin = this.attributes["data-min"].value;
-			this.value = newVal <= dmin ? dmin : newVal;
-		}
-
-		if (this.attributes["data-max"] !== undefined){
 			var dmax = this.attributes["data-max"].value;
-			this.value = newVal >= dmax ? dmax : newVal;
-		}
 
-	});
-
-	$(".static-spinner-counter")
-	//.spinner("delay", 5) //delay in ms
-	.spinner("changed", function(e, newVal, oldVal) {
-		//trigger lazed, depend on delay option.
-		//validateSimulation(22);
-
-	})
-
-	.spinner("changing", function(e, newVal, oldVal) {
-
-		//trigger immediately
-		var dmin = this.attributes["data-min"].value;
-		var dmax = this.attributes["data-max"].value;
-
-		if (newVal >= dmax) {
-			this.value = dmax;
-		} else if (newVal <= dmin) {
-			this.value = dmin;
-		}
-
-	});
+			if (newVal >= dmax) {
+				this.value = dmax;
+			} else if (newVal <= dmin) {
+				this.value = dmin;
+			}
+		});
+	}
 
 	// --------------------------------------------------
 	// Show Errors --------------------------------------
@@ -3833,7 +3767,7 @@ $(document).ready ( function(){
 						if ( type == "project" ){
 								
 							var textFileContents = reader.result;
-							if ( validateProjectCode(textFileContents) ) {
+							if ( app.validateState(textFileContents) ) {
 								g_fileLoadedName = file.name;
 								showPartialImportProjectModal(textFileContents);
 							} else {
@@ -3878,12 +3812,12 @@ $(document).ready ( function(){
 				var importWarpPattern = $("#partialImportWarpColorPatternCheckbox").prop("checked");
 				var importWeftPattern = $("#partialImportWeftColorPatternCheckbox").prop("checked");
 				var importWeave = $("#partialImportWeaveCheckbox").prop("checked");
-				var importDraft = $("#partialImportDraftCheckbox").prop("checked");
+				var importThreading = $("#partialImportThreadingCheckbox").prop("checked");
 				var importLifting = $("#partialImportLiftingCheckbox").prop("checked");
 				var importTieup = $("#partialImportTieupCheckbox").prop("checked");
 				var importArtwork = $("#partialImportArtworkCheckbox").prop("checked");
 				
-				importProjectCode(2, code, importAppSettings, importPalette, importWeave, importDraft, importLifting, importTieup, importWarpPattern, importWeftPattern, importArtwork);
+				app.setState(2, code, importAppSettings, importPalette, importWeave, importThreading, importLifting, importTieup, importWarpPattern, importWeftPattern, importArtwork);
 				$("#project-partial-open-modal .action-btn").off("click");
 				hideModalWindow();
 				return false;
@@ -3901,14 +3835,14 @@ $(document).ready ( function(){
 			if ( state ){
 
 				$("#partialImportTieupCheckbox").prop("checked", true);
-				$("#partialImportDraftCheckbox").prop("checked", true);
+				$("#partialImportThreadingCheckbox").prop("checked", true);
 				$("#partialImportTreadlingCheckbox").prop("checked", true);
 				$("#partialImportPegplanCheckbox").prop("checked", true);
 
 			} else {
 
 				$("#partialImportTieupCheckbox").prop("checked", false);
-				$("#partialImportDraftCheckbox").prop("checked", false);
+				$("#partialImportThreadingCheckbox").prop("checked", false);
 				$("#partialImportTreadlingCheckbox").prop("checked", false);
 				$("#partialImportPegplanCheckbox").prop("checked", false);
 
@@ -3935,270 +3869,12 @@ $(document).ready ( function(){
 	// Set Simulation BackgroundColor ------------------------------
 	// -------------------------------------------------------------
 	function setBackgroundColor(code, renderSimulation = true) {
-		var bgColorValue = globalPalette.colors[code].hex;
+		var bgColorValue = app.palette.colors[code].hex;
 		g_backgroundColor = code;
 		$("#bgcolor-container").css("background-color", bgColorValue);
 		if (renderSimulation) {
 			//validateSimulation(23);
 		}
-	}
-
-
-	// -------------------------------------------------------------
-	// Project Import and Export -----------------------------------
-	// -------------------------------------------------------------
-	function getApplicationSettings(){
-
-		var timeStamp = Date.now();
-		var pointPlusGrid = g_pointPlusGrid;
-		var showGrid = g_showGrid;
-
-		var seamlessWeave = globalWeave.seamlessWeave;
-		var seamlessDraft = globalWeave.seamlessDraft;
-		var seamlessLifting = globalWeave.seamlessLifting;
-		var seamlessWarp = globalPattern.seamlessWarp;
-		var seamlessWeft = globalPattern.seamlessWeft;
-
-		var graphDrawStyle = globalWeave.drawStyle;
-		var activeTab = globalTabs.active;
-
-		var settingObj = {
-		    tms: timeStamp, 
-		    ppg: pointPlusGrid,
-		    sgr: showGrid,
-		    slw: seamlessWeave,
-		    sld: seamlessDraft,
-		    sll: seamlessLifting,
-		    slp: seamlessWarp,
-		    slt: seamlessWeft,
-		    gds: graphDrawStyle,
-		    atb: activeTab
-		};
-
-		return JSON.stringify(settingObj);
-	}
-
-	// -------------------------------------------------------------
-	// Apply Application Settings  ---------------------------------
-	// -------------------------------------------------------------
-	function applyApplicationSettings(code, render = true){
-
-		var settingObj = JSON.parse(code);
-
-		var pointPlusGrid = settingObj.ppg;
-		var showGrid = settingObj.sgr;
-
-		var seamlessWeave = settingObj.slw;
-		var seamlessDraft = settingObj.sld;
-		var seamlessLifting = settingObj.sll;
-		var seamlessWarp = settingObj.slp;
-		var seamlessWeft = settingObj.slt;
-
-		var graphDrawStyle = settingObj.gds;
-		var activeTab = settingObj.atb;
-
-		globalWeave.setProps(10, "pointPlusGrid", pointPlusGrid, false);
-		globalWeave.setProps(11, "showGrid", showGrid, false);
-		globalWeave.setProps(12, "seamlessWeave", seamlessWeave, false);
-		globalWeave.setProps(13, "seamlessDraft", seamlessDraft, false);
-		globalWeave.setProps(14, "seamlessLifting", seamlessLifting, false);
-		globalWeave.setProps(15, "seamlessWarp", seamlessWarp, false);
-		globalWeave.setProps(16, "seamlessWeft", seamlessWeft, false);
-		globalWeave.setProps(17, "graphDrawStyle", graphDrawStyle, false);
-
-		mainTabbar.tabs(activeTab).setActive();
-
-		if ( activeTab == "weave" ){
-
-			// createWeaveLayout(14, render);
-
-		} else if ( activeTab == "artwork"){
-
-			// createArtworkLayout(14, render);
-
-		} else if ( activeTab == "simulation"){
-
-			// createSimulationLayout(14, render);
-
-		} else if ( activeTab == "three"){
-
-			// createThreeLayout(14, render);
-
-		} else if ( activeTab == "model"){
-
-			// createModelLayout(14, render);
-
-		}
-
-	}
-
-	// -------------------------------------------------------------
-	// Project Import and Export -----------------------------------
-	// -------------------------------------------------------------
-	function getProjectCode(instanceId) {
-
-		// console.log(["getProjectCode", instanceId]);
-
-		var weave, draft, lifting, tieup;
-
-		var timeStamp = Date.now();
-
-		var warpPattern = compress1D(globalPattern.warp);
-		var weftPattern = compress1D(globalPattern.weft);
-
-		if (g_liftingMode == "weave"){
-
-			weave = globalWeave.weave2D8 ? convert_2d8_str(globalWeave.weave2D8) : false;
-			draft = false;		
-			lifting = false;
-			tieup = false;
-
-		} else {
-
-			weave = false;
-			draft = globalWeave.draft2D8 ? convert_2d8_str(globalWeave.draft2D8) : false;
-			lifting = globalWeave.lifting2D8 ? convert_2d8_str(globalWeave.lifting2D8) : false;
-			tieup = globalWeave.tieup2D8 ? convert_2d8_str(globalWeave.tieup2D8) : false;
-
-		}
-		
-		var palette = globalPalette.compress();
-
-		var backgroundColor = g_backgroundColor;
-
-		var authorName = g_authorName;
-		var appVersion = g_appVersion;
-		var projectName = g_projectName;
-		var projectNotes = g_projectNotes;
-
-		var warpSize = g_warpSize;
-		var weftSize = g_weftSize;
-		var warpSpace = g_warpSpace;
-		var weftSpace = g_weftSpace;
-
-		var warpCount = g_warpCount;
-		var weftCount = g_weftCount;
-		var warpDensity = g_warpDensity;
-		var weftDensity = g_weftDensity;
-
-		var screenDPI = g_screenDPI;
-		
-		var projectObj = {
-		    "tms": timeStamp, 
-		    "ver": appVersion,
-		    "ath": authorName,
-		    "pnm": projectName,
-		    "pnt": projectNotes,
-		    "plt": palette,
-		    "wve": weave,
-		    "dft": draft,
-		    "lft": lifting,
-		    "tup": tieup,
-		    "bgc": backgroundColor,
-		    "wps": warpSize,
-		    "wfs": weftSize,
-		    "wpp": warpSpace,
-		    "wfp": weftSpace,
-		    "wpc": warpCount,
-		    "wfc": weftCount,
-		    "wpd": warpDensity,
-		    "wfd": weftDensity,
-		    "scd": screenDPI,
-		    "clw": [
-				{
-				    "wpt": warpPattern, 
-			        "wft": weftPattern
-				}
-			]
-		};
-
-		var projectSecurityCode = djb2Code(JSON.stringify(projectObj));
-		projectObj.psc = projectSecurityCode;
-		return JSON.stringify(projectObj);
-	}
-
-	function getProjectCode_old(id = 0) {
-
-		//console.log(["getProjectCode",id]);
-
-		var timeStamp = Date.now();
-
-		var warp = compress1D(globalPattern.warp);
-		var weft = compress1D(globalPattern.weft);
-		
-		var weave = compress2D(globalWeave.weave2D8);
-		var draft = compress2D(globalWeave.draft2D8);
-		var lifting = compress2D(globalWeave.lifting2D8);
-		var tieup = compress2D(globalWeave.tieup2D8);
-
-		var palette = globalPalette.compress();
-
-		var backgroundColor = g_backgroundColor;
-
-		var authorName = g_authorName;
-		var appVersion = g_appVersion;
-		var projectName = g_projectName;
-		var projectNotes = g_projectNotes;
-
-		var warpSize = g_warpSize;
-		var weftSize = g_weftSize;
-		var warpSpace = g_warpSpace;
-		var weftSpace = g_weftSpace;
-
-		var warpCount = g_warpCount;
-		var weftCount = g_weftCount;
-		var warpDensity = g_warpDensity;
-		var weftDensity = g_weftDensity;
-
-		var screenDPI = g_screenDPI;
-		
-		var projectObj = {
-		    "tms": timeStamp, 
-		    "ver": appVersion,
-		    "ath": authorName,
-		    "pnm": projectName,
-		    "pnt": projectNotes,
-		    "plt": palette,
-		    "wve": weave,
-		    "dft" : draft,
-		    "lft" : lifting,
-		    "tup" : tieup,
-		    "bgc": backgroundColor,
-		    "wps": warpSize,
-		    "wfs": weftSize,
-		    "wpp": warpSpace,
-		    "wfp": weftSpace,
-		    "wpc": warpCount,
-		    "wfc": weftCount,
-		    "wpd": warpDensity,
-		    "wfd": weftDensity,
-		    "scd": screenDPI,
-		    "clw": [
-				{
-				    "wpt": warpPattern, 
-			        "wft": weftPattern
-				}
-			]
-		};
-
-		projectSecurityCode = djb2Code(JSON.stringify(projectObj));
-		projectObj.psc = projectSecurityCode;
-		return JSON.stringify(projectObj);
-	}
-
-	// -------------------------------------------------------------
-	// Import Project with Code  -----------------------------------
-	// -------------------------------------------------------------
-	function validateProjectCode(code) {
-		var isValid = false;
-		if ( IsJsonString(code) ){
-			var projectObj = JSON.parse(code);
-			var projectFileSecurityCode = projectObj.psc;
-			delete projectObj.psc;
-			var projectContentSecurityCode = djb2Code(JSON.stringify(projectObj));
-			isValid = projectFileSecurityCode == projectContentSecurityCode ? true : false ;
-		}
-		return isValid;
 	}
 
 	function IsJsonString(str) {
@@ -4208,114 +3884,6 @@ $(document).ready ( function(){
 	        return false;
 	    }
 	    return true;
-	}
-
-	// -------------------------------------------------------------
-	// Import Project with Code  -----------------------------------
-	// -------------------------------------------------------------
-	function importProjectCode(instanceId, code, importAppSettings = true, importPalette = true, importWeave = true, importDraft = true, importLifting = true, importTieup = true, importWarpPattern = true, importWeftPattern = true, importArtwork = true){
-
-		// console.log(["importProjectCode", instanceId]);
-
-		var projectObj = JSON.parse(code);
-
-		var timeStamp = projectObj.tms;
-		var appVersion = projectObj.ver;
-		var authorName = projectObj.ath;
-		var projectName = projectObj.pnm;
-		var projectNotes = projectObj.pnt;
-
-		var palette = projectObj.plt;
-		var weave = projectObj.wve;
-		var draft = projectObj.dft;
-		var lifting = projectObj.lft;
-		var tieup = projectObj.tup;
-
-		var artworkDataURL = projectObj.atw;
-
-		var warpSize = projectObj.wpz;
-		var weftSize = projectObj.wfz;
-		var warpSpace = projectObj.wpp;
-		var weftSpace = projectObj.wfp;
-		var warpCount = projectObj.wpc;
-		var weftCount = projectObj.wfc;
-		var warpDensity = projectObj.wpd;
-		var weftDensity = projectObj.wfd;
-		var screenDPI = projectObj.scd;
-		var backgroundColor = projectObj.bgc;
-
-		var warpPattern = projectObj.clw[0].wpt;
-		var weftPattern = projectObj.clw[0].wft;
-
-		if (importPalette) {
-			globalPalette.setFromCompressed(palette);
-		}
-
-		if (importWarpPattern) {
-			globalPattern.set(23, "warp", decompress1D(warpPattern), false, 0, false, false);
-		}
-
-		if (importWeftPattern) {
-			globalPattern.set(24, "weft", decompress1D(weftPattern), false, 0, false, false);
-		}
-
-		if (importWeave) {
-
-			if ( weave ){
-
-				setLiftingMode("weave", false);
-				globalWeave.setGraph2D8("weave", convert_str_2d8(weave), 0, 0, false, false);
-
-			} else {
-
-				globalWeave.setGraph2D8("tieup", convert_str_2d8(tieup), 0, 0, false, false);
-				globalWeave.setGraph2D8("draft", convert_str_2d8(draft), 0, 0, false, false);
-				globalWeave.setGraph2D8("lifting", convert_str_2d8(lifting), 0, 0, false, false);
-				globalWeave.setWeaveFromParts(globalWeave.tieup2D8, globalWeave.draft2D8, globalWeave.lifting2D8, false);
-
-			}
-
-			globalWeave.setGraph2D8("weave");
-
-		}
-
-		
-
-		if ( importWarpPattern || importWeftPattern ){
-			globalPattern.render8(2);
-		}
-
-		/*
-
-		if (importArtwork) {
-			globalArtwork.drawDataURL(artworkDataURL);
-		}
-
-		*/
-
-		if (importAppSettings) {
-
-		/*
-
-			setSimulationParameters(warpSize, weftSize, warpSpace, weftSpace, warpCount, weftCount, warpDensity, weftDensity, screenDPI, 1, 1);
-			g_projectNotes = projectNotes;
-			$("#project-properties-notes").val(projectNotes);	
-
-			if( projectName === "" ){
-				
-				setProjectName("Untitled Project");
-				
-			} else {
-
-				setProjectName(projectName, false);
-			
-			}
-
-		*/
-
-		}
-		
-
 	}
 
 	// -------------------------------------------------------------
@@ -4415,15 +3983,23 @@ $(document).ready ( function(){
 		stepi : -1,
 		steps : [],
 
-		addStep : function (instanceId){
+		start: function(){
+			this.recording = true;
+		},
 
-			// console.log(["globalHistory.addStep", instanceId]);
+		stop: function(){
+			this.recording = false;
+		},
 
-			debugTime("addStepGetProjectCode");
-			var code = getProjectCode(6);
-			debugTimeEnd("addStepGetProjectCode");
+		record : function (instanceId){
 
 			if ( this.recording ) {
+
+				console.log(["globalHistory.record", instanceId]);
+
+				debugTime("recordAppState");
+				var code = app.getState(6);
+				debugTimeEnd("recordAppState");
 
 				// remove last history step if new step is same
 				if ( this.steps.length ){
@@ -4454,20 +4030,20 @@ $(document).ready ( function(){
 				} else {
 					this.disableUndo();
 				}
-			}
 
-			store.session("activeProjectCode", code);
-			// updateAppSettings();
+				store.session(app.stateStorageID, code);
+				// app.saveConfigurations(8);
+			}
 
 		},
 
 		gotoNextStep : function (){
 
 			if ( this.stepi < this.steps.length-1 ) {
-				this.recording = false;
+				this.stop();
 				this.stepi += 1;
-				importProjectCode(3, this.steps[this.stepi].code, false);
-				this.recording = true;
+				app.setState(3, this.steps[this.stepi].code, false);
+				this.start();
 				this.enableUndo();
 				if ( this.stepi == this.steps.length-1 ) {
 					this.disableRedo();
@@ -4476,28 +4052,15 @@ $(document).ready ( function(){
 
 		},
 
-		enableUndo : function(){
-			layoutToolbar.enableItem("toolbar-main-edit-undo");
-		},
-		disableUndo : function(){
-			layoutToolbar.disableItem("toolbar-main-edit-undo");
-		},
-		enableRedo : function(){
-			layoutToolbar.enableItem("toolbar-main-edit-redo");
-		},
-		disableRedo : function(){
-			layoutToolbar.disableItem("toolbar-main-edit-redo");
-		},
-
 		gotoPrevStep : function (){
 
 			if ( this.stepi > 0 ) {
 
-				this.recording = false;
+				this.stop();
 				this.stepi -= 1;
-				importProjectCode(3, this.steps[this.stepi].code, false);
+				app.setState(4, this.steps[this.stepi].code, false);
 				this.enableRedo();
-				this.recording = true;
+				this.start();
 
 				if ( this.stepi == 0 ) {
 					this.disableUndo();
@@ -4505,8 +4068,20 @@ $(document).ready ( function(){
 
 			}
 
-
 		},
+
+		enableUndo : function(){
+			layoutMenu.setItemEnabled("menu-main-edit-undo");
+		},
+		disableUndo : function(){
+			layoutMenu.setItemDisabled("menu-main-edit-undo");
+		},
+		enableRedo : function(){
+			layoutMenu.setItemEnabled("menu-main-edit-redo");
+		},
+		disableRedo : function(){
+			layoutMenu.setItemDisabled("menu-main-edit-redo");
+		}
 
 	};
 
@@ -4518,29 +4093,25 @@ $(document).ready ( function(){
 		store(false); 
 	}
 
-	function updateAppSettings(){
-		localStorage.wdappsettings = getApplicationSettings();
-	}
-
 	// -------------------------------------------------------------
 	// Generative Functions ----------------------------------------
 	// -------------------------------------------------------------
-	function generateRandomDraft(shafts, draftW, mirror = true, rigidity = 0){
+	function generateRandomThreading(shafts, threadingW, mirror = true, rigidity = 0){
 
-		var i, shaftsInDraft, firstShaftNum, lastShaftNum, shaftNum, nextInc, rigidityCounter, draft1D, prevInc, validDraft;
+		var i, shaftsInThreading, firstShaftNum, lastShaftNum, shaftNum, nextInc, rigidityCounter, threading1D, prevInc, validThreading;
 
 		var attemptCounter = 0;
 		var maxAttempts = 1000;
 		var algoNum = 0;
 
-		draftW = draftW % 2 ? draftW+1 : draftW;
-		draftW = mirror ? draftW/2+1 : draftW;
-		shafts = shafts > draftW ? draftW : shafts;
+		threadingW = threadingW % 2 ? threadingW+1 : threadingW;
+		threadingW = mirror ? threadingW/2+1 : threadingW;
+		shafts = shafts > threadingW ? threadingW : shafts;
 		rigidity = rigidity ? rigidity : getRandomInt(1, shafts);
 
 		do {
 
-			draft1D = [];
+			threading1D = [];
 			attemptCounter++;
 			rigidityCounter = 0;
 
@@ -4550,11 +4121,11 @@ $(document).ready ( function(){
 
 			//rigidity = 1;
 			
-			for (i = 0; i < draftW; i++) {
+			for (i = 0; i < threadingW; i++) {
 
 				rigidityCounter++;
 
-				draft1D.push(shaftNum);
+				threading1D.push(shaftNum);
 
 				if ( rigidityCounter >= rigidity ){
 
@@ -4569,7 +4140,7 @@ $(document).ready ( function(){
 
 				}
 
-				if ( i == draftW-1){
+				if ( i == threadingW-1){
 					lastShaftNum = shaftNum;
 				}
 				
@@ -4578,25 +4149,25 @@ $(document).ready ( function(){
 
 			}
 
-			shaftsInDraft = draft1D.unique().length;
-			validDraft = shaftsInDraft === shafts;
-			if ( validDraft && !mirror){
+			shaftsInThreading = threading1D.unique().length;
+			validThreading = shaftsInThreading === shafts;
+			if ( validThreading && !mirror){
 				var diff = Math.abs(firstShaftNum - lastShaftNum);
 				//console.log([firstShaftNum, lastShaftNum]);
-				validDraft = diff == 1 || diff == shafts - 1;
+				validThreading = diff == 1 || diff == shafts - 1;
 			}
 
-		} while ( !validDraft && attemptCounter < maxAttempts ) ;
+		} while ( !validThreading && attemptCounter < maxAttempts ) ;
 
-		debug("autoDraftAttempts", attemptCounter);
+		debug("autoThreadingAttempts", attemptCounter);
 
-		if ( validDraft ){
+		if ( validThreading ){
 
 			if ( mirror ){
-				draft1D = draft1D.concat(draft1D.slice(1, -1).reverse()); 
+				threading1D = threading1D.concat(threading1D.slice(1, -1).reverse()); 
 			}
 			
-			return draft1D_draft2D8(draft1D);
+			return threading1D_threading2D8(threading1D);
 
 		} else {
 
@@ -4652,14 +4223,14 @@ $(document).ready ( function(){
 			var twillDir = ["s", "z"].shuffle();
 
 			gen_tieup = generateTieup ? makeTwill(randomEnd, twillDir[0], 1) : globalWeave.tieup2D8;
-			gen_threading = generateThreading ? generateRandomDraft(shafts, weaveW, mirrorThreading, threadingRigidity) : globalWeave.draft2D8;
+			gen_threading = generateThreading ? generateRandomThreading(shafts, weaveW, mirrorThreading, threadingRigidity) : globalWeave.threading2D8;
 
 			if ( generateTreadling ){
 
 				if (balanceWeave){
 					gen_treadling = gen_threading.rotate2D8("l").flip2D8("x");
 				} else {
-					gen_treadling = generateRandomDraft(shafts, weaveH, mirrorTreadling, treadlingRigidity);
+					gen_treadling = generateRandomThreading(shafts, weaveH, mirrorTreadling, treadlingRigidity);
 					gen_treadling = gen_treadling.rotate2D8("l").flip2D8("x");
 				}
 
@@ -4693,11 +4264,11 @@ $(document).ready ( function(){
 
 		if ( validWeave ){
 
-			if ( g_liftingMode == "weave" ){
+			if ( globalWeave.liftingMode == "weave" ){
 
 				globalWeave.setGraph2D8("weave", gen_weave);
 
-			} else if ( g_liftingMode == "pegplan" ){
+			} else if ( globalWeave.liftingMode == "pegplan" ){
 
 				var liftplan = tieupTreadlingToPegplan(gen_tieup, gen_treadling);		
 				var tieup = newArray2D8(2, shafts, shafts);
@@ -4705,14 +4276,14 @@ $(document).ready ( function(){
 					tieup[x][x] = 1;
 				}
 				globalWeave.setGraph2D8("tieup", tieup, 0, 0, false, false);
-				globalWeave.setGraph2D8("draft", gen_threading, 0, 0, false, false);
+				globalWeave.setGraph2D8("threading", gen_threading, 0, 0, false, false);
 				globalWeave.setGraph2D8("lifting", liftplan, 0, 0, false, true);
 				globalWeave.render2D8(55);
 
-			} else if ( g_liftingMode == "treadling" ){
+			} else if ( globalWeave.liftingMode == "treadling" ){
 
 				globalWeave.setGraph2D8("tieup", gen_tieup, 0, 0, false, false);
-				globalWeave.setGraph2D8("draft", gen_threading, 0, 0, false, false);
+				globalWeave.setGraph2D8("threading", gen_threading, 0, 0, false, false);
 				globalWeave.setGraph2D8("lifting", gen_treadling, 0, 0, false, true);
 				globalWeave.render2D8(55);
 
@@ -4793,8 +4364,8 @@ $(document).ready ( function(){
 
 		globalPattern.render8(3);
 		globalPattern.updateStatusbar();
-		globalPalette.updateChipArrows();
-		globalHistory.addStep(4);
+		app.palette.updateChipArrows();
+		globalHistory.record(4);
 
 	}
 
@@ -5474,7 +5045,7 @@ $(document).ready ( function(){
 
 					var canvas2D8 = globalWeave.getGraph2D8(graph);
 					globalSelection.selected = modifiedSelection;
-					var xOverflow = globalWeave.seamless && ["weave", "draft"].includes(graph) ? "loop" : "extend";
+					var xOverflow = globalWeave.seamless && ["weave", "threading"].includes(graph) ? "loop" : "extend";
 					var yOverflow = globalWeave.seamless && ["weave", "lifting"].includes(graph) ? "loop" : "extend";
 					res = paste2D8(modifiedSelection, canvas2D8, globalSelection.startCol-1, globalSelection.startRow-1, xOverflow, yOverflow, 0);
 
@@ -6709,7 +6280,7 @@ $(document).ready ( function(){
 	// --------------------------------------------------
 	// Graph Mouse Interaxtions -------------------------
 	// --------------------------------------------------
-	$("#weave-container, #draft-container, #lifting-container, #tieup-container, #warp-container, #weft-container, #artwork-container").on("mouseover", function(evt) {
+	$("#weave-container, #threading-container, #lifting-container, #tieup-container, #warp-container, #weft-container, #artwork-container").on("mouseover", function(evt) {
 
 		var graph = getGraphId($(this).attr("id"));
 		if ( graph.in("warp","weft") ){
@@ -6718,7 +6289,7 @@ $(document).ready ( function(){
 
 		globalStatusbar.switchTo(graph);
 
-		$("#weave-container, #draft-container, #lifting-container, #tieup-container, #warp-container, #weft-container").css({
+		$("#weave-container, #threading-container, #lifting-container, #tieup-container, #warp-container, #weft-container").css({
 			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor
@@ -6753,27 +6324,27 @@ $(document).ready ( function(){
 		var endNum = mouse.end;
 		var pickNum = mouse.pick;
 
-		var code = globalPalette.selected;
+		var code = app.palette.selected;
 		
-		gmy.patternPainting = true;
-		gmy.patternDrawCopy = globalPattern[yarnSet];
-		gmy.patternDrawSet = yarnSet;
+		app.storage.patternPainting = true;
+		app.storage.patternDrawCopy = globalPattern[yarnSet];
+		app.storage.patternDrawSet = yarnSet;
 
-		globalMouse.graph = yarnSet;
-		globalMouse.isDown = true;
+		app.mouse.graph = yarnSet;
+		app.mouse.isDown = true;
 
 		if (yarnSet == "warp"){
-			globalMouse.colNum = colNum;
-			globalMouse.endNum = endNum;
+			app.mouse.colNum = colNum;
+			app.mouse.endNum = endNum;
 			threadNum = endNum;
-			gmy.patternPaintingStartNum = colNum;
+			app.storage.patternPaintingStartNum = colNum;
 			seamless = globalPattern.seamlessWarp;
 
 		} else {
-			globalMouse.rowNum = rowNum;
-			globalMouse.pickNum = pickNum;
+			app.mouse.rowNum = rowNum;
+			app.mouse.pickNum = pickNum;
 			threadNum = pickNum;
-			gmy.patternPaintingStartNum = rowNum;
+			app.storage.patternPaintingStartNum = rowNum;
 			seamless = globalPattern.seamlessWeft;
 		}
 
@@ -6801,7 +6372,7 @@ $(document).ready ( function(){
 	}
 	*/
 
-	$("#draft-container, #lifting-container, #tieup-container").on("mousedown", function(evt) {
+	$("#threading-container, #lifting-container, #tieup-container").on("mousedown", function(evt) {
 
 		var graph = getGraphId($(this).attr("id"));
 
@@ -6812,7 +6383,7 @@ $(document).ready ( function(){
 			mc.offsetx = globalTieup.scrollX;
 			mc.offsety = globalTieup.scrollY;
 
-		} else if ( graph == "draft" ){
+		} else if ( graph == "threading" ){
 
 			mc.rowLimit = globalWeave.seamless ? globalWeave.weave2D[0].length : 0;
 			mc.offsetx = globalWeave.scrollX;
@@ -6871,10 +6442,10 @@ $(document).ready ( function(){
 		var endNum = mouse.end;
 		var pickNum = mouse.pick;
 
-		globalMouse.set("weave", colNum, rowNum, true, evt.which);
+		app.mouse.set("weave", colNum, rowNum, true, evt.which);
 
-		var startColNum = globalMouse.colNum;
-		var startRowNum = globalMouse.rowNum;
+		var startColNum = app.mouse.colNum;
+		var startRowNum = app.mouse.rowNum;
 
 		// Undefined Mouse Key
 		if (typeof evt.which == "undefined") {
@@ -6909,26 +6480,26 @@ $(document).ready ( function(){
 					globalWeave.setGraphPoint2D8("weave", colNum, rowNum, 0, true, false);
 					graphReserve.clear("weave");
 					graphReserve.add(colNum, rowNum, 0);
-					gmy.weavePainting = true;
+					app.storage.weavePainting = true;
 
 				} else if ( g_graphTool == "line" ){
 					if ( !g_graphLineStarted ){
 
 						g_graphLineStarted = true;
-						gmy.lineState = 0;
-						gmy.lineX0 = colNum;
-						gmy.lineY0 = rowNum;
-						gmy.lineX1 = colNum;
-						gmy.lineY1 = rowNum;
+						app.storage.lineState = 0;
+						app.storage.lineX0 = colNum;
+						app.storage.lineY0 = rowNum;
+						app.storage.lineX1 = colNum;
+						app.storage.lineY1 = rowNum;
 
-						gmy.lineMouseCurrentCol = colNum;
-						gmy.lineMouseCurrentRow = rowNum;
+						app.storage.lineMouseCurrentCol = colNum;
+						app.storage.lineMouseCurrentRow = rowNum;
 
-						graphLine2D8("weave", gmy.lineX0, gmy.lineY0, gmy.lineX1, gmy.lineY1, gmy.lineState, true, false);
+						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
 
 					} else {
 
-						graphLine2D8("weave", gmy.lineX0, gmy.lineY0, gmy.lineX1, gmy.lineY1, gmy.lineState, false, true);
+						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, false, true);
 						globalWeave.setGraph2D8("weave");
 						g_graphLineStarted = false;
 						
@@ -6943,7 +6514,7 @@ $(document).ready ( function(){
 			if (step == 0) {
 
 				globalSelection.clear_old(9);
-				globalMouse.graph = "weave";
+				app.mouse.graph = "weave";
 
 				if ( g_graphTool == "pointer" ){
 
@@ -6955,12 +6526,12 @@ $(document).ready ( function(){
 
 				} else if ( g_graphTool == "hand" ){
 
-					gmy.hand = true;
-					gmy.handTarget = "weave";
-					gmy.handsx = mouse.cx;
-					gmy.handsy = mouse.cy;
-					gmy.handscrollx = globalWeave.scrollX;
-					gmy.handscrolly = globalWeave.scrollY;
+					app.storage.hand = true;
+					app.storage.handTarget = "weave";
+					app.storage.handsx = mouse.cx;
+					app.storage.handsy = mouse.cy;
+					app.storage.handscrollx = globalWeave.scrollX;
+					app.storage.handscrolly = globalWeave.scrollY;
 
 				} else if ( g_graphTool == "selection" ){
 
@@ -6979,7 +6550,7 @@ $(document).ready ( function(){
 					} else if ( globalSelection.started && globalSelection.confirmed && globalSelection.paste_action == "paste"){
 
 						canvas2D8 = globalWeave.getGraph2D8("weave");
-						xOverflow = globalWeave.seamless && ["weave", "draft"].includes("weave") ? "loop" : "extend";
+						xOverflow = globalWeave.seamless && ["weave", "threading"].includes("weave") ? "loop" : "extend";
 						yOverflow = globalWeave.seamless && ["weave", "lifting"].includes("weave") ? "loop" : "extend";
 						res = paste2D8(globalSelection.selected, canvas2D8, mouse.col-1, mouse.row-1, xOverflow, yOverflow, 0);
 						globalWeave.setGraph2D8("weave", res);
@@ -7013,7 +6584,7 @@ $(document).ready ( function(){
 						var pasteTile = arrayTileFill(globalSelection.selected, pasteW, pasteH);
 
 						canvas2D8 = globalWeave.getGraph2D8("weave");
-						xOverflow = globalWeave.seamless && ["weave", "draft"].includes("weave") ? "loop" : "extend";
+						xOverflow = globalWeave.seamless && ["weave", "threading"].includes("weave") ? "loop" : "extend";
 						yOverflow = globalWeave.seamless && ["weave", "lifting"].includes("weave") ? "loop" : "extend";
 						res = paste2D8(pasteTile, canvas2D8, paste_sc-1, paste_sr-1, xOverflow, yOverflow, 0);
 						globalWeave.setGraph2D8("weave", res);
@@ -7031,7 +6602,7 @@ $(document).ready ( function(){
 					globalWeave.setGraphPoint2D8("weave", colNum, rowNum, 1, true, false);
 					graphReserve.clear("weave");
 					graphReserve.add(colNum, rowNum, 1);
-					gmy.weavePainting = true;
+					app.storage.weavePainting = true;
 
 				} else if ( g_graphTool == "fill" ){
 
@@ -7048,21 +6619,21 @@ $(document).ready ( function(){
 					if ( !g_graphLineStarted ){
 
 						g_graphLineStarted = true;
-						gmy.lineState = 1;
-						gmy.lineX0 = colNum;
-						gmy.lineY0 = rowNum;
-						gmy.lineX1 = colNum;
-						gmy.lineY1 = rowNum;
+						app.storage.lineState = 1;
+						app.storage.lineX0 = colNum;
+						app.storage.lineY0 = rowNum;
+						app.storage.lineX1 = colNum;
+						app.storage.lineY1 = rowNum;
 
-						gmy.lineMouseCurrentCol = colNum;
-						gmy.lineMouseCurrentRow = rowNum;
+						app.storage.lineMouseCurrentCol = colNum;
+						app.storage.lineMouseCurrentRow = rowNum;
 
-						graphLine2D8("weave", gmy.lineX0, gmy.lineY0, gmy.lineX1, gmy.lineY1, gmy.lineState, true, false);
+						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
 
 
 					} else {
 
-						graphLine2D8("weave", gmy.lineX0, gmy.lineY0, gmy.lineX1, gmy.lineY1, gmy.lineState, false, true);
+						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, false, true);
 						globalWeave.setGraph2D8("weave");
 						g_graphLineStarted = false;
 
@@ -7079,33 +6650,33 @@ $(document).ready ( function(){
 
 				if (action == "insertEnds") {
 
-					weaveHighlight.show.box(endNum, 1, endNum, globalWeave.picks, globalColors.rgba_str.green2);
+					weaveHighlight.show.box(endNum, 1, endNum, globalWeave.picks, app.colors.rgba_str.green2);
 					showWeaveInsertEndsModal(endNum);
 
 				} else if (action == "insertPicks") {
 
-					weaveHighlight.show.box(1, pickNum, globalWeave.ends, pickNum, globalColors.rgba_str.green2);
+					weaveHighlight.show.box(1, pickNum, globalWeave.ends, pickNum, app.colors.rgba_str.green2);
 					showWeaveInsertPicksModal(pickNum);
 
 				} else if (action == "deleteEnds") {
 
-					weaveHighlight.show.box(endNum, 1, endNum, globalWeave.picks, globalColors.rgba_str.red2);
+					weaveHighlight.show.box(endNum, 1, endNum, globalWeave.picks, app.colors.rgba_str.red2);
 
 				} else if (action == "deletePicks") {
 
-					weaveHighlight.show.box(1, pickNum, globalWeave.ends, pickNum, globalColors.rgba_str.red2);
+					weaveHighlight.show.box(1, pickNum, globalWeave.ends, pickNum, app.colors.rgba_str.red2);
 
 				} else if ( action == "copy" || action == "shift" || action == "fill" || action == "inverse" || action == "stamp" || action == "flip_horizontal" || action == "flip_vertical"){ 
 
-					weaveHighlight.show.box(endNum, pickNum, endNum, pickNum, globalColors.rgba_str.blue2);
+					weaveHighlight.show.box(endNum, pickNum, endNum, pickNum, app.colors.rgba_str.blue2);
 
 				} else if (action == "crop") {
 
-					weaveHighlight.show.box(endNum, pickNum, endNum, pickNum, globalColors.rgba_str.green2);
+					weaveHighlight.show.box(endNum, pickNum, endNum, pickNum, app.colors.rgba_str.green2);
 
 				} else if (action == "clear") {
 
-					weaveHighlight.show.box(endNum, pickNum, endNum, pickNum, globalColors.rgba_str.red2);
+					weaveHighlight.show.box(endNum, pickNum, endNum, pickNum, app.colors.rgba_str.red2);
 
 				} else if ( action == "reposition"){
 
@@ -7242,22 +6813,22 @@ $(document).ready ( function(){
 		var endNum = mouse.end;
 		var pickNum = mouse.pick;
 
-		if ( globalMouse.graphPos !== mouse.graphpos  ){
+		if ( app.mouse.graphPos !== mouse.graphpos  ){
 			
-			globalMouse.graphPos = mouse.graphpos ;
+			app.mouse.graphPos = mouse.graphpos ;
 			var currentWeaveState = globalWeave.getState("weave", endNum, pickNum);
 
 			var action = globalSelection.action;
 			var step = globalSelection.step;
 
 			var startColNum, lastColNum, startRowNum, lastRowNum;
-			[startColNum, lastColNum] = mapCols(globalMouse.colNum, colNum);
-			[startRowNum, lastRowNum] = mapRows(globalMouse.rowNum, rowNum);
+			[startColNum, lastColNum] = mapCols(app.mouse.colNum, colNum);
+			[startRowNum, lastRowNum] = mapRows(app.mouse.rowNum, rowNum);
 
 			if ( step == 0){
 
 				if ( g_graphTool == "line" && g_graphLineStarted){
-					weaveHighlight.show.line(startColNum, startRowNum, lastColNum, lastRowNum, globalColors.rgba_str.blue2);
+					weaveHighlight.show.line(startColNum, startRowNum, lastColNum, lastRowNum, app.colors.rgba_str.blue2);
 				}
 
 			} else if ( step == 1 ){
@@ -7268,23 +6839,23 @@ $(document).ready ( function(){
 
 				if ( action == "deleteEnds"){
 
-					weaveHighlight.show.box(startColNum, 1, lastColNum, globalWeave.picks, globalColors.rgba_str.red2);
+					weaveHighlight.show.box(startColNum, 1, lastColNum, globalWeave.picks, app.colors.rgba_str.red2);
 
 				} else if ( action == "deletePicks" ){
 
-					weaveHighlight.show.box(1, startRowNum, globalWeave.ends, lastRowNum, globalColors.rgba_str.red2);
+					weaveHighlight.show.box(1, startRowNum, globalWeave.ends, lastRowNum, app.colors.rgba_str.red2);
 
 				} else if ( action == "crop" ){
 
-					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, globalColors.rgba_str.green2);
+					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, app.colors.rgba_str.green2);
 
 				} else if ( action == "clear"){ 
 
-					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, globalColors.rgba_str.red2);
+					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, app.colors.rgba_str.red2);
 
 				} else if ( action == "copy" || action == "shift" || action == "fill" || action == "inverse" || action == "stamp" || action == "flip_horizontal" || action == "flip_vertical"){ 
 
-					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, globalColors.rgba_str.blue2);
+					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, app.colors.rgba_str.blue2);
 				
 				}
 
@@ -7292,7 +6863,7 @@ $(document).ready ( function(){
 
 				if ( action == "fill"){
 
-					weaveHighlight.show.box(globalSelection.startEnd, globalSelection.startPick, globalSelection.lastEnd, globalSelection.lastPick, globalColors.rgba_str.blue2);
+					weaveHighlight.show.box(globalSelection.startEnd, globalSelection.startPick, globalSelection.lastEnd, globalSelection.lastPick, app.colors.rgba_str.blue2);
 
 				}
 
@@ -7301,9 +6872,9 @@ $(document).ready ( function(){
 				if ( action == "fill"){
 
 					var startColNum, lastColNum, startRowNum, lastRowNum;
-					[startColNum, lastColNum] = mapCols(globalMouse.colNum, colNum);
-					[startRowNum, lastRowNum] = mapRows(globalMouse.rowNum, rowNum);
-					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, globalColors.rgba_str.green2);
+					[startColNum, lastColNum] = mapCols(app.mouse.colNum, colNum);
+					[startRowNum, lastRowNum] = mapRows(app.mouse.rowNum, rowNum);
+					weaveHighlight.show.box(startColNum, startRowNum, lastColNum, lastRowNum, app.colors.rgba_str.green2);
 
 				}
 
@@ -7318,14 +6889,14 @@ $(document).ready ( function(){
 				g_weaveStateUnderMouse = currentWeaveState;
 				globalStatusbar.set("weaveIntersection", endNum, pickNum);
 
-				// console.log([globalMouse.isDown, g_graphTool, currentWeaveState, g_graphBrushState]);
-				if (globalMouse.isDown && g_graphTool == "brush" && currentWeaveState !== g_graphBrushState) {
+				// console.log([app.mouse.isDown, g_graphTool, currentWeaveState, g_graphBrushState]);
+				if (app.mouse.isDown && g_graphTool == "brush" && currentWeaveState !== g_graphBrushState) {
 					debugTime("setWeavePointer");
 
-					graphLine2D8("weave", colNum, rowNum, globalMouse.colNum, globalMouse.rowNum, g_graphBrushState); 
+					graphLine2D8("weave", colNum, rowNum, app.mouse.colNum, app.mouse.rowNum, g_graphBrushState); 
 
-					globalMouse.colNum = colNum;
-					globalMouse.rowNum = rowNum;
+					app.mouse.colNum = colNum;
+					app.mouse.rowNum = rowNum;
 
 					//globalWeave.setGraph8("weave", g_graphBrushState, colNum, rowNum);
 					debug("g_graphBrushState", g_graphBrushState);
@@ -7345,7 +6916,7 @@ $(document).ready ( function(){
 
 	function drawGraphPoint(ctx, x, y, color = "black", origin = "tl", canvasW = 0, canvasH = 0) {
 		y = origin == "bl" ? flipIndex(y, canvasH) - g_pointW + 1 : y;
-		ctx.fillStyle = globalColors.rgba_str[color];
+		ctx.fillStyle = app.colors.rgba_str[color];
 		ctx.fillRect(x, y, g_pointW, g_pointW);
 	}
 
@@ -7422,17 +6993,13 @@ $(document).ready ( function(){
 
 	function createLayout(instanceId, render = true) {
 
-		// console.log(["createLayout", instanceId]);
+		console.log(["createLayout", instanceId]);
 
 		var activeTabId = mainTabbar.getActiveTab();
 
 		var activeFrame = $("#"+activeTabId+"-frame");
 		var activeFrameW = activeFrame.width();
 		var activeFrameH = activeFrame.height();
-
-		// console.log(["activeTabId", activeTabId]);
-		// console.log(["activeFrameW", activeFrameW]);
-		// console.log(["activeFrameH", activeFrameH]);
 
 		globalWeave.frameW = activeFrameW;
 		globalWeave.frameH = activeFrameH;
@@ -7442,8 +7009,6 @@ $(document).ready ( function(){
 
 		globalSimulation.frameW = activeFrameW;
 		globalSimulation.frameH = activeFrameH;
-
-		// console.log([activeFrameW, activeFrameH]);
 		
 		globalThree.frameW = activeFrameW;
 		globalThree.frameH = activeFrameH;
@@ -7455,13 +7020,9 @@ $(document).ready ( function(){
 		createArtworkLayout(1, render);
 		createSimulationLayout(1, render);
 
-		var doRenderThree = globalTabs.active == "three" && render && globalThree.sceneCreated;
-		createThreeLayout(1, doRenderThree);
+		globalThree.setInterface(1, render);
+		globalModel.setInterface(1, render);
 
-		var doRenderModel = globalTabs.active == "model" && render && globalModel.sceneCreated;
-		createModelLayout(1, doRenderModel);
-
-		$("#simulation-fullscreen-wrapper").width(window.innerWidth).height(window.innerHeight);
 
 	}
 
@@ -7473,17 +7034,17 @@ $(document).ready ( function(){
 			.append("<span>&times;</span>")
 			.append("<div class=\"colorBox transparent\"></div>")
 			.appendTo(container);
-		globalPalette.setChip(0, "#FFFFFF", false, false, false, false, false);
+		app.palette.setChip(0, "#FFFFFF", false, false, false, 0, false, false);
 
-		globalPalette.codes.forEach(function(code, i) {
-			globalPalette.colors[code] = {};
+		app.palette.codes.forEach(function(code, i) {
+			app.palette.colors[code] = {};
 			$("<div>", {id: "palette-chip-"+code, "class": "palette-chip"})
 			.append("<span>" + code + "</span>")
 			.append("<div class=\"colorBox\"></div>")
 			.append("<div class=\"warpArrow\"></div>")
 			.append("<div class=\"weftArrow\"></div>")
 			.appendTo(container);
-			globalPalette.setChip(code, false, false, false, false, false, false);
+			app.palette.setChip(code, false, false, false, false, 0, false, false);
 		});
 
 	}
@@ -7535,9 +7096,7 @@ $(document).ready ( function(){
 			globalArtwork.render2D8(5);
 		}
 
-		$.doTimeout("updateArtworkPositions", 100, function(){
-			globalPositions.update("artwork");
-		});
+		globalPositions.update("artwork");
 
 		//logTimeEnd("createArtworkLayout("+instanceId+")");
 
@@ -7592,9 +7151,7 @@ $(document).ready ( function(){
 			globalSimulation.render(5);
 		}
 
-		$.doTimeout("updateSimulationPositions", 100, function(){
-			globalPositions.update("simulation");
-		});
+		globalPositions.update("simulation");
 
 		//logTimeEnd("createArtworkLayout("+instanceId+")");
 
@@ -7621,56 +7178,11 @@ $(document).ready ( function(){
 			"bottom": threeBoxB,
 		});
 
-		//g_threeContext = getCtx(172, "three-container", "g_threeCanvas", threeBoxW, threeBoxH);
-		//g_threeContext.clearRect(0, 0, threeBoxW, threeBoxH);
-
 		if ( render ){
-			buildFabric();
+			globalThree.buildFabric();
 		}
 
-		$.doTimeout("updateThreePositions", 100, function(){
-			globalPositions.update("three");
-		});
-
-		//logTimeEnd("createArtworkLayout("+instanceId+")");
-
-	}
-
-	function createModelLayout(instanceId = 0, render = true) {
-
-		//console.log(["createArtworkLayout", instanceId]);
-		//logTime("createArtworkLayout("+instanceId+")");
-
-		var modelBoxL = 0;
-		var modelBoxB = 0;
-
-		var modelFrameW = globalModel.frameW;
-		var modelFrameH = globalModel.frameH;
-
-		var modelBoxW = modelFrameW - modelBoxL;
-		var modelBoxH = modelFrameH - modelBoxB;
-
-		$("#model-container").css({
-			"width":  modelBoxW,
-			"height": modelBoxH,
-			"left": modelBoxL,
-			"bottom": modelBoxB,
-		});
-
-		$("#model-container").css({
-			"background-image": "url(model/bgs/03.jpg)",
-			"background-size": "cover",
-			"background-position": "center center",
-			"background-repeat": "no-repeat"
-		});
-
-		if ( render ){
-			// buildModel();
-		}
-
-		$.doTimeout("updateModelPositions", 100, function(){
-			globalPositions.update("model");
-		});
+		globalPositions.update("three");
 
 		//logTimeEnd("createArtworkLayout("+instanceId+")");
 
@@ -7690,8 +7202,8 @@ $(document).ready ( function(){
 		var weaveBoxL = liftingBoxL + g_tieupW + interBoxSpace;
 
 		var warpBoxB = g_scrollbarW + wallBoxSpace;
-		var draftBoxB = warpBoxB + g_patternElementSize + interBoxSpace;
-		var weaveBoxB = draftBoxB + g_tieupW + interBoxSpace;
+		var threadingBoxB = warpBoxB + g_patternElementSize + interBoxSpace;
+		var weaveBoxB = threadingBoxB + g_tieupW + interBoxSpace;
 
 		var weaveFrameW = globalWeave.frameW;
 		var weaveFrameH = globalWeave.frameH;
@@ -7702,15 +7214,15 @@ $(document).ready ( function(){
 		var weaveBoxW = weaveFrameW - (g_scrollbarW + g_patternElementSize + g_tieupW + interBoxSpace * 2 + wallBoxSpace * 2);
 		var weaveBoxH = weaveFrameH - (g_scrollbarW + g_patternElementSize + g_tieupW + paletteBoxH - 1  + interBoxSpace * 2 + wallBoxSpace * 2) ;
 
-		if ( g_liftingMode == "weave"){
+		if ( globalWeave.liftingMode == "weave"){
 
 			weaveBoxL = liftingBoxL;
-			weaveBoxB = draftBoxB;
+			weaveBoxB = threadingBoxB;
 			weaveBoxW = weaveBoxW + g_tieupW + interBoxSpace;
 			weaveBoxH = weaveBoxH + g_tieupW + interBoxSpace;
 
 			$("#lifting-container").hide();
-			$("#draft-container").hide();
+			$("#threading-container").hide();
 			$("#tieup-container").hide();
 			$("#tieup-scrollbar-x").hide();
 			$("#tieup-scrollbar-y").hide();			
@@ -7724,7 +7236,7 @@ $(document).ready ( function(){
 			globalTieup.viewH = tieupBoxH;
 
 			$("#lifting-container").show();
-			$("#draft-container").show();
+			$("#threading-container").show();
 			$("#tieup-scrollbar-x").show();
 			$("#tieup-scrollbar-y").show();
 
@@ -7733,10 +7245,10 @@ $(document).ready ( function(){
 			g_liftingContext = getCtx(183, "lifting-container", "g_liftingCanvas", liftingBoxW, liftingBoxH);
 			g_liftingContext.clearRect(0, 0, liftingBoxW, liftingBoxH);
 
-			var draftBoxW = weaveBoxW;
-			var draftBoxH = g_tieupW;
-			g_draftContext = getCtx(19, "draft-container", "g_draftCanvas", draftBoxW, draftBoxH);
-			g_draftContext.clearRect(0, 0, draftBoxW, draftBoxH);
+			var threadingBoxW = weaveBoxW;
+			var threadingBoxH = g_tieupW;
+			g_threadingContext = getCtx(19, "threading-container", "g_threadingCanvas", threadingBoxW, threadingBoxH);
+			g_threadingContext.clearRect(0, 0, threadingBoxW, threadingBoxH);
 
 			$("#lifting-container").css({
 				"width":  liftingBoxW,
@@ -7748,10 +7260,10 @@ $(document).ready ( function(){
 				"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 			});
 
-			$("#draft-container").css({
-				"width":  draftBoxW,
-				"height": draftBoxH,
-				"bottom": draftBoxB,
+			$("#threading-container").css({
+				"width":  threadingBoxW,
+				"height": threadingBoxH,
+				"bottom": threadingBoxB,
 				"left": weaveBoxL,
 				"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 				"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
@@ -7766,11 +7278,11 @@ $(document).ready ( function(){
 
 			$("#tieup-scrollbar-y").css({
 				"height": tieupBoxH + g_boxShadow * 2,
-				"bottom": draftBoxB - g_boxShadow,
+				"bottom": threadingBoxB - g_boxShadow,
 				"left": 0
 			});
 
-			if ( g_liftingMode == "treadling"){
+			if ( globalWeave.liftingMode == "treadling"){
 
 				$("#tieup-container").show();
 				g_tieupContext = getCtx(20, "tieup-container", "g_tieupCanvas", tieupBoxW, tieupBoxH);
@@ -7779,7 +7291,7 @@ $(document).ready ( function(){
 				$("#tieup-container").css({
 					"width":  tieupBoxW,
 					"height": tieupBoxH,
-					"bottom": draftBoxB,
+					"bottom": threadingBoxB,
 					"left": liftingBoxL,
 					"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
 					"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
@@ -7879,24 +7391,22 @@ $(document).ready ( function(){
 			updateAllScrollbars();
 		}
 
-		$.doTimeout("updateWeavePositions", 100, function(){
-			globalPositions.update("weave");
-			globalPositions.update("warp");
-			globalPositions.update("weft");
-			globalPositions.update("tieup");
-			globalPositions.update("lifting");
-			globalPositions.update("draft");
-			globalStatusbar.set("weaveIntersection", "-", "-");
-		});
+		globalPositions.update("weave");
+		globalPositions.update("warp");
+		globalPositions.update("weft");
+		globalPositions.update("tieup");
+		globalPositions.update("lifting");
+		globalPositions.update("threading");
+
+		globalStatusbar.set("weaveIntersection", "-", "-");
 
 		//logTimeEnd("createWeaveLayout("+instanceId+")");
 
 	}
 
-
 	function renderAll(){
 
-		if ( globalTabs.active == "weave"){
+		if ( app.tabs.active == "weave"){
 
 			globalWeave.updateScrollingParameters(3);
 			globalTieup.updateScrollingParameters(3);
@@ -8003,7 +7513,7 @@ $(document).ready ( function(){
 
 	function getWeaveProps(weave){
 
-		var shafts, pegplan2D8, draft1D, draft2D8, tieup2D8, treadling1D, treadling2D8;
+		var shafts, pegplan2D8, threading1D, threading2D8, tieup2D8, treadling1D, treadling2D8;
 
 		var pd = unique2D(weave, 256);
 
@@ -8012,11 +7522,11 @@ $(document).ready ( function(){
 			var ends = weave.length;
 			var picks = weave[0].length;
 			pegplan2D8 = pd.uniques;
-			draft1D = pd.posIndex.map(a => a+1);
-			shafts = arrayMax(draft1D);
-			draft2D8 = newArray2D8(15, ends, shafts);
-			draft1D.forEach(function(shaft, i) {
-				draft2D8[i][shaft - 1] = 1;
+			threading1D = pd.posIndex.map(a => a+1);
+			shafts = arrayMax(threading1D);
+			threading2D8 = newArray2D8(15, ends, shafts);
+			threading1D.forEach(function(shaft, i) {
+				threading2D8[i][shaft - 1] = 1;
 			});
 			var rotatedpegplan = pegplan2D8.rotate2D8("r");
 			var rotatedFlippedpegplan = rotatedpegplan.flip2D8("y");
@@ -8038,8 +7548,8 @@ $(document).ready ( function(){
 			inLimit : pd.inLimit,
 			shafts : shafts,
 			pegplan2D8 : pegplan2D8,
-			draft1D : draft1D,
-			draft2D8 : draft2D8,
+			threading1D : threading1D,
+			threading2D8 : threading2D8,
 			tieup2D8 : tieup2D8,
 			treadling1D : treadling1D,
 			treadling2D8 : treadling2D8
@@ -8273,139 +7783,656 @@ $(document).ready ( function(){
 		});
 	};
 
-	// ----------------------------------------------------------------------------------
-	// Tabs & Windows
-	// ----------------------------------------------------------------------------------
-	var globalTabs = {
-		active: "weave"
-	};
+	var popForms = {
+
+		init : function(obj, target){
+			obj[target].forEach(function(v){
+				var type = v[0];
+				var initValule = v[5];
+				if ( type.in("check", "number", "text") ){
+					this[v[3]] = initValule || false;
+				} else if ( type == "number"){
+					this[v[3]] = initValule || false;
+				} else if ( type == "select" ){
+
+					if ( Array.isArray(initValule) ){
+						this[v[3]] = initValule[0][0] || false;
+					} else {
+						this[v[3]] = initValule || false;
+					}
+				}
+			}, obj);
+		},
+
+		update : function(obj, target){
+			var type, item, value;
+			obj[target].forEach(function(v,i){
+				type = v[0];
+				item = $("#"+v[2]);
+				value = this[v[3]];
+				if ( type == "check" ){
+					item.tinyToggle(value ? "check" : "uncheck");
+				} else if ( type == "number"){
+					item.find("input").val(value);
+				} else if ( type == "select"){
+					item.find('option[value="' + value + '"]').prop("selected", true);
+				}
+			}, obj);
+		},
+
+		apply : function(obj, target){
+			var type, item;
+			obj[target].forEach(function(v){
+				type = v[0];
+				item = $("#"+v[2]);
+				if ( type == "check" ){
+					this[v[3]] = item.prop("checked");
+				} else if ( type == "number"){
+					this[v[3]] = item.numVal();
+				} else if ( type == "select"){
+					this[v[3]] = item.val();
+				}
+			}, obj);
+		},
+
+		create : function(options){
+			var _this = this;
+			$("<div>", {id: options.htmlId, class: options.css}).appendTo("#noshow");
+			options.parent[options.child].forEach(function(item){
+				popForms.addItem(this.htmlId, ...item);
+			}, options);
+			var pop = new dhtmlXPopup({
+				toolbar: options.toolbar,
+				id: options.toolbarButton
+			});
+			if (typeof options.onLoad === "function") {
+		    	options.onLoad();
+		    }
+			pop.attachObject(options.htmlId);
+			this.init(options.parent, options.child);
+			pop.attachEvent("onShow", function(id) {
+				_this.update(options.parent, options.child);
+				if (typeof options.onShow === "function") {
+			    	options.onShow();
+			    }
+			});
+			$("#"+options.htmlId+" .button-primary").click(function(e) {
+				_this.apply(options.parent, options.child);
+				if (typeof options.onApply === "function") {
+			    	options.onApply();
+			    }
+				return false;
+			});
+			$("#"+options.htmlId+" .button-close").click(function(e) {
+				if (e.which === 1) {
+					pop.hide();
+					if (typeof options.onHide === "function") {
+				    	options.onHide();
+				    }
+				}
+				return false;
+			});
+		},
+
+		addItem : function(parentElement, type, title, id, varName, cssSize = null, values = null, min = null, max = null, step = 0, precision = 0){
+
+			var inputClass, titleClass;
+
+			if ( cssSize == "1/3" ){
+
+				inputClass = "xcol xcol13";
+				titleClass = "xcol xcol23";
+
+			} else if ( cssSize == "2/3" ){
+
+				inputClass = "xcol xcol23";
+				titleClass = "xcol xcol13";
+
+			} else if ( cssSize == "1/2" ){
+
+				inputClass = "xcol xcol12";
+				titleClass = "xcol xcol12";
+
+			} else if ( cssSize == "1/1" ){
+
+				inputClass = "xcol xcol11";
+				titleClass = "xcol xcol11";
+
+			} else if ( cssSize == "2/5" ){
+
+				inputClass = "xcol xcol25";
+				titleClass = "xcol xcol35";
+
+			} else if ( cssSize == "3/5" ){
+
+				inputClass = "xcol xcol35";
+				titleClass = "xcol xcol25";
+
+			}
+			
+			var html = '';
+
+			if ( type == "control" ){
+
+				html += '<div class="xcontrol">';
+					html += '<div class="xcol xcol34">';
+						html += '<a class="xbutton xleft button-primary">'+title+'</a>';
+					html += '</div>';
+					html += '<div class="xcol xcol14">';
+						html += '<a class="xbutton xright button-close">&#10006;</a>';
+					html += '</div>';
+				html += '</div>';
+
+			} else {
+
+				html += '<div class="xrow">';
+					html += '<div class="'+titleClass+'">';
+						html += '<div class="xtitle w100p">'+title+'</div>';
+					html += '</div>';
+					html += '<div class="'+inputClass+'">';
+
+					if ( type == "number"){
+
+						html+= spinnerHTML(id, "spinner-counter xcounter", values, min, max, step, precision);
+
+					} else if ( type == "select"){
+
+						html += '<select class="xselect" id="'+id+'">';
+							if ( Array.isArray(values) ){
+								for (var value of values) {
+								  html += '<option value="'+value[0]+'">'+value[1]+'</option>';
+								}
+							}
+						html += '</select>';
+
+					} else if ( type == "check" ){
+
+						var checkedTag = values ? ' checked="checked" ' : '';
+						html += '<div class="xcheckbox-container">';
+							html += '<input id = "'+id+'" class="xcheckbox tiny-toggle" data-tt-type="toggle" data-tt-size="big" type="checkbox" '+checkedTag+' />';
+						html += '</div>';
+
+
+					} else if ( type == "text" ){
+
+						html += '<input class="xtext" id = "'+id+'" type="text" />';
+
+					}
+
+					html += '</div>';
+				html += '</div>';
+
+			}
+
+			$("#"+parentElement).append(html);
+
+		},
+
+		addOption: function(selectID, optionValue, optionText){
+			$("#"+selectID).append($('<option>', { value : optionValue }).text(optionText));
+		},
+
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Model Object & Methods
 	// ----------------------------------------------------------------------------------
+
+	// All dimentions in Meters Scale 10;
+
 	var globalModel = {
+
+		objName: "model",
 
 		renderer : undefined,
 		scene : undefined,
 		camera : undefined,
 		controls : undefined,
+		model : undefined,
+		gltfLoader : undefined,
+		lights : {},
 
-		modelMeshId : undefined,
-
-		mapWmm : undefined,
-		mapHmm : undefined,
+		modelUVMapWmm : undefined,
+		modelUVMapHmm : undefined,
 
 		fabric: {
+			status : false,
 			texture: undefined,
-			xRepeats: 16,
-			yRepeats: 16,
-			textureWmm: undefined,
-			textureHmm: undefined,
+			bump: undefined,
+			xRepeats: 0,
+			yRepeats: 0,
+			textureWmm: 0,
+			textureHmm: 0,
 			needUpdate: true
 		},
 
+		params : {
+
+			roomW : 60,
+			roomL : 60,
+			roomH : 30,
+			roomR : 33.85,
+
+			roomMeshId: undefined,
+			featureWallMeshId: undefined,
+
+			prevState: {
+
+				gltfId: undefined,
+				roomShape: undefined,
+				wallTexture: undefined,
+				envAmbiance: undefined,
+				featureWall: undefined,
+
+			},
+
+			modelPos: undefined,
+			cameraPos: undefined,
+			controlsTarget: undefined,
+
+			scene: [
+
+				["select", "Room", "modelRoomShape", "roomShape", "1/2", [["square", "Square"], ["round", "Round"], ["open", "Open"]]],
+				["select", "Walls", "modelWallTexture", "wallTexture", "1/2", [["plain", "Plain"], ["rough", "Rough"], ["bricks", "Bricks"], ["pattern", "Pattern"]]],
+				["select", "Ambiance", "modelEnvAmbiance", "envAmbiance", "1/2", [["light", "Light"], ["dark", "Dark"]]],
+				["check", "Feature Wall", "modelFeatureWall", "featureWall", "2/5", 0],
+				["control", "Apply"]
+			],
+
+			lights: [
+				
+				["check", "Ambient", "modelAmbientLight", "ambientLight", "2/5", 0],
+				["check", "Directional", "modelDirectionalLight", "directionalLight", "2/5", 1],
+				["check", "Hemisphere", "modelHemisphereLight", "hemisphereLight", "2/5", 0],
+				["check", "Point", "modelPointLight", "pointLight", "2/5", 1],
+				["check", "Spot", "modelSpotLight", "spotLight", "2/5", 1],
+				["check", "Feature Spot", "modelFeatureSpotLight", "featureSpotLight", "2/5", 1],
+				["control", "Apply"]
+
+			],
+
+			model: [
+				["select", "Model", "modelGltfId", "gltfId", "2/3", 1],
+				["select", "Button Color", "modelButtonColor", "buttonColor", "1/2", [["white", "White"], ["black", "Black"]]],
+				["select", "Collar Color", "modelCollarColor", "collarColor", "1/2", [["pattern", "Pattern"], ["white", "White"], ["black", "Black"]]],
+				["control", "Apply"]
+			],
+				
+		},
+
 		materials : {},
+		textures : {},
 
 		sceneCreated : false,
-		doAnimate : false,
+		
 
 		frameW : 0,
 		frameH : 0,
 
-		controls_data : {},
-
 		fps : [],
+
+		mouseAnimate : false,
+		forceAnimate : false,
+		autoRotate : false,
+		allowAutoRotate : true,
+		rotationSpeed : 0.01,
+		rotationDirection : 1,
+
+		prevX : 0,
+		prevY : 0,
+
+		setInterface : function(instanceId = 0, render = true){
+
+			console.log(["globalModel.setInterface", instanceId]);
+			//logTime("globalModel.setInterface("+instanceId+")");
+
+			var modelBoxL = 0;
+			var modelBoxB = 0;
+
+			var modelBoxW = this.frameW - modelBoxL;
+			var modelBoxH = this.frameH - modelBoxB;
+
+			$("#model-container").css({
+				"width":  modelBoxW,
+				"height": modelBoxH,
+				"left": modelBoxL,
+				"bottom": modelBoxB,
+			});
+
+			globalPositions.update("model");
+
+			if ( app.tabs.active == "model" && render ){
+				globalModel.createScene(function(){
+					globalModel.renderer.setSize(globalModel.frameW, globalModel.frameH);
+					globalModel.camera.aspect = globalModel.frameW / globalModel.frameH;
+					globalModel.camera.updateProjectionMatrix();
+					globalModel.render();
+				});
+			}
+
+			//logTimeEnd("globalModel.setInterface("+instanceId+")");
+
+		},
 
 		onTabSelect : function(){
 
-			if ( globalModel.sceneCreated ){
-
-				if ( this.fabric.needUpdate ){
-					this.updateFabricTexture();
-				}
-	    		globalModel.render();
-	    	}
+			globalModel.setInterface(3);
 
 		},
 
-		restoreCamera : function(position, rotation, controlCenter){
-		    this.camera.position.set(position.x, position.y, position.z);
-		    this.camera.rotation.set(rotation.x, rotation.y, rotation.z);
-		    this.controls.target.set(controlCenter.x, controlCenter.y, controlCenter.z);
-		    this.controls.update();
-		    this.renderer.render( this.scene, this.camera );
-		},
+		setLights : function(){
 
-		createScene : function(){
+			if ( !this.lights.ambient && this.params.ambientLight ){
+				this.lights.ambient =  new THREE.AmbientLight( 0xffffff, 0.5 );
+				this.scene.add( this.lights.ambient );
+			} else if ( this.lights.ambient ){
+				this.lights.ambient.visible = this.params.ambientLight ;
+			}
 
-			this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
-			this.renderer.setPixelRatio(g_pixelRatio);
-		    this.renderer.setSize(this.frameW, this.frameH);
-		    this.renderer.setClearColor(0x000000, 0);
+			if ( !this.lights.point1 && this.params.pointLight ){
+				this.lights.point1 = new THREE.PointLight( 0xffffff, 10, 50, 1);
+				this.lights.point1.position.set( 0, this.params.roomH-0.05, 0 );
+				this.scene.add( this.lights.point1 );
+				this.lights.point2 = new THREE.PointLight( 0xffffff, 10, 50, 1);
+				this.lights.point2.position.set( this.params.roomW/3, this.params.roomH-0.05, this.params.roomL/3 );
+				this.scene.add( this.lights.point2 );
+				this.lights.point3 = new THREE.PointLight( 0xffffff, 10, 50, 1);
+				this.lights.point3.position.set( this.params.roomW/3, this.params.roomH-0.05, -this.params.roomL/3 );
+				this.scene.add( this.lights.point3 );
+				this.lights.point4 = new THREE.PointLight( 0xffffff, 10, 50, 1);
+				this.lights.point4.position.set( -this.params.roomW/3, this.params.roomH-0.05, this.params.roomL/3 );
+				this.scene.add( this.lights.point4 );
+				this.lights.point5 = new THREE.PointLight( 0xffffff, 10, 50, 1);
+				this.lights.point5.position.set( -this.params.roomW/3, this.params.roomH-0.05, -this.params.roomL/3 );
+				this.scene.add( this.lights.point5 );
+			} else if ( this.lights.point1 ){
+				this.lights.point1.visible = this.params.pointLight;
+				this.lights.point2.visible = this.params.pointLight;
+				this.lights.point3.visible = this.params.pointLight;
+				this.lights.point4.visible = this.params.pointLight;
+				this.lights.point5.visible = this.params.pointLight;
+			}
 
-		    this.renderer.shadowMap.enabled = true;
-			this.renderer.shadowMapSoft = true;
-			this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+			if ( !this.lights.spot && this.params.spotLight ){
+				// SpotLight( color, intensity, distance, angle, penumbra, decay )
+			    this.lights.spot = new THREE.SpotLight(0xffffff, 200, 50, 0.3, 1, 1);
+				this.lights.spot.position.set( 16, 24, 16 );
+				this.lights.spot.castShadow = true;
+				this.lights.spot.target = new THREE.Object3D( 0, 0, 0 );
+				this.lights.spot.target.position.set(0, 0, 0);
+			    this.lights.spot.shadow.bias = -0.0001;
+			    this.lights.spot.radius = 10;
+			    this.scene.add( this.lights.spot.target );
+				this.scene.add( this.lights.spot );
+				this.lights.spot.shadow.mapSize.width = 512;
+				this.lights.spot.shadow.mapSize.height = 512;
+				this.lights.spot.shadow.camera.near = 0.5;
+				this.lights.spot.shadow.camera.far = 85;
+				//var spotLightHelper = new THREE.SpotLightHelper( this.lights.spot );
+				//this.scene.add( spotLightHelper );
+				//Create a helper for the shadow camera (optional)
+				//var spotLightCameraHelper = new THREE.CameraHelper( this.lights.spot.shadow.camera );
+				//this.scene.add( spotLightCameraHelper );
+			} else if ( this.lights.spot ){
+				this.lights.spot.visible = this.params.spotLight;
+			}
 
-		    this.renderer.gammaInput = true;
-			this.renderer.gammaOutput = true;
+			if ( !this.lights.featureSpot && this.params.featureSpotLight ){
+				// SpotLight( color, intensity, distance, angle, penumbra, decay )
+			    this.lights.featureSpot = new THREE.SpotLight(0xffffff, 100, 500, 1, 1, 1);
+				this.lights.featureSpot.position.set( 0, 24, -7.5 );
+				this.lights.featureSpot.castShadow = true;
+				this.lights.featureSpot.target = new THREE.Object3D( 0, 0, 0 );
+				this.lights.featureSpot.target.position.set(0, 0, -20);
+			    this.lights.featureSpot.shadow.bias = -0.0001;
+			    this.lights.featureSpot.radius = 10;
+			    this.scene.add( this.lights.featureSpot.target );
+				this.scene.add( this.lights.featureSpot );
+				this.lights.featureSpot.shadow.mapSize.width = 512;
+				this.lights.featureSpot.shadow.mapSize.height = 512;
+				this.lights.featureSpot.shadow.camera.near = 0.5;
+				this.lights.featureSpot.shadow.camera.far = 85;
+			} else if ( this.lights.featureSpot ){
+				this.lights.featureSpot.visible = this.params.featureSpotLight;
+			}
 
-		    var container = document.getElementById("model-container");
-		    container.innerHTML = "";
-		    container.appendChild(this.renderer.domElement);
-		    this.renderer.domElement.id = "g_modelCanvas";
+			if ( !this.lights.directional && this.params.directionalLight ){
+				this.lights.directional = new THREE.DirectionalLight( 0xffef99, 0.5 );
+				this.lights.directional.position.set(0, this.params.roomH/2, this.params.roomL/4);
+				this.scene.add( this.lights.directional );
+			} else if ( this.lights.directional ){
+				this.lights.directional.visible = this.params.directionalLight;
+			}
 
-		    addStyleClassToElement("g_modelCanvas", "graph-canvas");
-
-		    // scene
-		    this.scene = new THREE.Scene();
-		    
-		    // camera
-		    this.camera = new THREE.PerspectiveCamera(45, this.frameW / this.frameH, 0.1, 1000);
-		    this.camera.position.set( 0, 2, -2.5 );
-		    this.scene.add( this.camera ); //required, since camera has a child light
-
-		    // controls
-		    this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
-		    this.controls.minDistance = 2;
-		    this.controls.maxDistance = 1000;
-		    
-		    // ambient
-		    this.scene.add( new THREE.AmbientLight( 0xffffff, 0.4 ) );
-		    
-		    // Point Light
-		    var pointLight = new THREE.PointLight( 0xffffff, 1, 100 );
-		    pointLight.position.set( 0, 4, -1 );
-		    this.camera.add( pointLight );
-
-		    // var pointLightHelper = new THREE.PointLightHelper( pointLight, 1, 0x000000 );
-			// this.scene.add( pointLightHelper );
-
-		    // Spot Light
-		    var spotLight = new THREE.SpotLight( 0xffffff, 1, 1, 0.7, 1, 2);
-			spotLight.position.set( 5, 5, 5 );
-			spotLight.target.position.set( 0, 0, 0 );
-			spotLight.castShadow = true;
-			
-			//Set up shadow properties for the spotLight
-			spotLight.shadow.mapSize.width = 5; // default
-			spotLight.shadow.mapSize.height = 5; // default
-			spotLight.shadow.camera.near = 1; // default
-			spotLight.shadow.camera.far = 10; // default
-
-			this.scene.add( spotLight.target );
-			this.scene.add( spotLight );
-		    
-		    // axes
-		    //this.scene.add( new THREE.AxesHelper( 10 ) );
-
-		    //this.scene.add(new THREE.CameraHelper(this.camera));
-			//this.scene.add( new THREE.SpotLightHelper( spotLight ) );
-
-			this.createMaterials();
+			if ( !this.lights.hemisphere && this.params.hemisphereLight ){
+				this.lights.hemisphere = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
+				this.lights.hemisphere.color.setHSL( 0.1, 1, 0.7 );
+				this.lights.hemisphere.groundColor.setHSL( 0.6, 1, 0.7 );
+				this.lights.hemisphere.position.set( 0, this.params.roomH, 0 );
+				this.scene.add( this.lights.hemisphere );
+			} else if ( this.lights.hemisphere ){
+				this.lights.hemisphere.visible = this.params.hemisphereLight;
+			}
 
 			this.render();
-			this.sceneCreated = true;
+		
+		},
+
+		createScene : function(callback = false){
+
+			if ( !this.sceneCreated ){
+
+				setLoadingbar(0, "modelcreatescene", true, "Creating Scene");
+
+				$.doTimeout("createModelScene", 100, function(){
+
+					globalModel.renderer = new THREE.WebGLRenderer({
+						antialias: true,
+						alpha: true,
+						preserveDrawingBuffer: true 
+					});
+
+					globalModel.renderer.setPixelRatio(g_pixelRatio);
+				    globalModel.renderer.setSize(globalModel.frameW, globalModel.frameH);
+				    globalModel.renderer.setClearColor(0x000000, 0);
+
+				    globalModel.renderer.shadowMap.enabled = true;
+					globalModel.renderer.shadowMapSoft = true;
+					globalModel.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+					globalModel.renderer.shadowMap.bias = 0.0001;
+
+				    globalModel.renderer.gammaInput = true;
+					globalModel.renderer.gammaOutput = true;
+		    		globalModel.renderer.gammaFactor = 2.2;
+
+		    		globalModel.renderer.physicallyCorrectLights = true;
+
+				    var container = document.getElementById("model-container");
+				    container.innerHTML = "";
+				    container.appendChild(globalModel.renderer.domElement);
+				    globalModel.renderer.domElement.id = "g_modelCanvas";
+
+				    addStyleClassToElement("g_modelCanvas", "graph-canvas");
+
+				    // scene
+				    globalModel.scene = new THREE.Scene();
+				    
+				    // camera
+				    globalModel.camera = new THREE.PerspectiveCamera(45, globalModel.frameW / globalModel.frameH, 0.5, 400);
+				    globalModel.scene.add( globalModel.camera ); //required, since camera has a child light
+
+				    // controls
+				    globalModel.controls = new THREE.OrbitControls( globalModel.camera, globalModel.renderer.domElement );
+				    globalModel.controls.minDistance = 0.5;
+				    globalModel.controls.maxDistance = 400;
+				    //globalModel.controls.minPolarAngle = 0;
+				    //globalModel.controls.maxPolarAngle = Math.PI/1.8;
+				    globalModel.controls.enablePan = false;
+				    globalModel.controls.mouseButtons = {
+						LEFT: THREE.MOUSE.PAN,
+						MIDDLE: THREE.MOUSE.DOLLY,
+						RIGHT: THREE.MOUSE.ROTATE
+					}
+
+					globalModel.gltfLoader = new THREE.GLTFLoader();
+
+					globalModel.createMaterials();
+					globalModel.setEnvironment();
+				    
+				    // axes
+				    //globalModel.scene.add( new THREE.AxesHelper( 2 ) );
+
+				    //globalModel.scene.add(new THREE.CameraHelper(globalModel.camera));
+					//globalModel.scene.add( new THREE.SpotLightHelper( globalModel.lights.spot ) );
+
+					var cameraPos = [0, globalModel.params.roomH/2, globalModel.params.roomL*0.75];
+					var controlsTarget = [0, globalModel.params.roomH/2, 0];
+					var spotLightTarget = [0, 0, 0];
+
+					globalModel.camera.position.set(...cameraPos);
+					globalModel.controls.target.set(...controlsTarget);
+
+					if ( globalModel.lights.spot ){
+						globalModel.lights.spot.target.position.set(...spotLightTarget);
+					}
+
+					globalModel.controls.update();
+					
+					globalModel.render();
+					globalModel.startAnimation();
+					globalModel.sceneCreated = true;
+
+					setLoadingbar("hide");
+
+					if (typeof callback === "function") {
+				    	callback();
+				    }
+
+				});
+
+			} else {
+
+				if (typeof callback === "function") {
+			    	callback();
+			    }
+
+			}
+
+		},
+
+		setEnvironment : function(){
+
+			var room_geometry, room_material, room_mesh, feature_geometry, feature_material, feature_mesh;
+
+			var shape = globalModel.params.roomShape;
+			var walls = globalModel.params.wallTexture;
+			var ambiance = globalModel.params.envAmbiance;
+			var feature = globalModel.params.featureWall;
+
+			if ( globalModel.params.prevState.roomShape !== shape ){
+				
+				this.disposeObjectById(this.params.roomMeshId);
+				this.params.roomMeshId = undefined;
+
+				if ( shape !== "open" ){
+					if ( shape == "round"  ){
+						room_geometry = new THREE.CylinderBufferGeometry( this.params.roomR, this.params.roomR, this.params.roomH, 64 );
+					} else if ( shape == "square"  ){
+						room_geometry = new THREE.BoxBufferGeometry( this.params.roomW, this.params.roomH, this.params.roomL );
+						//var box_material = [this.materials.wall, this.materials.wall, this.materials.ceiling, this.materials.floor, this.materials.wall, this.materials.wall];
+					}
+					room_material = ambiance == "light" ? this.materials.wall_light : this.materials.wall_dark;
+					room_mesh = new THREE.Mesh( room_geometry, room_material );
+					room_mesh.receiveShadow = true;
+					room_mesh.position.set( 0, this.params.roomH/2, 0 );
+					this.params.roomMeshId = room_mesh.id;
+					this.scene.add( room_mesh );
+				}
+
+			} else {
+
+				if ( globalModel.params.prevState.envAmbiance !== ambiance ){
+					this.scene.getObjectById(this.params.roomMeshId).material = ambiance == "light" ? this.materials.wall_light : this.materials.wall_dark;
+				}
+
+			}
+
+			if ( feature ){
+
+				if ( this.params.featureWallMeshId == undefined ){
+
+					var featureW = this.params.roomW*0.5;
+					var featureH = this.params.roomH*0.75;
+					var featureL = 0.5;
+
+					var featureMaterial = ambiance == "light" ? this.materials.pattern_light : this.materials.pattern_dark;
+					var flatWallMaterial = this.materials.wall_light_face;
+
+					feature_geometry = new THREE.BoxBufferGeometry( featureW, featureH, featureL );
+					feature_material = [ flatWallMaterial, flatWallMaterial, flatWallMaterial, flatWallMaterial, featureMaterial, flatWallMaterial ];
+
+					feature_mesh = new THREE.Mesh( feature_geometry, feature_material );
+					feature_mesh.receiveShadow = true;
+					feature_mesh.castShadow = true;
+					feature_mesh.position.set( 0, featureH/2, -this.params.roomL/4 );
+					this.params.featureWallMeshId = feature_mesh.id;
+
+					this.scene.add( feature_mesh );
+
+				} else {
+
+					if ( globalModel.params.prevState.envAmbiance !== ambiance ){
+						this.scene.getObjectById(this.params.featureWallMeshId).material = ambiance == "light" ? this.materials.pattern_light : this.materials.pattern_dark;
+					}
+
+				}
+
+			} else {
+
+				this.disposeObjectById(this.params.featureWallMeshId);
+				this.params.featureWallMeshId = undefined;
+			
+			}
+
+			globalModel.params.prevState.roomShape = shape;
+			globalModel.params.prevState.wallTexture = walls;
+			globalModel.params.prevState.envAmbiance = ambiance;
+			globalModel.params.prevState.featureWall = feature;
+
+			this.setLights();
+
+			this.render();
+
+
+		},
+
+		disposeObjectById : function(id){
+
+			if ( id !== undefined ){
+
+				var o = this.scene.getObjectById(id);
+
+				if (o.geometry) {
+		            o.geometry.dispose()
+		        }
+
+		        if (o.material) {
+		            if (o.material.length) {
+		                for (let i = 0; i < o.material.length; ++i) {
+		                    o.material[i].dispose()
+		                }
+		            }
+		            else {
+		                o.material.dispose()
+		            }
+		        }
+				
+				this.scene.remove(o);
+				o = undefined;
+
+				this.render();
+
+			}
 
 		},
 
@@ -8416,37 +8443,354 @@ $(document).ready ( function(){
 			var texture_wood = loader.load( "model/textures/wood_texture_512.jpg", function (tex) {
 				texture_wood.wrapS = THREE.RepeatWrapping;
 				texture_wood.wrapT = THREE.RepeatWrapping;
-				texture_wood.repeat.set(1, 1);
+				texture_wood.repeat.set(10, 10);
 				texture_wood.anisotropy = 16;
 				texture_wood.needsUpdate = true;
 				globalModel.render();
 			});
 
-			var bump_wood = loader.load( "model/textures/wood_bump_512.jpg", function ( tex ) {
-				bump_wood.wrapS = THREE.RepeatWrapping;
-				bump_wood.wrapT = THREE.RepeatWrapping;
-				bump_wood.repeat.set(1, 1);
-				bump_wood.anisotropy = 16;
-				bump_wood.needsUpdate = true;
+			var texture_wall_dark = loader.load( "model/textures/texture_wall_dark_256.png", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(2, 2);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
 				globalModel.render();
-			} );
+			});
+
+			var texture_wall_light = loader.load( "model/textures/texture_wall_light_256.png", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(2, 2);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var texture_pattern_dark = loader.load( "model/textures/texture_pattern_dark_256.png", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(4, 3);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var texture_pattern_light = loader.load( "model/textures/texture_pattern_light_256.png", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(4, 3);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var bump_wall = loader.load( "model/textures/bump_wall_01_256.png", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(2, 2);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var bump_pattern = loader.load( "model/textures/bump_pattern_256.png", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(16, 12);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var texture_wall = loader.load( "model/textures/texture_wall_01_2048.jpg", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(2, 2);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var texture_floor = loader.load( "model/textures/wall_01.jpg", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(2, 2);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var texture_ceiling = loader.load( "model/textures/wall_01.jpg", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(2, 2);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			var texture_marble = loader.load( "model/textures/texture_marble_01.jpg", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(10, 10);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			this.fabric.bump = loader.load( "model/textures/bump_fabric_white_512.png", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(1, 1);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+				globalModel.render();
+			});
+
+			this.materials.marble = new THREE.MeshPhongMaterial( {
+		        map : texture_marble,
+		       	//bumpMap: bump_wood,
+		        //bumpScale: 0.01,
+		        specular: 0xffffff,
+		        shininess: 500,
+		        side: THREE.DoubleSide
+		    });
+
+		    debugInput("number", "globalModel.materials.marble.shininess", false, "live", function(val){
+				globalModel.render();
+			});
 
 			this.materials.wood = new THREE.MeshPhongMaterial( {
 		        map : texture_wood,
 		       	//bumpMap: bump_wood,
 		        //bumpScale: 0.01,
-		        //shininess: 1,
-		        //side: THREE.DoubleSide
+		        shininess: 1,
+		        side: THREE.DoubleSide
 		    });
 
-		    this.materials.white = new THREE.MeshLambertMaterial( {
+		    this.materials.white = new THREE.MeshStandardMaterial( {
+		    	roughness: 1,
+		        metalness: 0,
 		        color: 0xffffff,
 		        side: THREE.DoubleSide,
 		    });
 
-		    this.updateFabricTexture();
+		    this.materials.metal = new THREE.MeshStandardMaterial( {
+		    	roughness: 0.4,
+		        metalness: 0.6,
+		        color: 0xffffff,
+		        side: THREE.DoubleSide,
+		    });
 
-			this.fabric.texture = new THREE.CanvasTexture(g_simulationRepeatCanvas);
+		    debugInput("number", "globalModel.materials.metal.roughness", false, "live", function(val){
+				globalModel.render();
+			});
+
+			debugInput("number", "globalModel.materials.metal.metalness", false, "live", function(val){
+				globalModel.render();
+			});
+
+			debugInput("text", "globalModel.materials.metal.metalness", false, "live", function(val){
+				globalModel.render();
+			});
+
+		    this.materials.whitePlastic = new THREE.MeshPhongMaterial({
+			  color: 0xffffff,
+			  opacity: 0.75,
+			  transparent: true,
+			  side: THREE.DoubleSide,
+			  depthTest: true
+			});
+
+			this.materials.blackPlastic = new THREE.MeshPhongMaterial({
+			  color: 0x000000,
+			  opacity: 0.75,
+			  transparent: true,
+			  side: THREE.DoubleSide,
+			  depthTest: true
+			});
+
+		    this.materials.red = new THREE.MeshLambertMaterial( {
+		        color: 0xff0000,
+		        side: THREE.DoubleSide,
+		    });
+
+		    this.materials.green = new THREE.MeshLambertMaterial( {
+		        color: 0x00ff00,
+		        side: THREE.DoubleSide,
+		    });
+
+		    this.materials.blue = new THREE.MeshLambertMaterial( {
+		        color: 0x0000ff,
+		        side: THREE.DoubleSide,
+		    });
+
+		    this.materials.yellow = new THREE.MeshLambertMaterial( {
+		        color: 0xffff00,
+		        side: THREE.DoubleSide,
+		    });
+
+		    this.materials.cyan = new THREE.MeshLambertMaterial( {
+		        color: 0x00ffff,
+		        side: THREE.DoubleSide,
+		    });
+
+		    this.materials.magenta = new THREE.MeshLambertMaterial( {
+		        color: 0xff00ff,
+		        side: THREE.DoubleSide,
+		    });
+
+		    this.materials.black = new THREE.MeshLambertMaterial( {
+		        color: 0x000000,
+		        side: THREE.DoubleSide,
+		    });
+
+		    this.textures.defaultFabric = loader.load( "model/textures/texture_fabric_white_512.jpg", function (tex) {
+				tex.wrapS = THREE.RepeatWrapping;
+				tex.wrapT = THREE.RepeatWrapping;
+				tex.repeat.set(1, 1);
+				tex.anisotropy = 16;
+				tex.needsUpdate = true;
+			});
+
+		    this.materials.fabric = new THREE.MeshPhysicalMaterial( {
+		        color: 0xC8C0B5,
+		       	bumpMap: this.fabric.bump,
+		        bumpScale: 0.005,
+		        roughness: 0.9,
+		        metalness: 0,
+		        reflectivity: 0,
+		        side: THREE.DoubleSide
+
+		    });
+
+		    debugInput("number", "globalModel.materials.fabric.roughness", false, "live", function(val){
+				globalModel.render();
+			});
+
+			debugInput("number", "globalModel.materials.fabric.metalness", false, "live", function(val){
+				globalModel.render();
+			});
+
+			debugInput("number", "globalModel.materials.fabric.reflectivity", false, "live", function(val){
+				globalModel.render();
+			});
+
+		    this.materials.defaultFabric = new THREE.MeshPhongMaterial( {
+		        map : this.textures.defaultFabric,
+		       	//bumpMap: bump_wood,
+		        //bumpScale: 0.01,
+		        shininess: 1,
+		        side: THREE.DoubleSide
+		    });
+
+		    this.materials.ceiling = new THREE.MeshPhongMaterial( {
+		        map : texture_ceiling,
+		       	//bumpMap: bump_wood,
+		        //bumpScale: 0.01,
+		        shininess: 1,
+		        side: THREE.BackSide
+		    });
+
+			this.materials.wall = new THREE.MeshPhongMaterial( {
+		        map : texture_wall,
+		       	//bumpMap: bump_wood,
+		        //bumpScale: 0.01,
+		        shininess: 1,
+		        side: THREE.BackSide
+		    });
+
+		    this.materials.wall_dark = new THREE.MeshPhongMaterial( {
+		        map : texture_wall_dark,
+		       	bumpMap: bump_wall,
+		        bumpScale: 0.1,
+		        shininess: 15,
+		        side: THREE.BackSide
+		    });
+
+		    this.materials.wall_dark_face = new THREE.MeshPhongMaterial( {
+		        map : texture_wall_dark,
+		       	bumpMap: bump_wall,
+		        bumpScale: 0.1,
+		        shininess: 15,
+		        side: THREE.FrontSide
+		    });
+
+		    this.materials.wall_light_face = new THREE.MeshPhongMaterial( {
+		        map : texture_wall_light,
+		       	bumpMap: bump_wall,
+		        bumpScale: 0.1,
+		        shininess: 15,
+		        side: THREE.FrontSide
+		    });
+
+		    this.materials.wall_light = new THREE.MeshPhongMaterial( {
+		        map : texture_wall_light,
+		       	bumpMap: bump_wall,
+		        bumpScale: 0.1,
+		        shininess: 15,
+		        side: THREE.BackSide
+		    });
+
+		    this.materials.pattern_light = new THREE.MeshPhongMaterial( {
+		        map : texture_pattern_light,
+		       	bumpMap: bump_pattern,
+		        bumpScale: 0.1,
+		        shininess: 0,
+		        side: THREE.FrontSide
+		    });
+
+		    this.materials.pattern_dark = new THREE.MeshPhongMaterial( {
+		        map : texture_pattern_dark,
+		       	bumpMap: bump_pattern,
+		        bumpScale: 0.1,
+		        shininess: 15,
+		        side: THREE.FrontSide
+		    });
+
+		    debugInput("number", "globalModel.materials.wall_light.bumpScale", false, "live", function(val){
+				globalModel.render();
+			});
+
+			debugInput("number", "globalModel.materials.pattern_light.shininess", false, "live", function(val){
+				globalModel.render();
+			});
+
+			this.materials.floor = new THREE.MeshPhongMaterial( {
+		        map : texture_floor,
+		       	//bumpMap: bump_wood,
+		        //bumpScale: 0.01,
+		        shininess: 1,
+		        side: THREE.BackSide
+		    });
+
+		},
+
+		setDefaultFabricTexture : function(){
+
+			this.fabric.texture = this.textures.defaultFabric;
+			this.fabric.textureWmm = 25.4;
+			this.fabric.textureHmm = 25.4;
+			this.materials.fabric.map = this.fabric.texture;
+			this.fabric.texture.needsUpdate = true;
+
+		},
+
+		updateFabricTextureDimensions : function(){
+
+			var xRepeats = this.modelUVMapWmm / this.fabric.textureWmm;
+			var yRepeats = this.modelUVMapHmm / this.fabric.textureHmm;
+			this.fabric.texture.repeat.set(xRepeats, yRepeats);
+			globalModel.fabric.texture.needsUpdate = true;
+
+		},
+
+		loadSimulation : function(){
+
+			this.updateFabricTexture();
+
+			this.fabric.texture = new THREE.CanvasTexture(g_modelTextureCanvas);
 			this.fabric.texture.wrapS = THREE.RepeatWrapping;
 			this.fabric.texture.wrapT = THREE.RepeatWrapping;
 			this.fabric.texture.repeat.set(16, 16);
@@ -8472,10 +8816,10 @@ $(document).ready ( function(){
 			//var warpRepeat = [weaveW, globalPattern.warp.length].lcm();
 			//var weftRepeat = [weaveH, globalPattern.weft.length].lcm();
 
-			//var warpSize = globalSimulation.warpSize;
-			//var weftSize = globalSimulation.weftSize;
-			//var warpSpace = globalSimulation.warpSpace;
-			//var weftSpace = globalSimulation.weftSpace;
+			//var warpSize = globalSimulation.params.warpSize;
+			//var weftSize = globalSimulation.params.weftSize;
+			//var warpSpace = globalSimulation.params.warpSpace;
+			//var weftSpace = globalSimulation.params.weftSpace;
 
 			//var intersectionW = warpSize + warpSpace;
 			//var intersectionH = weftSize + weftSpace;
@@ -8483,22 +8827,22 @@ $(document).ready ( function(){
 			//var repeatW = warpRepeat * intersectionW;
 			//var repeatH = weftRepeat * intersectionH;
 
-			var repeatW = globalSimulation.repeatWpx;
-			var repeatH = globalSimulation.repeatHpx;
+			var textureWpx = globalSimulation.textureWpx;
+			var textureHpx = globalSimulation.textureHpx;
 
-			var canvasW = Math.min(2048, nearestPow2(repeatW));
-			var canvasH = Math.min(2048, nearestPow2(repeatH));
+			var canvasW = Math.min(2048, nearestPow2(textureWpx));
+			var canvasH = Math.min(2048, nearestPow2(textureHpx));
 
-			console.log([repeatW, repeatH, canvasW, canvasH]);
+			console.log([textureWpx, textureHpx, canvasW, canvasH]);
 
-			g_simulationRepeatContext = getCtx(61, "temp-canvas", "g_simulationRepeatCanvas", canvasW, canvasH, false);
-			globalSimulation.renderTo(g_simulationRepeatContext, repeatW, repeatH, globalWeave.weave2D8, "bl", 0, 0, false, false);
+			g_modelTextureContext = getCtx(61, "temp-canvas", "g_modelTextureCanvas", textureWpx, textureHpx, false);
+			globalSimulation.renderTo(g_modelTextureContext, textureWpx, textureHpx, globalWeave.weave2D8, "bl", 0, 0);
 
 			if ( globalModel.fabric.texture !== undefined ){
-				this.fabric.textureWmm = globalSimulation.repeatWmm;
-				this.fabric.textureHmm = globalSimulation.repeatHmm;
-				this.fabric.xRepeats = this.mapWmm / this.fabric.textureWmm;
-				this.fabric.yRepeats = this.mapHmm / this.fabric.textureHmm;
+				this.fabric.textureWmm = globalSimulation.textureWmm;
+				this.fabric.textureHmm = globalSimulation.textureHmm;
+				this.fabric.xRepeats = this.modelUVMapWmm / this.fabric.textureWmm;
+				this.fabric.yRepeats = this.modelUVMapHmm / this.fabric.textureHmm;
 				this.fabric.texture.repeat.set(this.fabric.xRepeats, this.fabric.yRepeats);
 				globalModel.fabric.texture.needsUpdate = true;
 			}
@@ -8507,264 +8851,466 @@ $(document).ready ( function(){
 			
 		},
 
-		loadModel : function(id){
+		setModel : function(){
 
-			setLoadingbar(0, "loadModel", true, "Loading Model");
-
-			var materialList;
+			var id = globalModel.params.gltfId;
+			var file, UVMapWmm, UVMapHmm, materialList;
+			var folder = "model/objects/";
 
 			var cameraPos = [0, 0, 0];
-
-			if ( !this.sceneCreated ){
-		    	this.createScene();
-		    } else {
-		    	this.removeModel();
-		    }
-
-			var modelFolderPath, modelFileName, modelMapWmm, modelMapHmm;
+			var controlsTarget = [0, 0, 0];
+			var modelPos = [0, 0, 0];
+			var spotLightTarget = [0, 0, 0];
 
 			if ( id == 1 ){
 
-				modelFolderPath = "model/obj/table/";
-				modelFileName = "table01.obj";
-				modelMapWmm = 2000;
-				modelMapHmm = 2000;
-				cameraPos = [-3, 4, 5];
+				file = "table.glb";
+				UVMapWmm = 1400;
+				UVMapHmm = 1400;
+				modelPos = [0, 0, 0];
+				cameraPos = [0, this.params.roomH/2, this.params.roomL/4];
+				controlsTarget = [0, 7.5, 0];
+				spotLightTarget = [0, 7.5, 0];
 
 				materialList = {
-					
-					table_wood: globalModel.materials.wood,
-					fabric_material: globalModel.materials.fabric,
+					table: globalModel.materials.wood,
+					fabric: globalModel.materials.fabric,
 				};
 
 			} else if ( id == 2 ){
 
-				modelFolderPath = "model/obj/pillow/";
-				modelFileName = "pillow_09.obj";
-				modelMapWmm = 700;
-				modelMapHmm = 570;
-				cameraPos = [0.65, 2.85, 1.95];
+				file = "pillows.glb";
+				UVMapWmm = 457;
+				UVMapHmm = 457;
+				modelPos = [0, 0, 0];
+				cameraPos = [0, this.params.roomH/2, this.params.roomL/4];
+				controlsTarget = [0, 5.5, 0];
+				spotLightTarget = [0, 5.5, 0];
 
 				materialList = {
-
-					top: globalModel.materials.fabric,
-					bottom: globalModel.materials.fabric,
-					seam: globalModel.materials.white
-
+					wood: globalModel.materials.wood,
+					metal: globalModel.materials.metal,
+					p1afabric: globalModel.materials.fabric,
+					p1bfabric: globalModel.materials.fabric,
+					p1cseam: globalModel.materials.defaultFabric,
+					p2afabric: globalModel.materials.fabric,
+					p2bfabric: globalModel.materials.fabric,
+					p2cseam: globalModel.materials.defaultFabric,
+					p3afabric: globalModel.materials.fabric,
+					p3bfabric: globalModel.materials.fabric,
+					p3cseam: globalModel.materials.defaultFabric
 				};
+
+				//file = "pillow.glb";
+				//UVMapWmm = 700;
+				//UVMapHmm = 570;
+				//cameraPos = [0.5, 2.5, 3.5];
+				//materialList = {
+					//top: globalModel.materials.fabric,
+					//bottom: globalModel.materials.fabric,
+					//seam: globalModel.materials.defaultFabric
+				//};
 
 			} else if ( id == 3 ){
 
-				modelFolderPath = "model/obj/dress01/";
-				modelFileName = "dress02.obj";
-				modelMapWmm = 1030;
-				modelMapHmm = 1460;
+				file = "dress02.obj";
+				UVMapWmm = 1030;
+				UVMapHmm = 1460;
 				cameraPos = [0, 1, -4];
-
 				materialList = {
-
 					dress_fabric: globalModel.materials.fabric,
-
 				};
 
 			} else if ( id == 4 ){
 
-				modelFolderPath = "model/obj/shirt01/";
-				modelFileName = "shirt01.obj";
-				modelMapWmm = 1030;
-				modelMapHmm = 1460;
+				file = "shirt01.obj";
+				UVMapWmm = 1400;
+				UVMapHmm = 1400;
 				cameraPos = [-43, 12, 86];
-
 				materialList = {
-
 					fabric: globalModel.materials.fabric,
-					button: globalModel.materials.white,
-					thread: globalModel.materials.white,
-
+					button: globalModel.materials.glass,
+					thread: globalModel.materials.black,
 				};
 
 			} else if ( id == 5 ){
 
-				modelFolderPath = "model/obj/chair/";
-				modelFileName = "chair03.obj";
-				modelMapWmm = 240;
-				modelMapHmm = 240;
+				file = "chair03.obj";
+				UVMapWmm = 240;
+				UVMapHmm = 240;
 				cameraPos = [-15, 10, 15];
-
 				materialList = {
-
-					wood_material_01: globalModel.materials.wood,
-					back_material_02: globalModel.materials.fabric,
-					base_material_03: globalModel.materials.fabric
-					
+					wood_material_01: globalModel.materials.wood
 				};
 
 			} else if ( id == 6 ){
 
-				modelFolderPath = "model/obj/";
-				modelFileName = "fabric01.obj";
-				modelMapWmm = 1030;
-				modelMapHmm = 1460;
-				cameraPos = [0, 1, -4];
+				file = "column.glb";
+				UVMapWmm = 1400;
+				UVMapHmm = 1400;
+				modelPos = [0, 0, 0];
+				cameraPos = [0, this.params.roomH/2, this.params.roomL/4];
+				controlsTarget = [0, 7.5, 0];
+				spotLightTarget = [0, 7.5, 0];
 
 				materialList = {
-
-					fabric: globalModel.materials.fabric
-
+					column: globalModel.materials.wood
 				};
 
 			} else if ( id == 7 ){
 
-				modelFolderPath = "model/obj/";
-				modelFileName = "fabric01.obj";
-				modelMapWmm = 1030;
-				modelMapHmm = 1460;
-				cameraPos = [0, 1, -4];
-
+				file = "longdress02.obj";
+				UVMapWmm = 2000;
+				UVMapHmm = 2000;
+				cameraPos = [-1.5, 0.75, 4];
 				materialList = {
-
-					fabric: globalModel.materials.fabric
-
+					dress_fabric: globalModel.materials.fabric,
+					belt_material: globalModel.materials.black
 				};
 
 			} else if ( id == 8 ){
 
-				modelFolderPath = "model/obj/";
-				modelFileName = "fabric01.obj";
-				modelMapWmm = 1030;
-				modelMapHmm = 1460;
-				cameraPos = [0, 1, -4];
-
+				file = "shirt_tie.glb";
+				UVMapWmm = 850;
+				UVMapHmm = 850;
+				modelPos = [0, 0, 0];
+				cameraPos = [-7.5, 16, 7.5];
+				controlsTarget = [0, 11, 0];
+				spotLightTarget = [0, 11, 0];
+				
 				materialList = {
-
-					fabric: globalModel.materials.fabric
+					shirt: globalModel.materials.fabric,
+					button: globalModel.materials.blackPlastic,
+					tie: globalModel.materials.white,
+					seam: globalModel.materials.white,
+					tag: globalModel.materials.white,
+					innerseam: globalModel.materials.defaultFabric,
+					thread: globalModel.materials.black,
+					marble: globalModel.materials.marble,
+					connectors: globalModel.materials.metal,
+					legs: globalModel.materials.metal
 
 				};
 
 			} else if ( id == 9 ){
 
-				modelFolderPath = "model/obj/";
-				modelFileName = "fabric01.obj";
-				modelMapWmm = 1030;
-				modelMapHmm = 1460;
-				cameraPos = [0, 1, -4];
+				file = "menshirt.glb";
+				UVMapWmm = 2000;
+				UVMapHmm = 2000;
+				modelPos = [0, 7.3, 0];
+				cameraPos = [0, 12, 20];
+				controlsTarget = [0, 11.5, 0];
+				spotLightTarget = [0, 12, 0];
 
 				materialList = {
-
-					fabric: globalModel.materials.fabric
-
+					shirt: globalModel.materials.fabric,
+					innercollar: globalModel.materials.white
 				};
+
+				if ( globalModel.params.buttonColor == "black" ){
+					materialList.button = globalModel.materials.blackPlastic;
+					materialList.thread = globalModel.materials.black;
+					materialList.buttonhole = globalModel.materials.black;
+				} else if ( globalModel.params.buttonColor == "white" ){
+					materialList.button = globalModel.materials.whitePlastic;
+					materialList.thread = globalModel.materials.white;
+					materialList.buttonhole = globalModel.materials.white;
+				}
+
+				if ( globalModel.params.collarColor == "white" ){
+					materialList.collar = globalModel.materials.white;
+					materialList.collarstand = globalModel.materials.white;
+					materialList.cuffleft = globalModel.materials.white;
+					materialList.cuffright = globalModel.materials.white;
+				} else {
+					materialList.collar = globalModel.materials.fabric;
+					materialList.collarstand = globalModel.materials.fabric;
+					materialList.cuffleft = globalModel.materials.fabric;
+					materialList.cuffright = globalModel.materials.fabric;
+				}
 
 			} else if ( id == 10 ){
 
-				modelFolderPath = "model/obj/";
-				modelFileName = "fabric01.obj";
-				modelMapWmm = 1030;
-				modelMapHmm = 1460;
-				cameraPos = [0, 1, -4];
-
+				file = "longdress.glb"
+				UVMapWmm = 2000;
+				UVMapHmm = 2000;
+				cameraPos = [-1.5, 0.75, 4];
 				materialList = {
-
-					fabric: globalModel.materials.fabric
-
+					dress: globalModel.materials.fabric,
+					belt: globalModel.materials.black
 				};
 
 			}
 
-			var objLoader = new THREE.OBJLoader();
-			objLoader.setPath(modelFolderPath);
-			objLoader.load(modelFileName, function(object){
+			globalModel.params.modelPos = modelPos;
+			globalModel.params.cameraPos = cameraPos;
+			globalModel.params.controlsTarget = controlsTarget;
 
-				setLoadingbar("hide");
+			globalModel.modelUVMapWmm = UVMapWmm;
+			globalModel.modelUVMapHmm = UVMapHmm;
 
-				object.traverse( function ( node ) {
-					if ( node.isMesh ){
-						console.log(node.name);
-						node.receiveShadow = true;
-						node.castShadow = true;
-						node.material = materialList[node.name];
-					} 
+			if ( globalModel.params.prevState.gltfId !== id ){
+
+				this.createScene(function(){
+
+					globalModel.removeModel();
+					globalModel.allowAutoRotate = false;
+					globalModel.params.prevState.gltfId = id;
+					var url = folder+file;
+					setLoadingbar(0, "setModel", true, "Loading Model");
+
+					globalModel.gltfLoader.load( url, function ( gltf ) {
+
+						globalModel.model = gltf.scene;
+						setLoadingbar("hide");
+
+						globalModel.model.position.set(...modelPos);
+						//globalModel.controls.target.set(...controlsTarget);
+						globalModel.model.scale.set(1,1,1);
+						
+						globalModel.scene.add(globalModel.model);
+						//globalModel.camera.position.set(...cameraPos);
+						//globalModel.lights.spot.target.position.set(...spotLightTarget);
+						//globalModel.controls.update();
+
+						if ( !globalModel.fabric.texture ){
+							globalModel.setDefaultFabricTexture();
+						}
+
+						globalModel.applyMaterials(materialList);
+
+						var modelRot = [0, 0, 0];
+
+						globalModel.animateSceneTo(modelRot, cameraPos, controlsTarget, spotLightTarget);
+
+						globalModel.render();
+
+						globalModel.postCreate();
+
+					}, function ( xhr ) {
+
+						var progress = Math.round(xhr.loaded / xhr.total * 100);
+						setLoadingbar(progress, "setModel", true, "Loading Model");
+						if ( progress == 100 ){
+							setLoadingbar("hide");
+						}
+
+					}, function ( error ) {
+
+						console.log( 'An error happened' );
+						console.error(error);
+						
+					});
+
 				});
 
-				object.position.y = 0;
-				object.position.z = -0.25;
-				object.scale.set(1,1,1);
-				object.castShadow = true;
-				object.receiveShadow = true;
+			} else {
 
-				globalModel.mapWmm = modelMapWmm;
-				globalModel.mapHmm = modelMapHmm;
-
-				globalModel.fabric.xRepeats = globalModel.mapWmm / globalModel.fabric.textureWmm;
-				globalModel.fabric.yRepeats = globalModel.mapHmm / globalModel.fabric.textureHmm;
-
-				globalModel.fabric.texture.repeat.set(globalModel.fabric.xRepeats, globalModel.fabric.yRepeats);
-
-				globalModel.fabric.texture.needsUpdate = true;
-
-				globalModel.scene.add(object);
-				globalModel.modelMeshId = object.id;
-
-				globalModel.camera.position.set(...cameraPos);
-				globalModel.controls.update();
-
+				globalModel.applyMaterials(materialList);
 				globalModel.render();
 
-				globalModel.postCreate();
+			}
 
+		},
+
+		animateSceneTo : function(modelRotation = false, cameraPos = false, controlsTarget = false, spotLightTarget = false){
+
+			globalModel.controls.enabled = false;
+			globalModel.forceAnimate = true;
+
+			var tl = new TimelineLite({
+				delay:0,
+				onComplete: function(){
+					globalModel.controls.enabled = true;
+					globalModel.forceAnimate = false;
+					globalModel.allowAutoRotate = true;
+					debug("Timeline.Status", "complete", "model");
+				},
+				onUpdate: function() {
+					debug("Timeline.Status", "updating", "model");
+					globalModel.controls.update();
+				}
+				
 			});
+
+			if ( modelRotation ){
+
+				tl.add(TweenLite.to(globalModel.model.rotation, 2.5, { 
+					x: modelRotation[0],
+					y: modelRotation[1],
+					z: modelRotation[2],
+					ease : Power4.easeInOut
+				}), 0);
+
+			}
+
+			if ( cameraPos ){
+
+				tl.add(TweenLite.to(globalModel.camera.position, 2.5, { 
+					x: cameraPos[0],
+					y: cameraPos[1],
+					z: cameraPos[2],
+					ease : Power4.easeInOut
+				}), 0);
+
+			}
+
+			if ( controlsTarget ){
+
+				tl.add(TweenLite.to(globalModel.controls.target, 2.5, { 
+					x: controlsTarget[0],
+					y: controlsTarget[1],
+					z: controlsTarget[2],
+					ease : Power4.easeInOut
+				}), 0 );
+
+			}
+
+			if ( spotLightTarget ){
+
+				tl.add(TweenLite.to(globalModel.lights.spot.target.position, 2.5, { 
+					x: spotLightTarget[0],
+					y: spotLightTarget[1],
+					z: spotLightTarget[2],
+					ease : Power4.easeInOut
+				}), 0 );
+
+			}
 
 		},
 
 		removeModel : function(){
 
-			if ( this.modelMeshId ){
-				var myObj = this.scene.getObjectById(this.modelMeshId);
-				for (var i = myObj.children.length - 1; i >= 0; i--) {
-				    this.scene.remove(myObj.children[i]);
-				    myObj.children[i].geometry.dispose();
-					myObj.children[i].material.dispose();
+			if ( this.model ){
+
+				for (var i = this.model.children.length - 1; i >= 0; i--) {
+				    this.scene.remove(this.model.children[i]);
+				    this.model.children[i].geometry.dispose();
+					this.model.children[i].material.dispose();
 				}
-				this.scene.remove(myObj);
-				myObj = undefined;
-				this.modelMeshId = undefined;
+				this.scene.remove(this.model);
+				this.model = undefined;
 			}
 
 		},
 
-		animate : function() {
+		startAnimation : function() {
 
-			if ( this.doAnimate ){
-			   
-				  window.requestAnimationFrame(() => {
-				    const now = performance.now();
-				    while (globalModel.fps.length > 0 && globalModel.fps[0] <= now - 1000) {
-				      globalModel.fps.shift();
-				    }
-				    globalModel.fps.push(now);
-				    debug("FPS", globalModel.fps.length, "model");
-				    globalModel.render();
-				    globalModel.animate();
-
-				  });
+			window.requestAnimationFrame(() => {
+				if (app.tabs.active == "model"){
+					if ( this.mouseAnimate || (this.autoRotate && this.allowAutoRotate) || this.forceAnimate ){
+						const now = performance.now();
+						while (globalModel.fps.length > 0 && globalModel.fps[0] <= now - 1000) {
+							globalModel.fps.shift();
+						}
+						globalModel.fps.push(now);
+						debug("FPS", globalModel.fps.length, "model");
+						if ( globalModel.model && globalModel.autoRotate && globalModel.allowAutoRotate ){
+					    	globalModel.model.rotation.y += globalModel.rotationSpeed * globalModel.rotationDirection;
+					    }
+						globalModel.render();
+					}
+				}
+				globalModel.startAnimation();
+			});
 				
+		},
+
+		renderTexture : function(){
+
+			if ( this.sceneCreated ){
+
+				var textureWpx = globalSimulation.textureWpx;
+				var textureHpx = globalSimulation.textureHpx;
+				var canvasW = Math.min(2048, nearestPow2(textureWpx));
+				var canvasH = Math.min(2048, nearestPow2(textureHpx));
+				g_modelTextureContext = getCtx(61, "temp-canvas", "g_modelTextureCanvas", canvasW, canvasH, false);
+				globalSimulation.renderTo(g_modelTextureContext, textureWpx, textureHpx, globalWeave.weave2D8, "bl", 0, 0, function(){
+					globalModel.applyTexture();
+				});
+
 			}
+
+		},
+
+		applyMaterials : function(materialList){
+
+			var nodei = 0;
+			globalModel.model.traverse( function ( node ) {
+				if ( node.isMesh ){
+
+					node.receiveShadow = true;
+					node.castShadow = true;
+
+					if ( materialList[node.name] == undefined ){
+						node.material = globalModel.materials.white;
+						debug("OBJ Node-"+nodei, node.name+" - Mat Missing", "model");
+					} else {
+						node.material = materialList[node.name];
+						debug("OBJ Node-"+nodei, node.name, "model");
+					}
+					nodei++;
+				} 
+			});
+
+			globalModel.updateFabricTextureDimensions();
+
+		},
+
+		applyTexture : function(){
+
+			this.fabric.needUpdate = false;
+			this.fabric.texture = new THREE.CanvasTexture(g_modelTextureCanvas);
+			this.fabric.texture.wrapS = THREE.RepeatWrapping;
+			this.fabric.texture.wrapT = THREE.RepeatWrapping;
+			this.fabric.texture.encoding = THREE.sRGBEncoding;
+			this.fabric.texture.flipY = false;
+			this.fabric.texture.anisotropy = 16;
+			this.fabric.textureWmm = globalSimulation.textureWmm;
+			this.fabric.textureHmm = globalSimulation.textureHmm;
+			this.fabric.xRepeats = this.modelUVMapWmm / this.fabric.textureWmm;
+			this.fabric.yRepeats = this.modelUVMapHmm / this.fabric.textureHmm;
+			this.fabric.texture.repeat.set(this.fabric.xRepeats, this.fabric.yRepeats);
+			this.fabric.texture.needsUpdate = true;
+			this.materials.fabric.map = this.fabric.texture;
+
+			this.materials.fabric.bumpMap = this.fabric.bump;
+
+
+			this.render();
 
 		},
 
 		render : function(){
 
-			this.renderer.render( this.scene, this.camera );
-			this.controls_data.position = this.camera.position.clone();
-			this.controls_data.rotation = this.camera.rotation.clone();
-			this.controls_data.controlCenter = this.controls.target.clone();
+			if ( this.sceneCreated ){
 
-			var cameraPos = globalModel.camera.position;
-			// var cameraPos = globalModel.camera.getWorldPosition();
+				this.renderer.render( this.scene, this.camera );
 
-			debug("Camera x", Math.round(cameraPos.x * 1000)/1000, "model");
-			debug("Camera y", Math.round(cameraPos.y * 1000)/1000, "model");
-			debug("Camera z", Math.round(cameraPos.z * 1000)/1000, "model");
+				var cameraPos = this.camera.position;
+
+				// var cameraPos = globalModel.camera.getWorldPosition();
+
+				debug("Camera x", Math.round(cameraPos.x * 1000)/1000, "model");
+				debug("Camera y", Math.round(cameraPos.y * 1000)/1000, "model");
+				debug("Camera z", Math.round(cameraPos.z * 1000)/1000, "model");
+
+				if ( this.model ){
+					var modelRot = this.model.rotation;
+					debug("Model Rotation x", Math.round(modelRot.x * 1000)/1000, "model");
+					debug("Model Rotation y", Math.round(modelRot.y * 1000)/1000, "model");
+					debug("Model Rotation z", Math.round(modelRot.z * 1000)/1000, "model");
+				}
+
+				debug("Azimuthal", Math.round(this.controls.getAzimuthalAngle() * 1000)/1000, "model");
+				debug("Polar", Math.round(this.controls.getPolarAngle() * 1000)/1000, "model");
+
+				var objectPos = new THREE.Vector3( 0, 0, 0 );
+				var distance = cameraPos.distanceTo( objectPos );  
+
+				debug("Distance", Math.round(distance * 1000)/1000, "model");
+
+			}
 
 		},
 
@@ -8777,60 +9323,94 @@ $(document).ready ( function(){
 			debug("Points", this.renderer.info.render.points, "model");
 			debug("Lines", this.renderer.info.render.lines, "model");
 
-		},
-
-		setbg : function(id){
-
-			$("#model-container").css({
-				"background-image":  "model/bgs/01.jpg"
-			});
 		}
 
 	};
 
 	$("#model-container").on("mouseover", function(evt) {
-		if ( globalModel.sceneCreated ){
-			globalModel.doAnimate = true;
-	    	globalModel.animate();
-		}
+
+		globalModel.mouseAnimate = true;
+
 	});
 
 	$("#model-container").on("mouseout", function(evt) {
-		globalModel.doAnimate = false;
+
+		globalModel.mouseAnimate = false;
+
 	});
 
 	$("#model-container").on("mouseup", function(evt) {
-		globalMouse.reset();
+		globalModel.allowAutoRotate = true;
+		app.mouse.reset();
 	});
 
 	$("#model-container").on("mousedown", function(evt) {
-		globalMouse.set("model", 0, 0, true, evt.which);
+
+		globalModel.allowAutoRotate = false;
+		app.mouse.set("model", 0, 0, true, evt.which);
+	
 	});
+
+	function addMesh(shape, size, pos, mat, col, target){
+
+		var mesh, geometry, material;
+
+		if ( shape == "cube" ){
+			geometry = new THREE.BoxGeometry( size[0], size[1], size[2] );
+		}
+
+		if ( mat == "phong" ){
+			material  = new THREE.MeshPhongMaterial( {
+		        color: col,
+		        side: THREE.DoubleSide,
+		        shininess: 1
+		    });
+		} else if ( mat == "standard" ){
+			material = new THREE.MeshStandardMaterial( {
+		        color: col,
+		        side: THREE.DoubleSide,
+		        roughness: 1,
+		        metalness: 0,
+		    });
+		}
+
+		mesh = new THREE.Mesh( geometry, material );
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.position.set(pos[0], pos[1], pos[2])
+		target.add( mesh );
+
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Three Object & Methods
 	// ----------------------------------------------------------------------------------
-	function yarnRadius(yarnNumber, yarnNumberSystem = "nec"){
-		var yarnRadius = 0;
-		
+	function getYarnRadius(yarnNumber, yarnNumberSystem = "nec", yarnEccentricity = 0){
+		var yarnRadius = 0, yarnRadiusX, yarnRadiusY;
 		// in mm
 		if ( yarnNumberSystem == "nec" ){
 			yarnRadius = Math.sqrt(1/3.192/yarnNumber);
 		}
-		return yarnRadius;
+		if ( yarnEccentricity ){
+			yarnRadiusY = Math.pow(Math.pow(yarnRadius,4)*(1-Math.pow(yarnEccentricity,2)),1/4);
+			yarnRadiusX = Math.pow(yarnRadius,2)/yarnRadiusY;
+		} else {
+			yarnRadiusY = yarnRadius;
+			yarnRadiusX = yarnRadius;
+		}
+		return [yarnRadius, yarnRadiusX, yarnRadiusY];
 	}
 
-	function yarnDia(yarnNumber, yarnNumberSystem = "nec", returnUnits = "mm", screenDPI = 110){
-		var yarnDia = yarnRadius(yarnNumber, yarnNumberSystem) * 2;
+	function getYarnDia(yarnNumber, yarnNumberSystem = "nec", returnUnits = "mm", screenDPI = 110){
+		var yarnDia;
+		var yarnRadius = getYarnRadius(yarnNumber, yarnNumberSystem)[0];
 		if ( returnUnits == "px" ){
-			yarnDia = yarnDia / 25.4 * screenDPI;
+			yarnDia = yarnRadius * 2 / 25.4 * screenDPI;
 		}
 		return yarnDia;
 	}
 
-	var mesh, renderer, scene, camera, controls, thread, sprite, numberTexture, spriteMaterial;
-	var threadList = [];
-	var fabricObjectIds = [];
+	var mesh, thread, sprite, numberTexture, spriteMaterial;
 
 	var line, lineGeometry, lineMaterial;
 	
@@ -8838,12 +9418,45 @@ $(document).ready ( function(){
 
 	var raycaster = new THREE.Raycaster();
 
-	var raycasterOriginSprite = new THREE.Raycaster(camera);
-
 	var globalThree = {
+
+		ObjName: "three",
+
+		fps : [],
+
+		renderer : undefined,
+		scene : undefined,
+		camera : undefined,
+		controls : undefined,
+		model : undefined,
+		lights : {},
+
+		fabric: undefined,
+		threads : [],
+		childIds : [],
+
+		composer: undefined,
+		outlinePass: undefined,
+		effectFXAA: undefined,
+		renderPass: undefined,
+		outlinePassSelected: [],
 
 		sceneCreated : false,
 		animate : false,
+
+		modelParams: {
+			initRotation: new THREE.Vector3( 0, 0, 0 )
+		},
+
+		currentPreset: 0,
+		rotationPresets: [[0,0,0], [0,0,-180], [0,0,0], [-90, 0, 0], [-90, 90, 0], [-30,45,0], [-30,0,0],],
+
+		sceneParams: {
+			initCameraPos: new THREE.Vector3( 0, 9, 0 ),
+			cameraPos: new THREE.Vector3( 0, 9, 0 ),
+			initControlsTarget: new THREE.Vector3( 0, 0, 0 ),
+			controlsTarget: new THREE.Vector3( 0, 0, 0 ),
+		},
 
 		frameW : 0,
 		frameH : 0,
@@ -8855,74 +9468,1189 @@ $(document).ready ( function(){
 		warpThreads : 12,
 		weftThreads : 12,
 
+		setup: {
+			showAxes: false,
+			bgColor: "white"
+		},
+
+		lights:{
+			ambient: undefined,
+			point: undefined,
+			spot: undefined
+		},
+
+		structure: {
+
+		},
+
+		frustumSize : 7,
+
 		weave2D8 : [],
 		
 		xDist : 0, // End to End Distance
 		yDist : 0,
 		zDist : 0, // Pick to Pick Distance
-		warpNumber: 0,
-		weftNumber : 0,
-		warpDensity : 0,
-		weftDensity : 0,
+
 		warpRadius : 0,
 		warpRadiusX : 0,
 		warpRadiusY : 0,
 		weftRadius : 0,
 		weftRadiusX : 0,
 		weftRadiusY : 0,
-		warpEccentricity : 0,
-		weftEccentricity : 0,
 
 		maxFabricThickness : 0,
-		yarnProfile : "circular",
 
-		radiusSegments : 0,
-		nodePathSegments : 0,
 		warpPathSegments : 0,
 		weftPathSegments : 0,
 
+		mouseOverOutline : false,
 		mouseOverHighlight : false,
-		showPathNodes: false,
-		showWireframe: false,
 
 		defaultOpacity : 0,
 		defaultDepthTest : true,
 
+		axes: undefined,
+
+		rotationAxisLine: undefined,
+
+		mouseAnimate : false,
+		forceAnimate : false,
+
+		resetPosition: function(callback = false){
+
+			globalThree.currentPreset = 0;
+			globalThree.animateSceneTo(globalThree.modelParams.initRotation, globalThree.sceneParams.initCameraPos, globalThree.sceneParams.initControlsTarget, callback);
+			
+		},
+
+		changeView: function(index = false){
+
+			if ( !index ){
+				index = loopNumber(this.currentPreset+1, this.rotationPresets.length);
+			}
+			this.currentPreset = index;
+			var pos = this.rotationPresets[index];
+			var modelRotation = new THREE.Vector3(toRadians(pos[0]), toRadians(pos[1]), toRadians(pos[2]));
+			globalThree.animateSceneTo(modelRotation);
+
+		},
+
+		setInterface : function(instanceId = 0, render = true){
+
+			console.log(["globalThree.setInterface", instanceId]);
+			//logTime("globalThree.setInterface("+instanceId+")");
+
+			var threeBoxL = 0;
+			var threeBoxB = 0;
+
+			var threeBoxW = this.frameW - threeBoxL;
+			var threeBoxH = this.frameH - threeBoxB;
+
+			$("#three-container").css({
+				"width":  threeBoxW,
+				"height": threeBoxH,
+				"left": threeBoxL,
+				"bottom": threeBoxB,
+			});
+
+			globalPositions.update("three");
+
+			if ( app.tabs.active == "three" && render ){
+				globalThree.createScene(function(){
+					if ( globalThree.camera.isPerspectiveCamera ){
+				        globalThree.camera.aspect = globalThree.frameW / globalThree.frameH;
+				    } else {
+
+				    	var aspect = globalThree.frameW / globalThree.frameH;
+				    	var frustumSize = globalThree.frustumSize;
+
+				        globalThree.camera.left = frustumSize * aspect  / - 2;
+				        globalThree.camera.right = frustumSize * aspect  / 2;
+				        globalThree.camera.top = frustumSize / 2;
+				        globalThree.camera.bottom = frustumSize / - 2;
+				    }
+					globalThree.renderer.setSize(globalThree.frameW, globalThree.frameH);
+					globalThree.camera.updateProjectionMatrix();
+					globalThree.composer.setSize( globalThree.frameW, globalThree.frameH );
+					globalThree.render();
+				});
+			}
+
+			//logTimeEnd("globalThree.setInterface("+instanceId+")");
+
+		},
+
+		onTabSelect : function(){
+
+			globalThree.setInterface(3);
+			globalStatusbar.set("threeIntersection", 0, 0);
+
+		},
+
+		params : {
+
+			structure: [
+				["select", "Mode", "threeMode", "threeMode", "3/5", [["bicount", "Bi-Count"], ["multicount", "Multi-Count"]]],
+				["select", "Profile", "threeYarnProfile", "yarnProfile", "2/3", [["circular", "Circular"], ["elliptical", "Elliptical"], ["racetrack", "Racetrack"]]],
+				["number", "Warp Number", "threeWarpNumber", "warpNumber", "2/5", 20, 1, 120],
+				["number", "Weft Number", "threeWeftNumber", "weftNumber", "2/5", 20, 1, 120],
+				["number", "Warp Density", "threeWarpDensity", "warpDensity", "2/5", 55, 1, 360],
+				["number", "Weft Density", "threeWeftDensity", "weftDensity", "2/5", 55, 1, 360],
+				["number", "Warp Eccentricity", "threeWarpEccentricity", "warpEccentricity", "2/5", 0.85, 0, 0.95, 0.05, 2],
+				["number", "Weft Eccentricity", "threeWeftEccentricity", "weftEccentricity", "2/5", 0.65, 0, 0.95, 0.05, 2],
+				["number", "Radius Segments", "threeRadiusSegments", "radiusSegments", "2/5", 8, 1, 36],
+				["number", "Node Path Segments", "threeNodePathSegments", "nodePathSegments", "2/5", 4, 1, 36],
+				["number", "Warp Start", "threeWarpStart", "warpStart", "2/5", 1],
+				["number", "Weft Start", "threeWeftStart", "weftStart", "2/5", 1],
+				["number", "Warp Threads", "threeShowWarpThreads", "warpThreads", "2/5", 12, 2, 120],
+				["number", "Weft Threads", "threeShowWeftThreads", "weftThreads", "2/5", 12, 2, 120],
+				["check", "Shw Path Nodes", "threeShowPathNodes", "showPathNodes", "2/5", 0],
+				["check", "Show Wireframe", "threeShowWireframe", "showWireframe", "2/5", 0],
+				["check", "Smooth Shading", "threeSmoothShading", "smoothShading", "2/5", 1],
+				["check", "Cast Shadow", "threeCastShadow", "castShadow", "2/5", 1],
+				["control", "Save"]
+			],
+
+			scene: [
+				
+				["select", "Projection", "threeProjection", "projection", "3/5", [["perspective", "Perspective"], ["orthographic", "Orthographic"]]],
+				["select", "Background", "threeBGColor", "bgColor", "1/2", [["white", "White"], ["grey", "Grey"], ["black", "Black"], ["transparent", "Transparent"]]],
+				["check", "Show Axes", "threeShowAxes", "showAxes", "2/5", 0],
+				["control", "Apply"]
+
+			],
+				
+		},
+
+		createScene : function(callback = false){
+
+			if ( !this.sceneCreated ){
+
+				setLoadingbar(0, "threecreatescene", true, "Creating Scene");
+
+				$.doTimeout("createThreeScene", 100, function(){
+
+					globalThree.renderer = new THREE.WebGLRenderer({
+						antialias: true,
+						alpha: true,
+						preserveDrawingBuffer: true 
+					});
+
+					globalThree.renderer.setPixelRatio(g_pixelRatio);
+				 	globalThree.renderer.setSize(globalThree.frameW, globalThree.frameH);
+
+				 	globalThree.renderer.shadowMap.enabled = true;
+					globalThree.renderer.shadowMapSoft = true;
+					globalThree.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+					globalThree.renderer.shadowMap.bias = 0.0001;
+
+					// globalThree.renderer.gammaInput = true;
+					// globalThree.renderer.gammaOutput = true;
+		   			// globalThree.renderer.gammaFactor = 1.1;
+
+		    		globalThree.renderer.physicallyCorrectLights = true;
+
+				    var container = document.getElementById("three-container");
+				    container.innerHTML = "";
+				    container.appendChild(globalThree.renderer.domElement);
+				    globalThree.renderer.domElement.id = "g_threeCanvas";
+
+				    addStyleClassToElement("g_threeCanvas", "graph-canvas");
+
+				    // scene
+				    globalThree.scene = new THREE.Scene();
+				    
+				    // cameras
+				    var aspect = globalThree.frameW / globalThree.frameH;
+				    var frustumSize = globalThree.frustumSize;
+				   	globalThree.perspectiveCamera = new THREE.PerspectiveCamera(45, aspect, 1, 1000);
+				   	globalThree.orthographicCamera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, -200, 500 );
+   					
+				   	if ( globalThree.params.projection == "perspective" ){
+				   		globalThree.camera = globalThree.perspectiveCamera;
+				   	} else if ( globalThree.params.projection == "orthographic" ){
+				   		globalThree.camera = globalThree.orthographicCamera;
+				   	}
+
+        			globalThree.scene.add( globalThree.camera );
+
+				    // controls
+				    globalThree.controls = new THREE.OrbitControls( globalThree.camera, globalThree.renderer.domElement );
+				    globalThree.controls.minDistance = 1;
+				    globalThree.controls.maxDistance = 100;
+				    //globalModel.controls.minPolarAngle = 0;
+				    //globalModel.controls.maxPolarAngle = Math.PI/1.8;
+				    
+				    // globalThree.scene.add(new THREE.CameraHelper(globalThree.camera));
+					//globalModel.scene.add( new THREE.SpotLightHelper( globalModel.lights.spot ) );
+
+					// ambient
+        			globalThree.scene.add( new THREE.AmbientLight( 0xffffff, 1 ) );
+
+        			// light
+			        var light = new THREE.PointLight( 0xffffff, 0.5 );
+			        light.position.set( 0, 6, 0 );
+			        //globalThree.camera.add( light );
+
+			        globalThree.lights.ambient = new THREE.AmbientLight( 0xffffff, 0.75 );
+					//globalThree.scene.add( globalThree.lights.ambient );
+
+			        // SpotLight( color, intensity, distance, angle, penumbra, decay )
+			        globalThree.lights.spot = new THREE.SpotLight(0xffffff, 1.5, 100, 1, 1, 0);
+					globalThree.lights.spot.position.set( -10, 10, -10 );
+
+					globalThree.lights.spot.castShadow = true;
+					globalThree.lights.spot.target = new THREE.Object3D( 0, 0, 0 );
+					globalThree.lights.spot.target.position.set(0, 0, 0);
+				    globalThree.lights.spot.shadow.bias = -0.0001;
+				    globalThree.lights.spot.radius = 10;
+				    globalThree.scene.add( globalThree.lights.spot.target );
+					globalThree.lights.spot.shadow.mapSize.width = 512;
+					globalThree.lights.spot.shadow.mapSize.height = 512;
+					globalThree.lights.spot.shadow.camera.near = 0.5;
+					globalThree.lights.spot.shadow.camera.far = 85;
+					globalThree.scene.add( globalThree.lights.spot );
+
+					debugInput("number", "globalThree.lights.spot.intensity", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.position.x", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.position.y", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.position.z", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.radius", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.shadow.bias", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.shadow.camera.near", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.shadow.camera.far", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.penumbra", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.decay", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.angle", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.lights.spot.distance", false, "live", function(val){
+						globalThree.render();
+					});
+
+
+
+
+				    //globalThree.camera.add( globalThree.lights.spot );
+
+					globalThree.camera.position.copy(globalThree.sceneParams.initCameraPos);
+					globalThree.controls.target.copy(globalThree.sceneParams.initControlsTarget);
+					globalThree.controls.update();
+
+					globalThree.fabric = new THREE.Group();
+				    globalThree.scene.add(globalThree.fabric);
+				    var initRotation = globalThree.modelParams.initRotation;
+				    globalThree.fabric.rotation.set(initRotation.x, initRotation.y, initRotation.z);
+
+					// Custom Axes
+					globalThree.axes = new THREE.Group();
+					var xArrow = new THREE.ArrowHelper( new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1, 0xFF0000 );
+					var yArrow = new THREE.ArrowHelper( new THREE.Vector3( 0,1,1), new THREE.Vector3(0,0,0), 1, 0x00FF00 );
+					var zArrow = new THREE.ArrowHelper( new THREE.Vector3( 0,0,-1), new THREE.Vector3(0,0,0), 1, 0x0000FF );
+					xArrow.name = "axes-arrow-x";
+					yArrow.name = "axes-arrow-y";
+					zArrow.name = "axes-arrow-z";
+					globalThree.axes.add( xArrow );
+					globalThree.axes.add( yArrow );
+					globalThree.axes.add( zArrow );
+					globalThree.axes.name = "axes";
+					globalThree.fabric.add(globalThree.axes);
+
+					globalThree.setBgColor(globalThree.params.bgColor);
+					globalThree.axes.visible = globalThree.params.showAxes;
+
+					var line_material = new THREE.LineBasicMaterial( { color: 0x999999 } );
+					var line_geometry = new THREE.Geometry();
+					line_geometry.vertices.push(new THREE.Vector3( 0, -10, 0) );
+					line_geometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
+					line_geometry.vertices.push(new THREE.Vector3( 0, 10, 0) );
+					globalThree.rotationAxisLine = new THREE.Line( line_geometry, line_material );
+					globalThree.scene.add( globalThree.rotationAxisLine );
+
+					globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
+
+					globalThree.composerSetup();
+
+					globalThree.render();
+					globalThree.startAnimation();
+					globalThree.sceneCreated = true;
+
+					setLoadingbar("hide");
+
+					if (typeof callback === "function") {
+				    	callback();
+				    }
+
+				});
+
+			} else {
+
+				if (typeof callback === "function") {
+			    	callback();
+			    }
+
+			}
+
+		},
+
+		composerSetup: function(){
+			globalThree.composer = new THREE.EffectComposer( globalThree.renderer );
+			globalThree.renderPass = new THREE.RenderPass( globalThree.scene, globalThree.camera );
+			globalThree.composer.addPass( globalThree.renderPass );
+			globalThree.outlinePass = new THREE.OutlinePass( new THREE.Vector2(globalThree.frameW, globalThree.frameH), globalThree.scene, globalThree.camera );
+			
+			globalThree.outlinePass.edgeStrength = Number(10);
+			globalThree.outlinePass.edgeGlow = Number(0);
+			globalThree.outlinePass.edgeThickness = Number(1);
+			globalThree.outlinePass.pulsePeriod = Number(0);
+			globalThree.outlinePass.visibleEdgeColor.set("#ffffff");
+			globalThree.outlinePass.hiddenEdgeColor.set("#222222");
+
+			globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
+
+			globalThree.effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+			globalThree.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / globalThree.frameW, 1 / globalThree.frameH );
+			globalThree.composer.addPass( globalThree.effectFXAA );
+			globalThree.composer.addPass( globalThree.outlinePass );
+		},
+
+		setBgColor: function(color){
+			if ( color == "transparent" ){
+				globalThree.renderer.setClearColor(0x000000, 0);
+			} else if ( color == "black" ){
+				globalThree.renderer.setClearColor(0x000000, 1);
+			}  else if ( color == "white" ){
+				globalThree.renderer.setClearColor(0xFFFFFF, 1);
+			}  else if ( color == "grey" ){
+				globalThree.renderer.setClearColor(0x7F7F7F, 1);
+			}
+		},
+
+		swithCameraTo: function(projection){
+
+			var currentCamera = this.camera.isPerspectiveCamera ? "perspective" : this.camera.isOrthographicCamera ? "orthographic" : "unknown";
+			if ( projection !== currentCamera ){
+				
+				var cameraPos = this.camera.position.clone();
+				var cameraRotation = this.camera.rotation.clone();
+
+				var cameraMatrix =  this.camera.matrix.clone();
+				var controlsTarget = this.controls.target.clone();
+				var controlsPos = this.controls.position0.clone();
+				var quaternion = this.camera.quaternion.clone();
+
+				this.camera = projection == "orthographic" ? this.orthographicCamera : this.perspectiveCamera;
+
+				globalThree.composerSetup();
+				
+				this.controls.object = this.camera;
+				this.controls.target.copy(controlsTarget);
+
+				this.camera.position.copy(cameraPos);
+				this.camera.rotation.copy(cameraRotation);
+
+				this.camera.matrix.copy(cameraMatrix);
+				this.camera.quaternion.copy(quaternion);
+				this.camera.updateProjectionMatrix();
+				this.controls.update();
+				this.render();
+
+			}
+
+		},
+
+		disposeHierarchy: function(node, callback){
+		    for (var i = node.children.length - 1; i >= 0; i--){
+		        var child = node.children[i];
+		        this.disposeHierarchy (child, callback);
+		        callback (child);
+		    }
+		},
+
+		disposeNode: function(parentObject){
+			parentObject.traverse(function (node) {
+		        if (node instanceof THREE.Mesh) {
+		            if (node.geometry) {
+		                node.geometry.dispose();
+		            }
+		            if (node.material) {
+		                var materialArray;
+		                if (node.material instanceof THREE.MeshFaceMaterial || node.material instanceof THREE.MultiMaterial) {
+		                    materialArray = node.material.materials;
+		                }
+		                else if(node.material instanceof Array) {
+		                    materialArray = node.material;
+		                }
+		                if(materialArray) {
+		                    materialArray.forEach(function (mtrl, idx) {
+		                        if (mtrl.map) mtrl.map.dispose();
+		                        if (mtrl.lightMap) mtrl.lightMap.dispose();
+		                        if (mtrl.bumpMap) mtrl.bumpMap.dispose();
+		                        if (mtrl.normalMap) mtrl.normalMap.dispose();
+		                        if (mtrl.specularMap) mtrl.specularMap.dispose();
+		                        if (mtrl.envMap) mtrl.envMap.dispose();
+		                        mtrl.dispose();
+		                    });
+		                }
+		                else {
+		                    if (node.material.map) node.material.map.dispose();
+		                    if (node.material.lightMap) node.material.lightMap.dispose();
+		                    if (node.material.bumpMap) node.material.bumpMap.dispose();
+		                    if (node.material.normalMap) node.material.normalMap.dispose();
+		                    if (node.material.specularMap) node.material.specularMap.dispose();
+		                    if (node.material.envMap) node.material.envMap.dispose();
+		                    node.material.dispose();
+		                }
+		            }
+		        }
+		    });
+		},
+
+		disposeScene: function(){
+
+			this.disposeHierarchy(this.scene, this.disposeNode);
+			this.renderer.dispose();
+			this.renderer.forceContextLoss(); 
+			//this.renderer.context = undefined;
+			this.renderer.domElement = undefined;
+			this.sceneCreated = false;
+
+		},
+
+		buildFabric: function() {
+
+			globalThree.createScene(function(){
+
+				globalThree.clearFabric();
+
+				globalThree.axes.visible = globalThree.params.showAxes;
+				globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
+
+				var threeMode = globalThree.params.threeMode;
+				var yarnProfile = globalThree.params.yarnProfile;
+				var warpNumber = globalThree.params.warpNumber;
+				var weftNumber = globalThree.params.weftNumber;
+				var warpDensity = globalThree.params.warpDensity;
+				var weftDensity = globalThree.params.weftDensity;
+				var warpEccentricity = globalThree.params.warpEccentricity;
+				var weftEccentricity = globalThree.params.weftEccentricity;
+				var radiusSegments = globalThree.params.radiusSegments;
+				var nodePathSegments = globalThree.params.nodePathSegments;
+				var warpStart = globalThree.params.warpStart;
+				var weftStart = globalThree.params.weftStart;
+				var warpThreads = globalThree.params.warpThreads;
+				var weftThreads = globalThree.params.weftThreads;
+				var showPathNodes = globalThree.params.showPathNodes;
+				var showWireframe = globalThree.params.showWireframe;
+
+				if ( globalWeave.weave2D8 !== undefined && globalWeave.weave2D8.length && globalWeave.weave2D8[0] !== undefined && globalWeave.weave2D8[0].length ){
+
+					// addMesh("cube", [1,2,3], [1,2,3], "phong", 0xff0000, globalThree.scene);
+					// addMesh("cube", [3,2,1], [3,2,1], "standard", 0x00ff00, globalThree.scene);
+
+					var weave2D8 = globalWeave.weave2D8.tileFill(warpThreads, weftThreads, 1-warpStart, 1-weftStart);
+					globalThree.weave2D8 = weave2D8;
+
+					globalThree.defaultOpacity = globalThree.params.showPathNodes ? 0.25 : 1;
+					globalThree.defaultDepthTest = globalThree.params.showPathNodes ? false : true;
+
+					var warpPathSegments = (globalThree.params.weftThreads + 1) * nodePathSegments;
+					var weftPathSegments = (globalThree.params.warpThreads + 1) * nodePathSegments;
+					globalThree.params.warpPathSegments = warpPathSegments;
+				    globalThree.params.weftPathSegments = weftPathSegments;
+
+				     // End to End Distance
+				    var xDist = 25.4/warpDensity;
+				    var zDist = 25.4/weftDensity;
+					globalThree.xDist = xDist;
+					globalThree.zDist = zDist;
+
+					// Structure Dimensions
+					var structureWx = xDist * (warpThreads-1);
+					var structureHz = zDist * (weftThreads-1);
+
+					globalThree.structureWx = structureWx;
+					globalThree.structureHz = structureHz;
+
+					globalThree.axes.position.set(-structureWx/2 - xDist, 0, structureHz/2 + zDist);
+
+					// Offset model to center
+				    var xOffset = xDist * (warpThreads-1) / 2;
+					var zOffset = zDist * (weftThreads-1) / 2;
+
+					globalThree.xOffset = xOffset;
+					globalThree.zOffset = zOffset;
+
+					var warpRadius = getYarnRadius(warpNumber, "nec")[0];
+					globalThree.warpRadius = warpRadius;
+
+					var weftRadius = getYarnRadius(weftNumber, "nec")[0];
+					globalThree.weftRadius = weftRadius;
+
+					var warpRadiusY = warpRadius;
+					var warpRadiusX = warpRadius;
+					var weftRadiusY = weftRadius;
+					var weftRadiusX = weftRadius;
+					var maxFabricThickness = (warpRadius + weftRadius) * 2;
+
+					if ( yarnProfile == "elliptical" ){
+
+						warpRadiusY = Math.pow(Math.pow(warpRadius,4)*(1-Math.pow(warpEccentricity,2)),1/4);
+						warpRadiusX = Math.pow(warpRadius,2)/warpRadiusY;
+						weftRadiusY = Math.pow(Math.pow(weftRadius,4)*(1-Math.pow(weftEccentricity,2)),1/4);
+						weftRadiusX = Math.pow(weftRadius,2)/weftRadiusY;
+						maxFabricThickness = (warpRadiusY + weftRadiusY) * 2;
+
+					}
+
+					globalThree.warpRadiusX = warpRadiusX;
+					globalThree.warpRadiusY = warpRadiusY;
+					globalThree.weftRadiusX = weftRadiusX;
+					globalThree.weftRadiusY = weftRadiusY;
+					globalThree.maxFabricThickness = maxFabricThickness;
+
+				    var endArray, pickArray = [], colorCode, colorHex;
+
+					// updating scene:
+					var axesOriginX = -(structureWx/2 + xDist + Math.min(xDist, zDist)/2);
+					var axesOriginY = 0;
+					var axesOriginZ = structureHz/2 + zDist + Math.min(xDist, zDist)/2;
+					globalThree.axes.position.set(axesOriginX, axesOriginY, axesOriginZ);
+					globalThree.render();
+
+					debugInput("number", "globalThree.axes.position.x", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.axes.position.y", false, "live", function(val){
+						globalThree.render();
+					});
+
+					debugInput("number", "globalThree.axes.position.z", false, "live", function(val){
+						globalThree.render();
+					});
+					
+				    var percentagePerThread = 100/(globalThree.params.warpThreads + globalThree.params.weftThreads);
+				    var cycle = 0;
+				    var startX = 0;
+				    var lastX = globalThree.params.warpThreads - 1;
+				    var x = startX;
+
+				    var startY = 0;
+				    var lastY = globalThree.params.weftThreads - 1;
+				    var y = startY;
+
+				    globalThree.threads = [];
+
+				    var percent;
+
+				    setLoadingbar(0, "warpdraw", true, "Rendering Warp Threads");
+				    $.doTimeout("warpdraw", 1, function(){
+						cycle++;
+						percent = Math.round(cycle * percentagePerThread);
+						setLoadingbar(percent);
+						globalThree.add3DThread("warp", x);
+						x++;
+						globalThree.render();
+						if ( x == lastX ){
+							setLoadingbar("hide");
+							setLoadingbar(percent, "weftdraw", true, "Rendering Weft Threads");
+						}
+						if ( x > lastX ){
+							$.doTimeout("weftdraw", 1, function(){
+								cycle++;
+								percent = Math.round(cycle * percentagePerThread);
+								setLoadingbar(percent);
+								globalThree.add3DThread("weft", y);
+								y++;
+								globalThree.render();
+								if ( y > lastY ){
+									setLoadingbar("hide");
+									globalThree.sceneCreated = true;
+									afterBuildFabric();
+									return false;
+								}
+								return true;
+							});
+							return false;
+						}
+						return true;
+					});
+
+				} else {
+
+					console.log("buildFabric Error : Invalid Weave2D8");
+
+				}
+
+			});
+
+		},
+
+		add3DThread: function (threadSet, threeIndex){
+
+			// console.log("add3DThread");
+
+			var sx, sy, sz, waveLength, waveAmplitude, pathSegments, intersectH, threadArray, colorCode, colorHex, orientation, yarnRadiusX, yarnRadiusY;
+			var warpPathSegments, weftPathSegments;
+			var weaveIndex, patternIndex;
+			var radius, xRadius, yRadius;
+
+			var xDist = globalThree.xDist;
+			var zDist = globalThree.zDist;
+			var xOffset = globalThree.structureWx/2;
+			var zOffset = globalThree.structureHz/2;
+			var hft = globalThree.maxFabricThickness/2; // half fabric thickness
+			
+			var threeMode = globalThree.params.threeMode;
+			var yarnProfile = globalThree.params.yarnProfile;
+			var radiusSegments = globalThree.params.radiusSegments;
+			
+			var WpRx = globalThree.warpRadiusX;
+			var WpRy = globalThree.warpRadiusY;
+			var WfRx = globalThree.weftRadiusX;
+			var WfRy = globalThree.weftRadiusY;
+
+			var rigidityVar = (WfRy*Math.sqrt(WfRy*WfRx)*zDist*zDist)/(WpRy*Math.sqrt(WpRy*WpRx)*zDist*zDist);
+			var WpWa = hft * rigidityVar / (1+rigidityVar); // Warp Wave Amplitude
+			var WfWa = hft - WpWa; // Weft Wave Amplitude
+
+			if ( threadSet == "warp" ){
+
+				sx = threeIndex * xDist - xOffset;
+				sy = 0;
+				sz = zOffset;
+
+				waveLength = zDist * 2;
+				waveAmplitude = WpWa;
+
+				xRadius = WpRx;
+				yRadius = WpRy;
+				pathSegments = globalThree.params.warpPathSegments;
+
+				weaveIndex = loopNumber(threeIndex + globalThree.params.warpStart - 1, globalWeave.ends);
+				patternIndex = (threeIndex+globalThree.params.warpStart-1) % globalPattern.warp.length;
+
+				var yarnNumber = globalThree.params.warpNumber;
+				var yarnNumberSystem = globalThree.params.warpNumberSystem;
+				var yarnEccentricity = globalThree.params.warpEccentricity;
+
+				orientation = "z";
+
+			} else if ( threadSet == "weft" ){
+
+				sx = -xOffset;
+				sy = 0;
+				sz = -threeIndex * zDist + zOffset;
+
+				waveLength = xDist * 2;
+				waveAmplitude = WfWa;
+
+				xRadius = WfRx;
+				yRadius = WfRy;
+				pathSegments = globalThree.params.weftPathSegments;
+
+				weaveIndex = loopNumber(threeIndex + globalThree.params.weftStart - 1, globalWeave.picks);
+				patternIndex = (threeIndex+globalThree.params.weftStart-1) % globalPattern.weft.length;
+
+				var yarnNumber = globalThree.params.weftNumber;
+				var yarnNumberSystem = globalThree.params.weftNumberSystem;
+				var yarnEccentricity = globalThree.params.weftEccentricity;
+
+				orientation = "x";
+
+			}
+
+			var userData = {
+
+				type : "tube",
+		    	threadSet : threadSet,
+		    	weavei : weaveIndex,
+		    	threei : threeIndex,
+		    	customId : threadSet+"-"+threeIndex
+
+			};
+
+			threadArray = getThreadArray(globalThree.weave2D8, threadSet, threeIndex);
+			colorCode = globalPattern[threadSet][patternIndex] || false;
+			colorHex = colorCode ? app.palette.colors[colorCode].hex : (threadSet == "warp" ? "#0000FF" : "#FFFFFF");
+
+			if ( threeMode == "multicount" && yarnProfile == "circular" ){
+
+				xRadius = app.palette.colors[colorCode].radius[0];
+				yRadius = app.palette.colors[colorCode].radius[0];
+
+			} else if ( threeMode == "multicount" && yarnProfile == "elliptical" ){
+
+				xRadius = app.palette.colors[colorCode].radius[1];
+				yRadius = app.palette.colors[colorCode].radius[2];
+
+			} else if ( threeMode == "bicount" && yarnProfile == "circular" ){
+
+				radius = getYarnRadius(yarnNumber, yarnNumberSystem);
+				xRadius = radius[0];
+				yRadius = radius[0];
+
+			} else if ( threeMode == "bicount" && yarnProfile == "elliptical" ){
+
+				radius = getYarnRadius(yarnNumber, yarnNumberSystem, yarnEccentricity);
+				xRadius = radius[1];
+				yRadius = radius[2];
+
+			}
+
+			globalThree.add3DWave(sx, sy, sz, xRadius, yRadius, waveLength, waveAmplitude, threadArray, orientation, colorHex, userData, pathSegments, radiusSegments, yarnProfile);
+
+		},
+
+		add3DWave: function(sx, sy, sz, xTubeRadius, yTubeRadius, waveLength, waveAmplitude, arr, orientation, hex, userData, pathSegments, radiusSegments, shapeProfile){
+
+			//console.log(["add3DWave", userData.threadSet]);
+
+			var segmentY;
+
+		    // var wa = waveAmplitude;
+
+		    var wa = yTubeRadius;
+
+		    var wl = -waveLength;
+		    var bca = wl/4; //bezierControlAmount
+
+		    // var atan = Math.atan2(wa*2, wl/2) / Math.PI * 2;
+		    // var bca =  (atan * wl + atan * wa) / 1.5;
+
+		    var state, prevState, n, nx, ny, nz, curvePoints, material, geometry;
+
+		    var threadSet = userData.threadSet;
+		    var isWarp = threadSet == "warp";
+		    var isWeft = threadSet == "weft";
+		    var pointCount = globalThree.params.nodePathSegments;
+
+		    var points = [];
+
+		    if ( isWarp ){
+
+		    	for (n = 0; n < arr.length ; n++) {
+		            state = arr[n];
+
+		            if ( n ){
+
+		            	nz = sz + (n-1) * wl/2;
+
+		            	if (n == 1){
+		            		ny = prevState ? wa : - wa;
+		            		curvePoints = warpSegmentPoints(sx, ny, sz-wl/2 , wl/2, 0, bca, pointCount, prevState);
+		            		points = points.concat(curvePoints);
+		            	}
+		                
+		                if ( state == prevState ){
+		                    ny = state ? wa : - wa;
+		                    curvePoints = warpSegmentPoints(sx, ny, nz , wl/2, 0, bca, pointCount, state);
+		                } else {
+		                    curvePoints = warpSegmentPoints(sx, sy, nz, wl/2, wa*2, bca, pointCount, prevState);
+		                }
+		                points = points.concat(curvePoints);
+
+		                if (n == arr.length - 1 ){
+		            		ny = state ? wa : - wa;
+		            		curvePoints = warpSegmentPoints(sx, ny, nz+wl/2 , wl/2, 0, bca, pointCount, state, false);
+		            		points = points.concat(curvePoints);
+		            	}
+
+		            }
+		            prevState = state;
+			    }
+		    
+		    } else if ( isWeft ){
+
+		    	for (n = 0; n < arr.length ; n++) {
+		            state = arr[n];
+		            if ( n ){
+		                nx = sx - (n-1) * wl/2;
+
+		                if (n == 1){
+		            		ny = prevState ? wa : - wa;
+		            		curvePoints = weftSegmentPoints(sx+wl/2, ny, sz , wl/2, 0, bca, pointCount, prevState);
+		            		points = points.concat(curvePoints);
+		            	}
+
+		                if ( state == prevState ){
+		                    ny = state ? wa : - wa;
+		                    curvePoints = weftSegmentPoints(nx, ny, sz , wl/2, 0, bca, pointCount, state);
+		                } else {
+		                    curvePoints = weftSegmentPoints(nx, sy, sz, wl/2, wa*2, bca, pointCount, prevState);
+		                }
+		                points = points.concat(curvePoints);
+
+		                if (n == arr.length - 1 ){
+		                	ny = state ? wa : - wa;
+		            		curvePoints = weftSegmentPoints(nx-wl/2, ny, sz , wl/2, 0, bca, pointCount, state, false);
+		            		points = points.concat(curvePoints);
+		            	}
+
+		            }
+		            prevState = state;
+			    }
+
+		    }
+
+		    var path = new THREE.CatmullRomCurve3(points);
+
+		    if ( shapeProfile == "elliptical" ){
+
+		    	material = new THREE.MeshStandardMaterial( {
+			        color: hex,
+			        side: THREE.DoubleSide,
+			        //flatShading: true,
+			        roughness: 1,
+			        metalness: 0,
+			        transparent: true,
+			        opacity: globalThree.defaultOpacity,
+			        depthWrite: true,
+			        wireframe: globalThree.params.showWireframe
+			    });
+
+			    var threadEllipse;
+
+		    	if ( isWarp ){
+
+		    		threadEllipse = new THREE.EllipseCurve( 0, 0, xTubeRadius, yTubeRadius, 0, 2 * Math.PI, false, 0.5 * Math.PI );
+
+		    	} else if ( isWeft ){
+
+		    		threadEllipse = new THREE.EllipseCurve( 0, 0, xTubeRadius, yTubeRadius, 0, 2 * Math.PI, false, 0 );
+
+		    	}
+
+				var threadShape = new THREE.Shape(threadEllipse.getPoints( globalThree.params.radiusSegments ));
+				var extrudeSettings = {
+					steps: pathSegments,
+					extrudePath: path
+				};
+
+				geometry = new THREE.ExtrudeBufferGeometry( threadShape, extrudeSettings );
+
+				if ( globalThree.params.smoothShading ){
+					var tempGeometry = new THREE.Geometry().fromBufferGeometry( geometry );
+					tempGeometry.mergeVertices();
+					tempGeometry.computeVertexNormals();
+					geometry = new THREE.BufferGeometry().fromGeometry( tempGeometry );
+				}
+				
+		    } else if ( shapeProfile == "circular" ){
+
+		    	material = new THREE.MeshStandardMaterial( {
+			        color: hex,
+			        side: THREE.DoubleSide,
+			        //flatShading: true,
+			        roughness: 1,
+			        metalness: 0,
+			        transparent: true,
+			        opacity: globalThree.defaultOpacity,
+			        depthWrite: true,
+			        wireframe: globalThree.params.showWireframe
+			    });
+
+			    if ( !globalThree.params.smoothShading ){
+			    	material.flatShading = true;
+			    }
+
+		    	geometry = new THREE.TubeGeometry( path, pathSegments, xTubeRadius, radiusSegments, false );
+			    geometry = new THREE.BufferGeometry().fromGeometry( geometry );
+			    
+		    	
+		    }
+
+		    thread = new THREE.Mesh( geometry, material );
+		    
+		    thread.name = "thread";
+
+		    if ( globalThree.params.showPathNodes ){
+
+		    	var pathPoints = path.points;
+		    	var nodePointGeometry = new THREE.BufferGeometry().setFromPoints( pathPoints );
+		    	var nodePointMaterial = new THREE.PointsMaterial( { color: hex, size: 0.04 } );
+				var nodePoints = new THREE.Points( nodePointGeometry, nodePointMaterial );
+				nodePoints.userData = {
+					type : "points",
+			    	threadSet : threadSet,
+			    	weavei : userData.weavei,
+			    	threei : userData.threei,
+			    	customId : userData.customId
+			    };
+			    nodePoints.name = "points";
+				this.fabric.add( nodePoints );
+				globalThree.childIds.push(nodePoints.id);
+
+				var geometry_line = new THREE.BufferGeometry().setFromPoints( pathPoints );
+				var material_line = new THREE.LineBasicMaterial({ color: hex });
+				var line = new THREE.Line( geometry_line, material_line );
+				line.userData = {
+					type : "line",
+			    	threadSet : threadSet,
+			    	weavei : userData.weavei,
+			    	threei : userData.threei,
+			    	customId : userData.customId
+			    };
+			    line.name = "line";
+				this.fabric.add( line );
+				globalThree.childIds.push(line.id);
+		    	
+		    }
+		    
+		    thread.userData = {
+		    	type : "tube",
+		    	threadSet : threadSet,
+		    	weavei : userData.weavei,
+		    	threei : userData.threei,
+		    	customId : userData.customId
+		    };
+
+		    thread.receiveShadow = true;
+			thread.castShadow = true;
+
+		    globalThree.fabric.add(thread);
+
+		    //this.scene.add( thread );
+		    globalThree.threads.push(thread);
+		    globalThree.childIds.push(thread.id);
+		    
+		},
+
+		removeFabric: function(){
+
+			var objectCount = globalThree.childIds.length;
+			var myObj;
+			for (let i = objectCount - 1; i >= 0; i--) {
+				myObj = this.scene.getObjectById(globalThree.childIds[i]);
+				console.log(myObj);
+				if ( myObj ){
+					this.scene.remove(myObj);
+				    myObj.geometry.dispose();
+					myObj.material.dispose();
+					myObj = undefined;
+				}
+			}
+			globalThree.threads = [];
+			globalThree.childIds = [];
+
+		},
+
+		clearFabric: function(){
+
+			for (var i = globalThree.fabric.children.length - 1; i >= 0; i--) {
+
+				if ( globalThree.fabric.children[i].name == "thread" ){
+					globalThree.fabric.children[i].geometry.dispose();
+	                globalThree.fabric.children[i].material.dispose();
+	                globalThree.fabric.remove(globalThree.fabric.children[i]);
+				}
+
+            }
+            globalThree.threads = [];
+            globalThree.childIds = [];
+            globalThree.render();
+
+		},
+
+		setSceneViewTo: function(modelPos = false, modelRotation = false, cameraPos = false, controlsTarget = false, spotLightTargetPos = false){
+
+			if ( modelPos ){ this.model.position.set(modelPos.x, modelPos.y, modelPos.z); }
+			if ( modelRotation ){ this.model.rotation.set(modelRotation.x, modelRotation.y, modelRotation.z); }
+			if ( cameraPos ){ this.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z); }
+			if ( controlsTarget ){ this.controls.target.set(controlsTarget.x, controlsTarget.y, controlsTarget.z); }
+			if ( spotLightTargetPos ){ this.lights.spot.target.position.set(spotLightTargetPos.x, spotLightTargetPos.y, spotLightTargetPos.z); }
+		    this.controls.update();
+		    this.render();
+
+		},
+
+		animateSceneTo : function(modelRotation = false, cameraPos = false, controlsTarget = false, callback = false){
+
+			globalThree.controls.enabled = false;
+			globalThree.forceAnimate = true;
+
+			var tl = new TimelineLite({
+				delay:0,
+				onComplete: function(){
+					globalThree.controls.enabled = true;
+					debug("Timeline.Status", "complete", this.ObjName);
+					if (typeof callback === "function") {
+				    	callback();
+				    }
+				},
+				onUpdate: function() {
+					debug("Timeline.Status", "updating", this.ObjName);
+					globalThree.controls.update();
+				}
+				
+			});
+
+			if ( modelRotation ){
+				tl.add(TweenLite.to(globalThree.fabric.rotation, 1.5, { 
+					x: modelRotation.x,
+					y: modelRotation.y,
+					z: modelRotation.z,
+					ease : Power4.easeInOut
+				}), 0);
+			}
+
+			if ( cameraPos ){
+				tl.add(TweenLite.to(globalThree.camera.position, 1.5, { 
+					x: cameraPos.x,
+					y: cameraPos.y,
+					z: cameraPos.z,
+					ease : Power4.easeInOut
+				}), 0);
+			}
+
+			if ( controlsTarget ){
+				tl.add(TweenLite.to(globalThree.controls.target, 1.5, { 
+					x: controlsTarget.x,
+					y: controlsTarget.y,
+					z: controlsTarget.z,
+					ease : Power4.easeInOut
+				}), 0);
+			}
+
+		},
+
+		render : function(){
+
+			if ( this.sceneCreated ){
+
+				var cameraPos = this.camera.position.clone();
+				var cameraRotation = this.camera.rotation.clone();
+				var controlsTarget = this.controls.target.clone();
+
+				this.rotationAxisLine.position.copy(controlsTarget);
+
+				//this.renderer.render( this.scene, this.camera );
+				this.composer.render();
+
+				this.sceneParams.cameraPos.copy(cameraPos);
+				this.sceneParams.controlsTarget.copy(controlsTarget);
+
+				debug("Camera x", Math.round(cameraPos.x * 1000)/1000, this.ObjName);
+				debug("Camera y", Math.round(cameraPos.y * 1000)/1000, this.ObjName);
+				debug("Camera z", Math.round(cameraPos.z * 1000)/1000, this.ObjName);
+
+				debug("Camera Rx", Math.round(cameraRotation.x * 1000)/1000, this.ObjName);
+				debug("Camera Ry", Math.round(cameraRotation.y * 1000)/1000, this.ObjName);
+				debug("Camera Rz", Math.round(cameraRotation.z * 1000)/1000, this.ObjName);
+
+				if ( this.fabric ){
+					var fabricRot = this.fabric.rotation;
+					debug("Fabric Rx", Math.round(fabricRot.x * 1000)/1000, this.ObjName);
+					debug("Fabric Ry", Math.round(fabricRot.y * 1000)/1000, this.ObjName);
+					debug("Fabric Rz", Math.round(fabricRot.z * 1000)/1000, this.ObjName);
+				}
+
+				debug("Azimuthal", Math.round(this.controls.getAzimuthalAngle() * 1000)/1000, this.ObjName);
+				debug("Polar", Math.round(this.controls.getPolarAngle() * 1000)/1000, this.ObjName);
+
+				var objectPos = new THREE.Vector3( 0, 0, 0 );
+				var distance = cameraPos.distanceTo( objectPos );  
+
+				debug("Distance", Math.round(distance * 1000)/1000, this.ObjName);
+
+			}
+
+		},
+
+		startAnimation : function() {
+
+			window.requestAnimationFrame(() => {
+				if (app.tabs.active == "three"){
+					if ( this.mouseAnimate || this.forceAnimate ){
+						const now = performance.now();
+						while (globalThree.fps.length > 0 && globalThree.fps[0] <= now - 1000) {
+							globalThree.fps.shift();
+						}
+						globalThree.fps.push(now);
+						debug("FPS", globalThree.fps.length, "three");
+						globalThree.render();
+					}
+				}
+				globalThree.startAnimation();
+			});
+				
+		},
+
+		postCreate : function(){
+
+			debug("Geometries", this.renderer.info.memory.geometries, this.ObjName);
+			debug("Textures", this.renderer.info.memory.textures, this.ObjName);
+			debug("Calls", this.renderer.info.render.calls, this.ObjName);
+			debug("Triangles", this.renderer.info.render.triangles, this.ObjName);
+			debug("Points", this.renderer.info.render.points, this.ObjName);
+			debug("Lines", this.renderer.info.render.lines, this.ObjName);
+
+		}
+
 	};
 
 	$("#three-container").on("mouseover", function(evt) {
-		if ( globalThree.sceneCreated ){
-			globalThree.animate = true;
-	    	animateThree();
-		}
+			globalThree.mouseAnimate = true;
 	});
 
 	$("#three-container").on("mouseout", function(evt) {
-		globalThree.animate = false;
+		globalThree.mouseAnimate = false;
 	});
 
 	$("#three-container").on("mouseup", function(evt) {
-		globalMouse.reset();
+		app.mouse.reset();
 	});
 
 	$("#three-container").on("mousedown", function(evt) {
-		globalMouse.set("three", 0, 0, true, evt.which);
+		app.mouse.set("three", 0, 0, true, evt.which);
 	});
 
 	$("#three-container").on("mousemove", function(evt) {
 
-		debug("isDown", globalMouse.isDown);
+		debug("isDown", app.mouse.isDown);
 
-		if ( globalThree.sceneCreated && !globalMouse.isDown ){
+		if ( globalThree.sceneCreated && !app.mouse.isDown ){
 
 			var iThreadSet, warpUUIDs = [], weftUUIDs = [];
 			var mousePos = { x: 0, y: 0 };
 			var threeMouse = getMouse(evt, $(this)[0]);
 			mousePos.x = ( threeMouse.x / globalThree.frameW ) * 2 - 1;
 			mousePos.y = ( threeMouse.y / globalThree.frameH ) * 2 - 1;
-			raycaster.setFromCamera( mousePos, camera );
+			raycaster.setFromCamera( mousePos, globalThree.camera );
 
-			var intersects = raycaster.intersectObjects(threadList);
+			var intersects = raycaster.intersectObjects(globalThree.threads);
 			var intersects_firstWarpWeft = filterFirstWarpWeftThreads(intersects);
 
 			var intersection = {
@@ -8931,9 +10659,18 @@ $(document).ready ( function(){
 			};
 
 			var its, iti;
+
+			globalThree.outlinePassSelected = [];
+			globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
+
 			intersects_firstWarpWeft.forEach(function(thread, i){
 				its = thread.object.userData.threadSet;
 				iti = thread.object.userData.threei;
+
+				if ( globalThree.mouseOverOutline ){
+					globalThree.outlinePassSelected.push(thread.object);
+					globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
+				}
 				intersection[its] = iti + 1;
 			});
 
@@ -8941,7 +10678,7 @@ $(document).ready ( function(){
 
 			if ( intersects.length && globalThree.mouseOverHighlight ){
 
-				threadList.forEach(function(thread, i){
+				globalThree.threads.forEach(function(thread, i){
 					thread.material.opacity = 0.25;
 					thread.material.depthTest = false;
 				});
@@ -8951,9 +10688,12 @@ $(document).ready ( function(){
 					thread.object.material.opacity = 1;
 				});
 
+				//globalThree.outlinePass.selectedObjects = intersects[0].object;
+				//globalThree.composer.addPass( globalThree.outlinePass );
+
 			} else {
 
-				threadList.forEach(function(thread, i){
+				globalThree.threads.forEach(function(thread, i){
 					thread.material.opacity = globalThree.defaultOpacity;
 					thread.material.depthTest = globalThree.defaultDepthTest;
 				});
@@ -9050,9 +10790,7 @@ $(document).ready ( function(){
 	        new THREE.Vector3( sx, sy - h/2, sz + w )
 	    );
 	    var points = curve.getPoints(segmentPoints);
-	    if ( removeLastPoint ){
-	    	points.pop();
-	    }
+	    if ( removeLastPoint ){ points.pop(); }
 	    return points;
 
 	}
@@ -9067,548 +10805,40 @@ $(document).ready ( function(){
 	        new THREE.Vector3( sx - w, sy - h/2, sz )
 	    );
 	    var points = curve.getPoints(segmentPoints);
-
-	    if ( removeLastPoint ){
-	    	points.pop();
-	    }
-
+	    if ( removeLastPoint ){ points.pop(); }
 	    return points;
-
-	}
-
-	function add3dWave(sx, sy, sz, xTubeRadius, yTubeRadius, waveLength, waveAmplitude, arr, orientation, hex, userData, pathSegments, radiusSegments, shapeProfile){
-
-	    var wa = waveAmplitude;
-	    var wl = waveLength;
-	    var bca = wl/4; //bezierControlAmount
-
-	    // var atan = Math.atan2(wa*2, wl/2) / Math.PI * 2;
-	    // var bca =  (atan * wl + atan * wa) / 1.5;
-
-	    var state, prevState, n, nx, ny, nz, curvePoints, material, geometry;
-
-	    var threadSet = userData.threadSet;
-	    var isWarp = threadSet == "warp";
-	    var isWeft = threadSet == "weft";
-	    var pointCount = globalThree.nodePathSegments;
-
-	    var points = [];
-
-	    if ( isWarp ){
-
-	    	for (n = 0; n < arr.length ; n++) {
-	            state = arr[n];
-	            if ( n ){
-
-	            	nz = sz + (n-1) * wl/2;
-
-	            	if (n == 1){
-	            		ny = prevState ? wa : - wa;
-	            		curvePoints = warpSegmentPoints(sx, ny, sz-wl/2 , wl/2, 0, bca, pointCount, prevState);
-	            		points = points.concat(curvePoints);
-	            	}
-	                
-	                if ( state == prevState ){
-	                    ny = state ? wa : - wa;
-	                    curvePoints = warpSegmentPoints(sx, ny, nz , wl/2, 0, bca, pointCount, state);
-	                } else {
-	                    curvePoints = warpSegmentPoints(sx, sy, nz, wl/2, wa*2, bca, pointCount, prevState);
-	                }
-	                points = points.concat(curvePoints);
-
-	                if (n == arr.length - 1 ){
-	            		ny = state ? wa : - wa;
-	            		curvePoints = warpSegmentPoints(sx, ny, nz+wl/2 , wl/2, 0, bca, pointCount, state, false);
-	            		points = points.concat(curvePoints);
-	            	}
-
-	            }
-	            prevState = state;
-		    }
-	    
-	    } else if ( isWeft ){
-
-	    	for (n = 0; n < arr.length ; n++) {
-	            state = arr[n];
-	            if ( n ){
-	                nx = sx - (n-1) * wl/2;
-
-	                if (n == 1){
-	            		ny = prevState ? wa : - wa;
-	            		curvePoints = weftSegmentPoints(sx+wl/2, ny, sz , wl/2, 0, bca, pointCount, prevState);
-	            		points = points.concat(curvePoints);
-	            	}
-
-	                if ( state == prevState ){
-	                    ny = state ? wa : - wa;
-	                    curvePoints = weftSegmentPoints(nx, ny, sz , wl/2, 0, bca, pointCount, state);
-	                } else {
-	                    curvePoints = weftSegmentPoints(nx, sy, sz, wl/2, wa*2, bca, pointCount, prevState);
-	                }
-	                points = points.concat(curvePoints);
-
-	                if (n == arr.length - 1 ){
-	                	ny = state ? wa : - wa;
-	            		curvePoints = weftSegmentPoints(nx-wl/2, ny, sz , wl/2, 0, bca, pointCount, state, false);
-	            		points = points.concat(curvePoints);
-	            	}
-
-	            }
-	            prevState = state;
-		    }
-
-	    }
-
-	    var path = new THREE.CatmullRomCurve3(points);
-
-	    if ( shapeProfile == "elliptical" ){
-
-	    	material = new THREE.MeshPhongMaterial( {
-		        color: hex,
-		        side: THREE.DoubleSide,
-		        transparent: true,
-		        opacity: globalThree.defaultOpacity,
-		        depthWrite: true,
-		        wireframe: globalThree.showWireframe
-		    });
-
-		    var threadEllipse;
-
-	    	if ( isWarp ){
-
-	    		threadEllipse = new THREE.EllipseCurve( 0, 0, xTubeRadius, yTubeRadius, 0, 2 * Math.PI, false, 0.5 * Math.PI );
-
-	    	} else if ( isWeft ){
-
-	    		threadEllipse = new THREE.EllipseCurve( 0, 0, xTubeRadius, yTubeRadius, 0, 2 * Math.PI, false, 0 );
-
-	    	}
-
-			var threadShape = new THREE.Shape(threadEllipse.getPoints( globalThree.radiusSegments ));
-			var extrudeSettings = {
-				steps: pathSegments,
-				extrudePath: path
-			};
-
-			geometry = new THREE.ExtrudeBufferGeometry( threadShape, extrudeSettings );
-			geometry.computeVertexNormals(true);
-			thread = new THREE.Mesh( geometry, material );
-
-	    } else if ( shapeProfile == "circular" ){
-
-	    	material = new THREE.MeshPhongMaterial( {
-		        color: hex,
-		        side: THREE.DoubleSide,
-		        //flatShading: true,
-		        transparent: true,
-		        opacity: globalThree.defaultOpacity,
-		        depthWrite: true,
-		        wireframe: globalThree.showWireframe
-		    });
-
-	    	geometry = new THREE.TubeGeometry( path, pathSegments, xTubeRadius, radiusSegments, false );
-		    geometry = new THREE.BufferGeometry().fromGeometry( geometry );
-		    thread = new THREE.Mesh( geometry, material );
-	    	
-	    }
-
-	    if ( globalThree.showPathNodes ){
-
-	    	var pathPoints = path.points;
-	    	var nodePointGeometry = new THREE.BufferGeometry().setFromPoints( pathPoints );
-	    	var nodePointMaterial = new THREE.PointsMaterial( { color: hex, size: 0.04 } );
-			var nodePoints = new THREE.Points( nodePointGeometry, nodePointMaterial );
-			nodePoints.userData = {
-				type : "points",
-		    	threadSet : threadSet,
-		    	weavei : userData.weavei,
-		    	threei : userData.threei,
-		    	customId : userData.customId
-		    };
-			scene.add( nodePoints );
-			fabricObjectIds.push(nodePoints.id);
-
-			var geometry_line = new THREE.BufferGeometry().setFromPoints( pathPoints );
-			var material_line = new THREE.LineBasicMaterial({ color: hex });
-			var line = new THREE.Line( geometry_line, material_line );
-			line.userData = {
-				type : "line",
-		    	threadSet : threadSet,
-		    	weavei : userData.weavei,
-		    	threei : userData.threei,
-		    	customId : userData.customId
-		    };
-			scene.add( line );
-			fabricObjectIds.push(line.id);
-	    	
-	    }
-	    
-	    thread.userData = {
-	    	type : "tube",
-	    	threadSet : threadSet,
-	    	weavei : userData.weavei,
-	    	threei : userData.threei,
-	    	customId : userData.customId
-	    };
-
-	    scene.add( thread );
-	    threadList.push(thread);
-	    fabricObjectIds.push(thread.id);
-	    
-	}
-
-	var warpArrow, weftArrow;
-
-	function buildThreeScene(){
-
-		renderer = new THREE.WebGLRenderer({antialias: true});
-		renderer.setPixelRatio(g_pixelRatio);
-	    renderer.setSize(globalThree.frameW, globalThree.frameH);
-	    renderer.setClearColor(0xd7d7d7, 1);
-
-	    var container = document.getElementById("three-container");
-	    container.innerHTML = "";
-	    container.appendChild(renderer.domElement);
-	    renderer.domElement.id = "g_threeCanvas";
-
-	    addStyleClassToElement("g_threeCanvas", "graph-canvas");
-
-	    // scene
-	    scene = new THREE.Scene();
-	    
-	    // camera
-	    camera = new THREE.PerspectiveCamera(45, globalThree.frameW / globalThree.frameH, 1, 1000);
-	    camera.position.set( 0, 3, -3 );
-	    scene.add( camera ); //required, since camera has a child light
-
-	    // controls
-	    controls = new THREE.OrbitControls( camera, renderer.domElement );
-	    controls.minDistance = 1;
-	    controls.maxDistance = 100;
-	    
-	    // ambient
-	    scene.add( new THREE.AmbientLight( 0xffffff, 0.4 ) );
-	    
-	    // light
-	    var light = new THREE.PointLight( 0xffffff, 0.5 );
-	    light.position.set( 20, 20, 0 );
-	    camera.add( light );
-	    
-	    // axes
-	    //scene.add( new THREE.AxesHelper( 100 ) );
-
-	    // warp weft arrows
-	    var weftArrowDir = new THREE.Vector3( -1, 0, 0 );
-		var warpArrowDir = new THREE.Vector3( 0, 0, 1 );
-		var weftArrowPosition = new THREE.Vector3( 0, 0, 0);
-		var warpArrowPosition = new THREE.Vector3( 0, 0, 0);
-		var arrowlength = 1;
-		var arrowHex = 0x333333;
-		weftArrow = new THREE.ArrowHelper( weftArrowDir, weftArrowPosition, arrowlength, arrowHex );
-		warpArrow = new THREE.ArrowHelper( warpArrowDir, warpArrowPosition, arrowlength, arrowHex );
-		scene.add( weftArrow );
-		scene.add( warpArrow );
-
-	}
-
-	function removeFabric(){
-
-		var objectCount = fabricObjectIds.length;
-		var myObj;
-
-		for (let i = objectCount - 1; i >= 0; i--) {
-
-			myObj = scene.getObjectById(fabricObjectIds[i]);
-			scene.remove(myObj);
-		    myObj.geometry.dispose();
-			myObj.material.dispose();
-			myObj = undefined;
-
-		}
-
-		threadList = [];
-		fabricObjectIds = [];
-
-	}
-
-	function buildFabric() {
-
-		if ( !globalThree.sceneCreated ){
-	    	buildThreeScene();
-	    } else {
-	    	removeFabric();
-	    }
-
-	    var threeMode = $("#threeMode").val();
-		globalThree.threeMode = threeMode;
-
-		var yarnProfile = $("#threeYarnProfile").val();
-		globalThree.yarnProfile = yarnProfile;
-
-		var warpNumber = $("#threeWarpNumber").numVal();
-		globalThree.warpNumber = warpNumber;
-
-		var weftNumber = $("#threeWeftNumber").numVal();
-		globalThree.weftNumber = weftNumber;
-
-		var warpDensity = $("#threeWarpDensity").numVal();
-		globalThree.warpDensity = warpDensity;
-
-		var weftDensity = $("#threeWeftDensity").numVal();
-		globalThree.weftDensity = weftDensity;
-
-		var warpEccentricity = $("#threeWarpEccentricity").numVal();
-		globalThree.warpEccentricity = warpEccentricity;
-
-		var weftEccentricity = $("#threeWeftEccentricity").numVal();
-		globalThree.weftEccentricity = weftEccentricity;
-
-		var radiusSegments = $("#threeRadiusSegments").numVal();
-		globalThree.radiusSegments = radiusSegments;
-
-		var nodePathSegments = $("#threeNodePathSegments").numVal();
-		globalThree.nodePathSegments = nodePathSegments;
-
-		var warpStart = $("#threeWarpStart").numVal();
-		globalThree.warpStart = warpStart;
-		var weftStart = $("#threeWeftStart").numVal();
-		globalThree.weftStart = weftStart;
-
-		var warpThreads = $("#threeShowWarpThreads").numVal();
-		globalThree.warpThreads = warpThreads;
-		var weftThreads = $("#threeShowWeftThreads").numVal();
-		globalThree.weftThreads = weftThreads;
-
-		var showPathNodes = $("#threeShowPathNodes").prop("checked");
-		globalThree.showPathNodes = showPathNodes;
-
-		var showWireframe = $("#threeShowWireframe").prop("checked");
-		globalThree.showWireframe = showWireframe;
-
-		if ( globalWeave.weave2D8 !== undefined && globalWeave.weave2D8.length && globalWeave.weave2D8[0] !== undefined && globalWeave.weave2D8[0].length ){
-
-			var weave2D8 = globalWeave.weave2D8.tileFill(warpThreads, weftThreads, 1-warpStart, 1-weftStart);
-			globalThree.weave2D8 = weave2D8;
-
-			globalThree.defaultOpacity = globalThree.showPathNodes ? 0.25 : 1;
-			globalThree.defaultDepthTest = globalThree.showPathNodes ? false : true;
-
-			var warpPathSegments = (globalThree.weftThreads + 1) * nodePathSegments;
-			var weftPathSegments = (globalThree.warpThreads + 1) * nodePathSegments;
-			globalThree.warpPathSegments = warpPathSegments;
-		    globalThree.weftPathSegments = weftPathSegments;
-
-		     // End to End Distance
-		    var xDist = 25.4/warpDensity;
-		    var zDist = 25.4/weftDensity;
-			globalThree.xDist = xDist;
-			globalThree.zDist = zDist;
-
-			// Offset model to center
-		    var xOffset = xDist * (warpThreads-1) / 2;
-			var zOffset = zDist * (weftThreads-1) / 2;
-
-			globalThree.xOffset = xOffset;
-			globalThree.zOffset = zOffset;
-
-			var warpRadius = yarnRadius(warpNumber, "nec");
-			globalThree.warpRadius = warpRadius;
-
-			var weftRadius = yarnRadius(weftNumber, "nec");
-			globalThree.weftRadius = weftRadius;
-
-			var warpRadiusY = warpRadius;
-			var warpRadiusX = warpRadius;
-			var weftRadiusY = weftRadius;
-			var weftRadiusX = weftRadius;
-			var maxFabricThickness = (warpRadius + weftRadius) * 2;
-
-			if ( yarnProfile == "elliptical" ){
-
-				warpRadiusY = Math.pow(Math.pow(warpRadius,4)*(1-Math.pow(warpEccentricity,2)),1/4);
-				warpRadiusX = Math.pow(warpRadius,2)/warpRadiusY;
-				weftRadiusY = Math.pow(Math.pow(weftRadius,4)*(1-Math.pow(weftEccentricity,2)),1/4);
-				weftRadiusX = Math.pow(weftRadius,2)/weftRadiusY;
-				maxFabricThickness = (warpRadiusY + weftRadiusY) * 2;
-
-			}
-
-			globalThree.warpRadiusX = warpRadiusX;
-			globalThree.warpRadiusY = warpRadiusY;
-			globalThree.weftRadiusX = weftRadiusX;
-			globalThree.weftRadiusY = weftRadiusY;
-			globalThree.maxFabricThickness = maxFabricThickness;
-
-		    if ( globalThree.sceneCreated ){
-		    	restoreCamera(camToSave.position, camToSave.rotation, camToSave.controlCenter);
-		    } else {
-		    	globalThree.sceneCreated = true;
-		    }
-
-		    var endArray, pickArray = [], colorCode, colorHex;
-
-			// updating scene:
-			var weftArrowStartX =  xOffset + xDist + Math.min(xDist, zDist)/2;
-			var warpArrowStartZ = -zOffset - zDist - Math.min(xDist, zDist)/2;
-			var weftArrowPosition = new THREE.Vector3( weftArrowStartX, 0, warpArrowStartZ);
-			var warpArrowPosition = new THREE.Vector3( weftArrowStartX, 0, warpArrowStartZ);
-
-			warpArrow.position.copy(warpArrowPosition);
-			warpArrow.updateMatrix();
-			weftArrow.position.copy(weftArrowPosition);
-			weftArrow.updateMatrix();
-			
-		    var percentagePerThread = 100/(globalThree.warpThreads + globalThree.weftThreads);
-		    var cycle = 0;
-		    var startX = 0;
-		    var lastX = globalThree.warpThreads - 1;
-		    var x = startX;
-
-		    var startY = 0;
-		    var lastY = globalThree.weftThreads - 1;
-		    var y = startY;
-
-		    threadList = [];
-		    var percent;
-
-		    setLoadingbar(0, "warpdraw", true, "Rendering Warp Threads");
-		    $.doTimeout("warpdraw", 1, function(){
-				cycle++;
-				percent = Math.round(cycle * percentagePerThread);
-				setLoadingbar(percent);
-				add3DThread("warp", x);
-				x++;
-				renderThree();
-				if ( x == lastX ){
-					setLoadingbar("hide");
-					setLoadingbar(percent, "weftdraw", true, "Rendering Weft Threads");
-				}
-				if ( x > lastX ){
-					$.doTimeout("weftdraw", 1, function(){
-						cycle++;
-						percent = Math.round(cycle * percentagePerThread);
-						setLoadingbar(percent);
-						add3DThread("weft", y);
-						y++;
-						renderThree();
-						if ( y > lastY ){
-							setLoadingbar("hide");
-							globalThree.sceneCreated = true;
-							afterBuildFabric();
-							return false;
-						}
-						return true;
-					});
-					return false;
-				}
-				return true;
-			});
-
-		} else {
-
-			console.log("buildFabric Error : Invalid Weave2D8");
-
-		}
 
 	}
 
 	function afterBuildFabric(){
 
-		threadList.forEach(function(thread, i){
+		debugInput("text", "AnimateRotation", "0,0,0", "live", function(val){
+			var pos = val.split(",");
+			var modelRotation = new THREE.Vector3(toRadians(pos[0]), toRadians(pos[1]), toRadians(pos[2]));
+			globalThree.animateSceneTo(modelRotation);
+		});
+
+		globalThree.threads.forEach(function(thread, i){
 			thread.material.opacity = globalThree.defaultOpacity;
 			thread.material.depthTest = globalThree.defaultDepthTest;
 		});
 
 		// debug Console
-		debug("Geometries", renderer.info.memory.geometries, "three");
-		debug("Textures", renderer.info.memory.textures, "three");
+		debug("Geometries", globalThree.renderer.info.memory.geometries, "three");
+		debug("Textures", globalThree.renderer.info.memory.textures, "three");
 		
-		debug("Calls", renderer.info.render.calls, "three");
-		debug("Triangles", renderer.info.render.triangles, "three");
-		debug("Points", renderer.info.render.points, "three");
-		debug("Lines", renderer.info.render.lines, "three");
+		debug("Calls", globalThree.renderer.info.render.calls, "three");
+		debug("Triangles", globalThree.renderer.info.render.triangles, "three");
+		debug("Points", globalThree.renderer.info.render.points, "three");
+		debug("Lines", globalThree.renderer.info.render.lines, "three");
 
-		renderThree();
-
-	}
-
-	const times = [];
-	
-	function animateThree() {
-
-		if ( globalThree.animate ){
-		   
-			  window.requestAnimationFrame(() => {
-			    const now = performance.now();
-			    while (times.length > 0 && times[0] <= now - 1000) {
-			      times.shift();
-			    }
-			    times.push(now);
-			    debug("FPS", times.length, "three");
-			    renderThree();
-			    animateThree();
-			  });
-
-
-			//requestAnimationFrame(animateThree);
-		    //ray_direction.subVectors( new THREE.Vector3(0, 0, 0) , new THREE.Vector3(4, 4, 4)).normalize();
-
-		    //var pointB = sprite.position;
-		    //var pointA = camera.position;
-
-		    //ray_direction.pointB.clone().sub(pointA).normalize()
-			
-			//raycasterOriginSprite.direction = ray_direction;
-			//drawRaycastLine(raycasterOriginSprite);
-
-		    /*
-		    raycasterOriginSprite.setFromCamera( sprite, camera );
-			var intersects = raycasterOriginSprite.intersectObjects(threadList);
-			
-			sprite.material.opacity = intersects.length ? 0.5 : 1;
-			*/
-
-			
-		}
+		globalThree.render();
 
 	}
 
 	function removeThreeChilds(){
 		scene.remove.apply(scene, scene.children);
-		renderThree();
-	}
-
-	var camToSave = {};
-
-	function renderThree(){
-
-		//line.geometry.vertices[0].set( camera.position.x, camera.position.y, camera.position.z )
-
-		//line.geometry.vertices[0] = camera.position;
-	    //line.geometry.vertices[1] = sprite.position;
-	    //lineGeometry.verticesNeedUpdate = true;
-	    //lineGeometry.elementsNeedUpdate = true;	
-
-		renderer.render( scene, camera );
-		camToSave.position = camera.position.clone();
-		camToSave.rotation = camera.rotation.clone();
-		camToSave.controlCenter = controls.target.clone();
-
-		var cameraPos = camera.position;
-		// var cameraPos = globalModel.camera.getWorldPosition();
-
-		debug("Camera X", Math.round(cameraPos.x * 1000)/1000, "three");
-		debug("Camera Y", Math.round(cameraPos.y * 1000)/1000, "three");
-		debug("Camera Z", Math.round(cameraPos.z * 1000)/1000, "three");
-
-	}
-
-	function restoreCamera(position, rotation, controlCenter){
-	    camera.position.set(position.x, position.y, position.z);
-	    camera.rotation.set(rotation.x, rotation.y, rotation.z);
-	    controls.target.set(controlCenter.x, controlCenter.y, controlCenter.z);
-	    controls.update();
-	    renderer.render( scene, camera );
+		globalThree.render();
 	}
 
 	function drawRaycastLine(raycaster) {
@@ -9640,7 +10870,7 @@ $(document).ready ( function(){
 
 	    let line = new THREE.Line(geometry, material);
 	    scene.add(line);
-	    fabricObjectIds.push(line.id);
+	    globalThree.childIds.push(line.id);
 
 	  }
 
@@ -9668,9 +10898,9 @@ $(document).ready ( function(){
 			threeMouse.x = ( threeDblClickMouse.x / globalThree.frameW ) * 2 - 1;
 			threeMouse.y = ( threeDblClickMouse.y / globalThree.frameH ) * 2 - 1;
 			
-			raycaster.setFromCamera( threeMouse, camera );
+			raycaster.setFromCamera( threeMouse, globalThree.camera );
 
-			var intersects = raycaster.intersectObjects(threadList);
+			var intersects = raycaster.intersectObjects(globalThree.threads);
 			
 			if ( intersects.length >= 4 ){
 
@@ -9688,8 +10918,8 @@ $(document).ready ( function(){
 					var warpThread_uuid = intersectUUIDs.warp[0];
 					var weftThread_uuid = intersectUUIDs.weft[0];
 
-					var warpThread_obj = scene.getObjectByProperty("uuid", warpThread_uuid);
-					var weftThread_obj = scene.getObjectByProperty("uuid", weftThread_uuid);
+					var warpThread_obj = globalThree.scene.getObjectByProperty("uuid", warpThread_uuid);
+					var weftThread_obj = globalThree.scene.getObjectByProperty("uuid", weftThread_uuid);
 
 					var wpWeavei = warpThread_obj.userData.weavei; // Actual globalWeave.weave2D8 index of warp Thread
 					var wfWeavei = weftThread_obj.userData.weavei; // Actual globalWeave.weave2D8 index of weft Thread
@@ -9699,11 +10929,11 @@ $(document).ready ( function(){
 
 					globalWeave.setGraph2D8("weave", "toggle", wpWeavei+1, wfWeavei+1, true, true, false);
 
-					var weave2D8 = globalWeave.weave2D8.tileFill(globalThree.warpThreads, globalThree.weftThreads, 1-globalThree.warpStart, 1-globalThree.weftStart);
+					var weave2D8 = globalWeave.weave2D8.tileFill(globalThree.params.warpThreads, globalThree.params.weftThreads, 1-globalThree.params.warpStart, 1-globalThree.params.weftStart);
 					globalThree.weave2D8 = weave2D8;
 
-					// remove intersecting threads from threadList and populate replaceThreads Array
-					threadList = $.grep(threadList, function(e, i){
+					// remove intersecting threads from globalThree.threads and populate replaceThreads Array
+					globalThree.threads = $.grep(globalThree.threads, function(e, i){
 						
 						wi = e.userData.weavei;
 						ti = e.userData.threei;
@@ -9720,19 +10950,19 @@ $(document).ready ( function(){
 
 					replaceThreads.warp.forEach(function(v, i){
 						threeRemoveElement("warp-"+v);
-						add3DThread("warp", v);
+						globalThree.add3DThread("warp", v);
 					});
 
 					replaceThreads.weft.forEach(function(v, i){
 						threeRemoveElement("weft-"+v);
-						add3DThread("weft", v);
+						globalThree.add3DThread("weft", v);
 					});
 
 				}
 
 			}
 
-			renderer.render( scene, camera );
+			globalThree.render();
 
 		} else if (evt.which == 2) {
 
@@ -9745,15 +10975,15 @@ $(document).ready ( function(){
 	function threeRemoveElement(customId) {
 
 		var element, myObj, eid;
-		for (var i = scene.children.length-1; i >= 0; --i) {
-			element = scene.children[i];
+		for (var i = globalThree.fabric.children.length-1; i >= 0; --i) {
+			element = globalThree.fabric.children[i];
 			if ( element.userData.customId == customId){
 				eid = element.id;
-				fabricObjectIds = fabricObjectIds.removeItem(eid);
-				myObj = scene.getObjectById(eid);
-				scene.remove(myObj);
+				globalThree.childIds = globalThree.childIds.removeItem(eid);
+				myObj = globalThree.fabric.getObjectById(eid);
 			    myObj.geometry.dispose();
 				myObj.material.dispose();
+				globalThree.fabric.remove(myObj);
 				myObj = undefined;
 			}
 		}
@@ -9793,86 +11023,6 @@ $(document).ready ( function(){
 
 	}
 
-	function add3DThread(threadSet, threeIndex){
-
-		var sx, sy, sz, waveLength, waveAmplitude, pathSegments, intersectH, threadArray, colorCode, colorHex, orientation;
-		var warpPathSegments, weftPathSegments;
-		var weaveIndex, patternIndex;
-
-		var xDist = globalThree.xDist;
-		var zDist = globalThree.zDist;
-		var xOffset = globalThree.xOffset;
-		var zOffset = globalThree.zOffset;
-		var hft = globalThree.maxFabricThickness/2; // half fabric thickness
-		var xRadius, yRadius;
-		var yarnProfile = globalThree.yarnProfile;
-		var radiusSegments = globalThree.radiusSegments;
-		
-		var WpRx = globalThree.warpRadiusX;
-		var WpRy = globalThree.warpRadiusY;
-		var WfRx = globalThree.weftRadiusX;
-		var WfRy = globalThree.weftRadiusY;
-
-		var rigidityVar = (WfRy*Math.sqrt(WfRy*WfRx)*zDist*zDist)/(WpRy*Math.sqrt(WpRy*WpRx)*zDist*zDist);
-		var WpWa = hft * rigidityVar / (1+rigidityVar); // Warp Wave Amplitude
-		var WfWa = hft - WpWa; // Weft Wave Amplitude
-
-		if ( threadSet == "warp" ){
-
-			sx = xOffset - threeIndex * xDist;
-			sy = 0;
-			sz = -zOffset;
-
-			waveLength = zDist * 2;
-			waveAmplitude = WpWa;
-
-			xRadius = WpRx;
-			yRadius = WpRy;
-			pathSegments = globalThree.warpPathSegments;
-
-			weaveIndex = loopNumber(threeIndex + globalThree.warpStart - 1, globalWeave.ends);
-			patternIndex = (threeIndex+globalThree.warpStart-1) % globalPattern.warp.length;
-
-			orientation = "z";
-
-		} else if ( threadSet == "weft" ){
-
-			sx = xOffset;
-			sy = 0;
-			sz = -(zOffset - threeIndex * zDist);
-
-			waveLength = xDist * 2;
-			waveAmplitude = WfWa;
-
-			xRadius = WfRx;
-			yRadius = WfRy;
-			pathSegments = globalThree.weftPathSegments;
-
-			weaveIndex = loopNumber(threeIndex + globalThree.weftStart - 1, globalWeave.picks);
-			patternIndex = (threeIndex+globalThree.weftStart-1) % globalPattern.weft.length;
-
-			orientation = "x";
-
-		}
-
-		var userData = {
-
-			type : "tube",
-	    	threadSet : threadSet,
-	    	weavei : weaveIndex,
-	    	threei : threeIndex,
-	    	customId : threadSet+"-"+threeIndex
-
-		};
-
-		threadArray = getThreadArray(globalThree.weave2D8, threadSet, threeIndex);
-		colorCode = globalPattern[threadSet][patternIndex] || false;
-		colorHex = colorCode ? globalPalette.colors[colorCode].hex : (threadSet == "warp" ? "#0000FF" : "#FFFFFF");
-
-		add3dWave(sx, sy, sz, xRadius, yRadius, waveLength, waveAmplitude, threadArray, orientation, colorHex, userData, pathSegments, radiusSegments, yarnProfile);
-
-	}
-
 	// ----------------------------------------------------------------------------------
 	// Objects & Methods
 	// ----------------------------------------------------------------------------------
@@ -9882,15 +11032,19 @@ $(document).ready ( function(){
 		weft : [],
 		tieup : [],
 		lifting : [],
-		draft : [],
+		threading : [],
 		weave : [],
 		artwork : [],
 		simulation : [],
 		three : [],
 		model : [],
 		update : function(graph){
-			var el = document.getElementById(graph+"-container").getBoundingClientRect();
-			this[graph] = [el.width, el.height, el.top, el.left, el.bottom, el.right];
+
+			$.doTimeout("updatePositions."+graph, 100, function(){
+				var el = document.getElementById(graph+"-container").getBoundingClientRect();
+				globalPositions[graph] = [el.width, el.height, el.top, el.left, el.bottom, el.right];
+			}, graph);
+			
 		}
 	};
 
@@ -9940,10 +11094,10 @@ $(document).ready ( function(){
 		
 		clear : function (set){
 			if (typeof set !== "undefined"){
-				globalPattern.set(45, set, globalPalette.codes.random(1));
+				globalPattern.set(45, set, app.palette.codes.random(1));
 			} else {
-				globalPattern.set(46, "warp", globalPalette.codes.random(1), false);
-				globalPattern.set(47, "weft", globalPalette.codes.random(1));
+				globalPattern.set(46, "warp", app.palette.codes.random(1), false);
+				globalPattern.set(47, "weft", app.palette.codes.random(1));
 			}
 		},
 
@@ -9998,10 +11152,10 @@ $(document).ready ( function(){
 			this.render8(4, yarnSet);
 
 			globalPattern.updateStatusbar();
-			globalPalette.updateChipArrows();
+			app.palette.updateChipArrows();
 
 			if ( !pattern.length ){
-				globalWeave.setProps(7, "graphDrawStyle", "graph");
+				globalWeave.setProps(7, {graphDrawStyle: "graph"});
 			}
 
 			if ( renderWeave ){
@@ -10009,7 +11163,7 @@ $(document).ready ( function(){
 			}
 
 			if ( addHistory ){
-				globalHistory.addStep(5);
+				globalHistory.record(5);
 			}
 
 			globalSimulation.update();
@@ -10021,14 +11175,14 @@ $(document).ready ( function(){
 			// console.log(["globalPattern.render8", instanceId, yarnSet]);
 
 			if ( yarnSet.in("warp", "fabric") ){
-				this.render8Set(g_warpContext, "warp", globalWeave.scrollX, this.seamlessWarp, g_origin);
+				this.render8Set(g_warpContext, "warp", globalWeave.scrollX, this.seamlessWarp, app.origin);
 			}
 
 			if ( yarnSet.in("weft", "fabric") ){
-				this.render8Set(g_weftContext, "weft", globalWeave.scrollY, this.seamlessWeft, g_origin);
+				this.render8Set(g_weftContext, "weft", globalWeave.scrollY, this.seamlessWeft, app.origin);
 			}
 
-			globalPalette.updateChipArrows();
+			app.palette.updateChipArrows();
 
 		},
 
@@ -10093,8 +11247,8 @@ $(document).ready ( function(){
 						index = loopNumber(i, patternSize);
 						code = globalPattern[yarnSet][index];
 						drawX = (i- drawStartIndex) * g_pointPlusGrid + pointDrawOffset;				
-						color = globalPalette.colors[code][fillType];
-						drawRectBuffer(g_origin, pixels, drawX, drawY, rectW, rectH, ctxW, ctxH, fillType, color, 1, gradientOrientation);
+						color = app.palette.colors[code][fillType];
+						drawRectBuffer(app.origin, pixels, drawX, drawY, rectW, rectH, ctxW, ctxH, fillType, color, 1, gradientOrientation);
 
 					}
 
@@ -10109,8 +11263,8 @@ $(document).ready ( function(){
 						index = loopNumber(i, patternSize);
 						code = globalPattern[yarnSet][index];
 						drawY = (i - drawStartIndex) * g_pointPlusGrid + pointDrawOffset;
-						color = globalPalette.colors[code][fillType];
-						drawRectBuffer(g_origin, pixels, drawX, drawY, rectW, rectH, ctxW, ctxH, fillType, color, 1, gradientOrientation);
+						color = app.palette.colors[code][fillType];
+						drawRectBuffer(app.origin, pixels, drawX, drawY, rectW, rectH, ctxW, ctxH, fillType, color, 1, gradientOrientation);
 					}
 
 				}
@@ -10124,9 +11278,9 @@ $(document).ready ( function(){
 				dark32 = rgbaToColor32(51,51,51,255);
 
 				if (yarnSet == "warp"){
-					drawGridOnBuffer(pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, 0, g_gridMajor, 0, light32, dark32, offset, offset, ctxW, ctxH, g_gridThickness);
+					drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, 0, g_gridMajor, 0, light32, dark32, offset, offset, ctxW, ctxH, g_gridThickness);
 				} else {
-					drawGridOnBuffer(pixels, g_pointPlusGrid, g_pointPlusGrid, 0, g_gridMinor, 0, g_gridMajor, light32, dark32, offset, offset, ctxW, ctxH, g_gridThickness);
+					drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, 0, g_gridMinor, 0, g_gridMajor, light32, dark32, offset, offset, ctxW, ctxH, g_gridThickness);
 				}
 				
 			}
@@ -10143,253 +11297,6 @@ $(document).ready ( function(){
 		"colorCode" : ""
 	};
 
-	var globalPalette = {
-
-		colors : {},
-		codes : [..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"],
-		codeString : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-		hexString : "edcd3ff7e8a18c6900e9bd5cbe9800b59663f67b2bff5100d36c5abc693c8e5b52661f2b862518b72a38b52d58cf2243dc3e42e81725ba88a7d1418ad4a8c3d271b4ae71b4754b9bb3a2d2d50773f27a9d7302380a609700719c516eb6375caf01aed687d1d300255708a68c9bc0e082c775cad400aab34d81a78506680d72732e485439503b18000000837a69ada498d1cfb5aeb7bff0e8c2ffffff",
-		selected : "a",
-		marked : false,
-		rightClicked : false,
-		gradientL : 60,
-
-		defaults : {
-
-			hex : "#000000",
-			yarnNumber : 60,
-			yarnNumberSystem : "nec",
-			yarnLuster : 15
-
-		},
-
-		getGradient : function(colorCode, gradienttW, gradientStyle = "linear"){
-
-			var shadeIndex, n;
-			var resultGradient32 = new Uint32Array(gradienttW);
-			var sourceGradient32 = this.colors[colorCode].lineargradient;
-			var sourceGradient32L = sourceGradient32.length;
-			if ( gradientStyle == "linear"){
-				for (n = 0; n < gradienttW; n++) {
-					shadeIndex = Math.ceil(sourceGradient32L/(gradienttW+1)*(n+1))-1;
-					resultGradient32[n] = sourceGradient32[shadeIndex];
-				}
-			} else if ( gradientStyle == "3d"){
-				for (n = 0; n < gradienttW; n++) {
-					shadeIndex = Math.ceil(sourceGradient32L/(gradienttW+1)*(n+1))-1;
-					resultGradient32[n] = sourceGradient32[shadeIndex];
-				}
-			}
-			return resultGradient32;
-
-		},
-
-		setRandom : function(renderWeave = true, history = true){
-
-			var randomColorArray = ["#000000", "#FFFFFF"].concat(randomColors(50));
-			this.codes.forEach(function(c, i){
-				globalPalette.setChip(c, randomColorArray[i], false, false, false, false, false);
-			});
-
-			if ( renderWeave ){
-				globalPattern.render8(6);
-				globalWeave.render2D8(8, "weave");
-			}
-
-			if ( history ){
-				globalHistory.addStep(6);
-			}
-
-		},
-
-		updateChipArrows : function(){
-
-			var warpColors = globalPattern.warp.filter(Boolean).unique();
-			var weftColors = globalPattern.weft.filter(Boolean).unique();
-
-			$(".palette-chip").find(".warpArrow, .weftArrow").hide();
-
-			warpColors.forEach(function(code) {
-				$("#palette-chip-"+code).find(".warpArrow").show();
-			});
-
-			weftColors.forEach(function(code) {
-				$("#palette-chip-"+code).find(".weftArrow").show();
-			});			
-
-		},
-
-		selectChip : function(code){
-
-			var codeA, codeB, newPattern;
-
-			if ( this.marked && code !== 0 && code !== "0" ) {
-
-				globalHistory.recording = false;
-
-				codeA = code;
-				codeB = this.marked;
-
-				if (g_enableWarp){
-					newPattern = globalPattern.warp.replaceAll(codeA, "FLAG");
-					newPattern = newPattern.replaceAll(codeB, codeA);
-					newPattern = newPattern.replaceAll("FLAG", codeB);
-					globalPattern.set(19, "warp", newPattern, false);
-				}
-
-				if (g_enableWeft){
-					newPattern = globalPattern.weft.replaceAll(codeA, "FLAG");
-					newPattern = newPattern.replaceAll(codeB, codeA);
-					newPattern = newPattern.replaceAll("FLAG", codeB);
-					globalPattern.set(19, "weft", newPattern, false);
-				}
-
-				globalHistory.recording = true;
-				globalHistory.addStep();
-				renderAll();
-				
-			}
-
-			this.clearSelection();
-			this.clearMarker();
-			$("#palette-chip-"+code).addClass("highlight-chip");
-			this.selected = code;
-
-		},
-
-		markChip : function(code){
-
-			this.clearMarker();
-			$("#palette-chip-"+code).addClass("mark-chip");
-			this.marked = code;
-
-		},
-
-		clearMarker : function(){
-			globalPalette.marked = false;
-			$(".palette-chip").removeClass("mark-chip");
-		},
-
-		clearSelection : function(){
-			globalPalette.marked = false;
-			$(".palette-chip").removeClass("highlight-chip");
-		},
-
-		compress: function(){
-			var item, arr = [];
-			this.codes.forEach(function(c) {
-				item = globalPalette.colors[c];
-				arr.push(c, item.hex, item.yarn, item.system, item.luster);	
-			});
-			return arr.join();
-		},
-
-		setFromCompressed(code){
-			var arr = chunk(code.split(","), 5);
-			arr.forEach(function(item){
-				globalPalette.setChip(item[0], item[1], item[2], item[3], item[4], false, false);
-			});
-		},
-
-		setChip : function(code, hex = false, yarnNumber = false, yarnNumberSystem = false, yarnLuster = false, renderWeave = true, history = true){
-
-			hex = hex ? hex : this.defaults.hex;
-			yarnNumber = yarnNumber ? yarnNumber : this.defaults.yarnNumber;
-			yarnNumberSystem = yarnNumberSystem ? yarnNumberSystem : this.defaults.yarnNumberSystem;
-			yarnLuster = yarnLuster ? yarnLuster : this.defaults.yarnLuster;
-
-			var alpha = code ? 255 : 0;
-
-			var color = tinycolor(hex);
-
-			var dark = color.saturate(1).darken(globalPalette.yarnShading).toString();
-			var light = color.saturate(1).lighten(globalPalette.yarnLuster).toString();
-
-			var darker = color.darken(10).toString();
-			var bright = color.lighten(10).toString();
-
-			var light2 = color.lighten(20).toString();
-			var dark2 = color.darken(50).toString();
-			
-			var color32 = hexToColor32(hex, alpha);
-			var dark32 = hexToColor32(dark, alpha);
-			var light32 = hexToColor32(light, alpha);
-
-			var darker32 = hexToColor32(dark, alpha);
-			var bright32 = hexToColor32(bright, alpha);
-
-			var rgba = hexToRgba1(hex);
-
-			var rgba_str = color.toRgbString();
-			var yarn = yarnNumber;
-			var system = yarnNumberSystem;
-			var luster = yarnLuster;
-
-			//var gradient = gradient32Arr(g_pointW, 0, dark, 0.25, hex, 0.5, light, 0.75, hex, 1, dark);
-			// var lineargradient = gradient32Arr(60, 0, "#FFFFCC", 0.30, hex, 0.50, hex, 0.70, hex, 1, "#330000");
-			//var lineargradient = gradient32Arr(60, 0, "#FFFFCC", 0.50, hex, 1, "#330000");
-
-			var lineargradient = gradient32Arr(this.gradientL, 0, light2, 0.50, hex, 1, dark2);
-			var gradientData = getGradientData(this.gradientL, 0, light2, 0.50, hex, 1, dark2);
-
-			this.colors[code] = {
-				hex : hex,
-				color32 : color32,
-				dark32 : dark32,
-				light32 : light32,
-				darker32 : darker32,
-				bright32 : bright32,
-				dark : dark,
-				darker: darker,
-				bright: bright,
-				light : light,
-				rgba : rgba,
-				rgba_str : rgba_str,
-				yarn : yarn,
-				system : system,
-				luster : luster,
-				lineargradient : lineargradient,
-				gradientData : gradientData,
-			};
-
-			if ( code !== 0 && code !== "0"){
-				$("#palette-chip-"+code+" .colorBox").css("background-image", "none").css("background-color", hex);
-			}
-
-			if ( (hex || yarnNumber || yarnNumberSystem) && renderWeave ){
-				globalPattern.render8(7);
-				globalWeave.render2D8(9, "weave");
-			}
-
-			if ( history ){
-				globalHistory.addStep(7);
-				globalSimulation.update();
-			}
-
-		},
-
-		showColorPicker(code){
-
-			this.selectChip(code);
-			colorPicker.setColor(this.colors[code].hex);
-			var element = $("#palette-chip-"+code);
-			var x = element.offset().left;
-			var y = element.offset().top;
-			var w = element.width();
-			var h = element.height();
-			colorPickerPopup.show(x,y,w,h);
-			$("#yarnnumberinput input").val(this.colors[code].yarn);
-			$("#yarnsystemselect").val(this.colors[code].system);
-			$("#yarnlusterinput input").val(this.colors[code].luster);
-
-		},
-
-		hideColorPicker(){
-			colorPickerPopup.hide();
-		}
-
-	};
-
 	// ----------------------------------------------------------------------------------
 	// GLOBAL ARTWORK
 	// ----------------------------------------------------------------------------------
@@ -10402,7 +11309,7 @@ $(document).ready ( function(){
 	    	$("#sb-weave").hide();
 	    	$("#sb-tieup").hide();
 	    	$("#sb-pattern").hide();
-	    	$("#sb-draft").hide();
+	    	$("#sb-threading").hide();
 	    	$("#sb-lifting").hide();
 	    	$("#sb-three").hide();
 	    	$("#sb-model").hide();
@@ -10417,9 +11324,9 @@ $(document).ready ( function(){
 				$("#sb-artwork").show();
 				$("#sb-artwork-colors").show();
 
-			} else if ( graph == "draft"){
+			} else if ( graph == "threading"){
 
-				$("#sb-draft").show();
+				$("#sb-threading").show();
 
 			} else if ( graph == "lifting"){
 
@@ -10451,7 +11358,7 @@ $(document).ready ( function(){
 
 		set : function(item, var1, var2, var3){
 
-			var ww, wh, pw, ph;
+			var ww, wh, pw, ph, txt;
 
 			if ( item == "patternSize"){
 			
@@ -10474,17 +11381,18 @@ $(document).ready ( function(){
 			
 			} else if ( item == "shaftCount"){
 				
-				//$("#sb-shaft-count").text("Shafts: " + getWeaveShafts());
+				//$("#sb-shaft-count").text("Shafts: " + getWeaveShafts()); 
 
-				$("#sb-weave-shafts").text("Shafts = " + var1);
+				txt = isNaN(var1) ? var1 : "Shafts = " + var1;
+				$("#sb-weave-shafts").text(txt);
 			
 			} else if ( item == "weaveIntersection"){
 				
 				$("#sb-weave-intersection").text(var1 + ", " + var2);
 
-			} else if ( item == "draftIntersection"){
+			} else if ( item == "threadingIntersection"){
 				
-				$("#sb-draft-intersection").text(var1 + ", " + var2);
+				$("#sb-threading-intersection").text(var1 + ", " + var2);
 
 			} else if ( item == "liftingIntersection"){
 
@@ -10549,7 +11457,7 @@ $(document).ready ( function(){
 				} else {
 					$("#sb-pattern-color").css({
 						"background-image": "none",
-						"background-color": globalPalette.colors[var1].hex
+						"background-color": app.palette.colors[var1].hex
 					});
 					$("#sb-pattern-code").text(var1);
 				}
@@ -10585,13 +11493,13 @@ $(document).ready ( function(){
 				var py = "-";
 
 				if ( var1 ){
-					tx = var1 + globalThree.warpStart - 1;
+					tx = var1 + globalThree.params.warpStart - 1;
 					wx = loopNumber(tx-1, ww)+1;
 					px = loopNumber(tx-1, pw)+1;
 				}
 
 				if ( var2 ){
-					ty = var2 + globalThree.weftStart - 1;
+					ty = var2 + globalThree.params.weftStart - 1;
 					wy = loopNumber(ty-1, wh)+1;
 					py = loopNumber(ty-1, ph)+1;
 				}
@@ -10788,6 +11696,15 @@ $(document).ready ( function(){
 		maxScrollX : 0,
 		maxScrollY : 0,
 
+		onTabSelect : function(){
+
+			createArtworkLayout(3);
+	    	globalStatusbar.set("artworkIntersection", "-", "-");
+	    	globalStatusbar.set("artworkColor", "-", "-");
+	    	globalStatusbar.set("artworkColorCount");
+
+		},
+
 		setArtwork8 : function(arr8, colors32, pixelCounts){
 
 			var [iw, ih] = arr8.get("wh");
@@ -10904,7 +11821,7 @@ $(document).ready ( function(){
 			if ( render ){
 				this.updateScrollingParameters(1);
 				this.render2D8(10);
-				//updateAppSettings();
+				//app.saveConfigurations(9);
 			}
 			
 		},
@@ -10988,7 +11905,7 @@ $(document).ready ( function(){
 						drawY = (y - drawStartIndexY) * pixelH + pointOffsetY;
 						colorIndex = arr[arrX][arrY];
 						color = this.colors[colorIndex].rgba;
-						drawRectBuffer(g_origin, pixels, drawX, drawY, pixelW, pixelH, ctxW, ctxH, "rgba", color);
+						drawRectBuffer(app.origin, pixels, drawX, drawY, pixelW, pixelH, ctxW, ctxH, "rgba", color);
 					}
 				}
 				
@@ -11000,7 +11917,7 @@ $(document).ready ( function(){
 						arrY = loopNumber(arrH - y - 1, arrH);
 						drawY = (y - drawStartIndexY) * pixelH + pointOffsetY;
 						color = this.buffer32[arrY * arrW + arrX];
-						drawRectBuffer(g_origin, pixels, drawX, drawY, pixelW, pixelH, ctxW, ctxH, "color32", color);
+						drawRectBuffer(app.origin, pixels, drawX, drawY, pixelW, pixelH, ctxW, ctxH, "color32", color);
 					}
 				}
 				*/
@@ -11238,7 +12155,7 @@ $(document).ready ( function(){
 
 		},
 
-		//spinnerHTML("acw-"+i+"offsetx", "spinner-counter", 0, 0, 0)
+		//spinnerHTML("acw-"+i+"offsetx", "spinner-counter", 0);
 
 		populateColorList : function(){
 
@@ -11370,14 +12287,770 @@ $(document).ready ( function(){
 
 	};
 
-	function spinnerHTML(id, trigger, val, min, max){
+	function spinnerHTML(id, css = false, val, min = null, max = null, step = false, precision = false){
+
+		css = css ? " "+css : "";
+		min = min !== null ? " data-min=\""+min+"\"" : "";
+		max = max !== null ? " data-min=\""+max+"\"" : "";
+		step = step ? " data-step=\""+step+"\"" : "";
+		precision = precision ? " data-precision=\""+precision+"\"" : "";
+		
 		var html = "";
-		html += "<div data-trigger=\""+trigger+"\" id=\""+id+"\" class=\"spinner-counter\">";
+		html += "<div id=\""+id+"\" data-trigger=\"spinner\" class=\""+css+"\">";
 			html += "<a data-spin=\"down\" class=\"spinner-down\"></a>";
-			html += "<input type=\"text\" value=\""+val+"\" data-rule=\"quantity\" data-min=\""+min+"\" data-max=\""+max+"\">";
+			html += "<input type=\"text\" value=\""+val+"\" data-rule=\"quantity\""+ min + max + step + precision +">";
 			html += "<a data-spin=\"up\" class=\"spinner-up\"></a>";
 		html += "</div>";
 		return html;
+
+	}
+
+
+	function g(id){
+
+		if ( id == "weave" ){
+			return globalWeave;
+		} else if ( id == "artwork"){
+			return globalArtwork;
+		} else if ( id == "simulation"){
+			return globalSimulation;
+		} else if ( id == "three"){
+			return globalThree;
+		} else if ( id == "model"){
+			return globalModel;
+		}
+
+	}
+
+	var app = {
+
+		origin: "bl",
+
+		colors: {
+			black32: rgbaToColor32(0,0,0),
+			black5032: rgbaToColor32(0,0,0,127),
+			white32: rgbaToColor32(255,255,255),
+			red32: rgbaToColor32(255,0,0),
+			green32: rgbaToColor32(0,255,0),
+			blue32: rgbaToColor32(0,0,255),
+			grey32: rgbaToColor32(127,127,127),
+			BGLight32: rgbaToColor32(255,255,255,64),
+			BGDark32: rgbaToColor32(0,0,0,13),
+			gridLight32: rgbaToColor32(153,153,153,255),
+			gridDark32: rgbaToColor32(51,51,51,255),
+			
+			rgba:{
+				black: {r:0, g:0, b:0, a:1},
+				black50: {r:0, g:0, b:0, a:0.5},
+				white: {r:255, g:255, b:255, a:1},
+				red: {r:255, g:0, b:0, a:1},
+				green: {r:0, g:255, b:0, a:1},
+				blue: {r:0, g:0, b:255, a:1},
+				grey: {r:127, g:127, b:127, a:1}
+			},
+			
+			rgba_str: {
+				black 	: "rgba(0,0,0,1)",
+				white 	: "rgba(255,255,255,1)",
+				grey	: "rgba(192,192,192,1)",
+				red 	: "rgba(255,0,0,1)",
+				green 	: "rgba(0,255,0,1)",
+				blue 	: "rgba(0,0,255,1)",
+				red1 : "rgba(255,0,0,1)",
+				red2 : "rgba(255,0,0,0.5)",
+				red3 : "rgba(255,0,0,0.33)",
+				green1 : "rgba(0,255,0,1)",
+				green2 : "rgba(0,255,0,0.5)",
+				green3 : "rgba(0,255,0,0.33)",
+				blue1 : "rgba(0,0,255,1)",
+				blue2 : "rgba(0,0,255,0.5)",
+				blue3 : "rgba(0,0,255,0.33)"
+			}
+		},
+
+		generateState : function(){
+			app.palette.setRandom(false, false);
+			autoPattern();
+			globalWeave.setGraph2D8("weave", weaveTextToWeave2D8("UD_DU"));
+			setProjectName(g_projectName, false);
+		},
+
+		palette : {
+
+			colors : {},
+			codes : [..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"],
+			selected : "a",
+			marked : false,
+			rightClicked : false,
+			gradientL : 60,
+
+			defaults : {
+
+				hex : "#000000",
+				yarnNumber : 60,
+				yarnNumberSystem : "nec",
+				yarnLuster : 15
+
+			},
+
+			getGradient : function(colorCode, gradienttW, gradientStyle = "linear"){
+
+				var shadeIndex, n;
+				var resultGradient32 = new Uint32Array(gradienttW);
+				var sourceGradient32 = this.colors[colorCode].lineargradient;
+				var sourceGradient32L = sourceGradient32.length;
+				if ( gradientStyle == "linear"){
+					for (n = 0; n < gradienttW; n++) {
+						shadeIndex = Math.ceil(sourceGradient32L/(gradienttW+1)*(n+1))-1;
+						resultGradient32[n] = sourceGradient32[shadeIndex];
+					}
+				} else if ( gradientStyle == "3d"){
+					for (n = 0; n < gradienttW; n++) {
+						shadeIndex = Math.ceil(sourceGradient32L/(gradienttW+1)*(n+1))-1;
+						resultGradient32[n] = sourceGradient32[shadeIndex];
+					}
+				}
+				return resultGradient32;
+
+			},
+
+			setRandom : function(renderWeave = true, history = true){
+
+				var randomColorArray = ["#000000", "#FFFFFF"].concat(randomColors(50));
+				this.codes.forEach(function(c, i){
+					app.palette.setChip(c, randomColorArray[i], false, false, false, 0, false, false);
+				});
+
+				if ( renderWeave ){
+					globalPattern.render8(6);
+					globalWeave.render2D8(8, "weave");
+				}
+
+				if ( history ){
+					globalHistory.record(6);
+				}
+
+			},
+
+			setDefault : function(renderWeave = true, history = true){
+
+				//var def = "edcd3ff7e8a18c6900e9bd5cbe9800b59663f67b2bff5100d36c5abc693c8e5b52661f2b862518b72a38b52d58cf2243dc3e42e81725ba88a7d1418ad4a8c3d271b4ae71b4754b9bb3a2d2d50773f27a9d7302380a609700719c516eb6375caf01aed687d1d300255708a68c9bc0e082c775cad400aab34d81a78506680d72732e485439503b18000000837a69ada498d1cfb5aeb7bff0e8c2ffffff";
+				var def = "000000ffffffdd4132ff6f61d36c5a8e5b52fa9a854a342ebc693cf967149f9c99ada498b59663837a69e9bd5cd2c29d8c6900f0ead6be9800f7e8a1b9a023f3e7796162478c944048543982c77506680d08a68c174a4587d1d301aed60a60975772849bc0e000539c2a4b7c2a293eb3a2d2ae71b4d271b485677bba88a7d4a8c3730238c62168b52d58f27a9dce5b78cf2243661f2b9b1b3072262c";
+				var arr = def.match(/.{1,6}/g);
+				this.codes.forEach(function(c, i){
+					app.palette.setChip(c, "#"+arr[i], false, false, false, 0, false, false);
+				});
+
+				if ( renderWeave ){
+					globalPattern.render8(6);
+					globalWeave.render2D8(8, "weave");
+				}
+
+				if ( history ){
+					globalHistory.record();
+				}
+
+			},
+
+			updateChipArrows : function(){
+
+				var warpColors = globalPattern.warp.filter(Boolean).unique();
+				var weftColors = globalPattern.weft.filter(Boolean).unique();
+
+				$(".palette-chip").find(".warpArrow, .weftArrow").hide();
+
+				warpColors.forEach(function(code) {
+					$("#palette-chip-"+code).find(".warpArrow").show();
+				});
+
+				weftColors.forEach(function(code) {
+					$("#palette-chip-"+code).find(".weftArrow").show();
+				});			
+
+			},
+
+			selectChip : function(code){
+
+				var codeA, codeB, newPattern;
+
+				if ( this.marked && code !== 0 && code !== "0" ) {
+
+					globalHistory.stop();
+
+					codeA = code;
+					codeB = this.marked;
+
+					if (g_enableWarp){
+						newPattern = globalPattern.warp.replaceAll(codeA, "FLAG");
+						newPattern = newPattern.replaceAll(codeB, codeA);
+						newPattern = newPattern.replaceAll("FLAG", codeB);
+						globalPattern.set(19, "warp", newPattern, false);
+					}
+
+					if (g_enableWeft){
+						newPattern = globalPattern.weft.replaceAll(codeA, "FLAG");
+						newPattern = newPattern.replaceAll(codeB, codeA);
+						newPattern = newPattern.replaceAll("FLAG", codeB);
+						globalPattern.set(19, "weft", newPattern, false);
+					}
+
+					globalHistory.start();
+					globalHistory.record();
+					renderAll();
+					
+				}
+
+				this.clearSelection();
+				this.clearMarker();
+				$("#palette-chip-"+code).addClass("highlight-chip");
+				this.selected = code;
+
+			},
+
+			markChip : function(code){
+
+				this.clearMarker();
+				$("#palette-chip-"+code).addClass("mark-chip");
+				this.marked = code;
+
+			},
+
+			clearMarker : function(){
+				app.palette.marked = false;
+				$(".palette-chip").removeClass("mark-chip");
+			},
+
+			clearSelection : function(){
+				app.palette.marked = false;
+				$(".palette-chip").removeClass("highlight-chip");
+			},
+
+			compress: function(){
+				var item, arr = [];
+				this.codes.forEach(function(c) {
+					item = app.palette.colors[c];
+					arr.push(c, item.hex, item.yarn, item.system, item.luster, item.eccentricity);	
+				});
+				return arr.join();
+			},
+
+			hexString: function(){
+				var arr = [];
+				this.codes.forEach(function(c) {
+					arr.push(app.palette.colors[c].hex);	
+				});
+				return arr.join("").replace(/#/g, "");
+			},
+
+			sortBy: function(sortMethod = "hue"){
+
+				var currentPaletteCode = app.palette.compress();
+
+				if ( sortMethod == "hue" ){
+					var currentPaletteArray = chunk(currentPaletteCode.split(","), 6);
+					currentPaletteArray.forEach(function(item, i){
+						item.push(app.palette.colors[item[0]].hsl.h);
+					});
+					currentPaletteArray.sort(function(a,b) { return a[5] - b[5] });
+					var sortedCodes = currentPaletteArray.map(a => a[0]);
+					this.codes.forEach(function(c, i) {
+						app.palette.setChip(c, currentPaletteArray[i][1], currentPaletteArray[i][2], currentPaletteArray[i][3], currentPaletteArray[i][4], currentPaletteArray[i][5], false, false);
+					});
+					var newWarpPattern = globalPattern.warp.replaceElements(sortedCodes, this.codes);
+					var newWeftPattern = globalPattern.weft.replaceElements(sortedCodes, this.codes);
+					globalPattern.set(23, "warp", newWarpPattern, false, 0, false, false);
+					globalPattern.set(23, "weft", newWeftPattern, false, 0, false, false);
+					renderAll();
+					globalHistory.record(112);
+				}
+
+			},
+
+			setFromCompressed(code){
+				var arr = chunk(code.split(","), 6);
+				arr.forEach(function(item){
+					app.palette.setChip(item[0], item[1], item[2], item[3], item[4], item[5], false, false);
+				});
+			},
+
+			setChip : function(code, hex = false, yarnNumber = false, yarnNumberSystem = false, yarnLuster = false, yarnEccentricity = 0.1, renderWeave = true, history = true){
+
+				hex = hex ? hex : this.defaults.hex;
+				yarnNumber = yarnNumber ? yarnNumber : this.defaults.yarnNumber;
+				yarnNumberSystem = yarnNumberSystem ? yarnNumberSystem : this.defaults.yarnNumberSystem;
+				yarnLuster = yarnLuster ? yarnLuster : this.defaults.yarnLuster;
+
+				var alpha = code ? 255 : 0;
+
+				var color = tinycolor(hex);
+
+				var dark = color.saturate(1).darken(app.palette.yarnShading).toString();
+				var light = color.saturate(1).lighten(app.palette.yarnLuster).toString();
+
+				var darker = color.darken(10).toString();
+				var bright = color.lighten(10).toString();
+
+				var light2 = color.lighten(20).toString();
+				var dark2 = color.darken(50).toString();
+				
+				var color32 = hexToColor32(hex, alpha);
+				var dark32 = hexToColor32(dark, alpha);
+				var light32 = hexToColor32(light, alpha);
+
+				var darker32 = hexToColor32(dark, alpha);
+				var bright32 = hexToColor32(bright, alpha);
+
+				var rgba = hexToRgba1(hex);
+
+				var hsl = rgbToHsl(rgba);
+
+				var rgba_str = color.toRgbString();
+				var yarn = yarnNumber;
+				var system = yarnNumberSystem;
+				var luster = yarnLuster;
+
+				var yarnRadius = getYarnRadius(yarnNumber, yarnNumberSystem, yarnEccentricity);
+
+				//var gradient = gradient32Arr(g_pointW, 0, dark, 0.25, hex, 0.5, light, 0.75, hex, 1, dark);
+				// var lineargradient = gradient32Arr(60, 0, "#FFFFCC", 0.30, hex, 0.50, hex, 0.70, hex, 1, "#330000");
+				//var lineargradient = gradient32Arr(60, 0, "#FFFFCC", 0.50, hex, 1, "#330000");
+
+				var lineargradient = gradient32Arr(this.gradientL, 0, light2, 0.50, hex, 1, dark2);
+				var gradientData = getGradientData(this.gradientL, 0, light2, 0.50, hex, 1, dark2);
+
+				this.colors[code] = {
+					hex : hex,
+					color32 : color32,
+					dark32 : dark32,
+					light32 : light32,
+					darker32 : darker32,
+					bright32 : bright32,
+					dark : dark,
+					darker: darker,
+					bright: bright,
+					light : light,
+					rgba : rgba,
+					rgba_str : rgba_str,
+					yarn : yarn,
+					system : system,
+					luster : luster,
+					lineargradient : lineargradient,
+					gradientData : gradientData,
+					hsl: hsl,
+					eccentricity: yarnEccentricity,
+					radius: yarnRadius
+				};
+
+				if ( code !== 0 && code !== "0"){
+					$("#palette-chip-"+code+" .colorBox").css("background-image", "none").css("background-color", hex);
+				}
+
+				if ( (hex || yarnNumber || yarnNumberSystem) && renderWeave ){
+					globalPattern.render8(7);
+					globalWeave.render2D8(9, "weave");
+				}
+
+				if ( history ){
+					globalHistory.record(7);
+					globalSimulation.update();
+				}
+
+			},
+
+			showColorPicker(code){
+
+				this.selectChip(code);
+				colorPicker.setColor(this.colors[code].hex);
+				var element = $("#palette-chip-"+code);
+				var x = element.offset().left;
+				var y = element.offset().top;
+				var w = element.width();
+				var h = element.height();
+				colorPickerPopup.show(x,y,w,h);
+				$("#yarnnumberinput input").val(this.colors[code].yarn);
+				$("#yarnsystemselect").val(this.colors[code].system);
+				$("#yarnlusterinput input").val(this.colors[code].luster);
+				$("#yarneccentricityinput input").val(this.colors[code].eccentricity);
+			},
+
+			hideColorPicker(){
+				colorPickerPopup.hide();
+			}
+
+		},
+
+		weave: {
+			needUpdate: true,
+			layout:{
+				needUpdate: true
+			}
+		},
+
+		threading: {
+			needUpdate: true
+		},
+
+		lifting: {
+			needUpdate: true
+		},
+
+		tieup: {
+			needUpdate: true
+		},
+
+		warp: {
+			needUpdate: true
+		},
+
+		weft: {
+			needUpdate: true
+		},
+
+		artwork: {
+			needUpdate: true
+		},
+
+		three: {
+			needUpdate: true
+		},
+
+		model: {
+			needUpdate: true
+		},
+
+		tabs: {
+			active: "weave"
+		},
+
+		mouse: {
+			graph : "",
+			isDown : false,
+			which : 0,
+			colNum : 0,
+			rowNum : 0,
+			endNum : 0,
+			pickNum : 0,
+			graphPos : "",
+			currentx : 0,
+			currenty : 0,
+
+			set : function(graph, colNum, rowNum, state = false, which = 0){
+				this.graph = graph;
+				this.colNum = colNum;
+				this.rowNum = rowNum;
+				this.endNum = mapEnds(colNum);
+				this.pickNum = mapPicks(rowNum);
+				this.isDown = state;
+				this.which = which;
+				this.graphPos = graph +"-"+ colNum +"-"+ rowNum;
+			},
+
+			reset : function(){
+				this.graph = "";
+				this.colNum = 0;
+				this.rowNum = 0;
+				this.endNum = 0;
+				this.pickNum = 0;
+				this.isDown = false;
+			}
+		},
+
+		storage: {},
+
+		renderWeave : function(){
+
+			if ( app.tabs.active  == "weave" ){
+
+				if ( app.weave.needUpdate ){
+					globalWeave.updateScrollingParameters(3);
+					globalWeave.render2D8(60);
+					updateScrollbar("weave-scrollbar-x");
+					updateScrollbar("weave-scrollbar-y");
+				}
+
+			}
+
+		},
+
+		stateStorageID: "wd_active",
+		configStorageID: "wd_settings",
+
+		getState: function(instanceId){
+
+			console.log(["app.getState", instanceId]);
+
+			var weave, threading, lifting, tieup;
+
+			var timeStamp = Date.now();
+
+			var warpPattern = compress1D(globalPattern.warp);
+			var weftPattern = compress1D(globalPattern.weft);
+
+			var liftingMode = globalWeave.liftingMode;
+
+			var weave = liftingMode == "weave" && globalWeave.weave2D8 ? convert_2d8_str(globalWeave.weave2D8) : false;
+			var threading = liftingMode.in("pegplan", "treadling", "compound") && globalWeave.threading2D8 ? convert_2d8_str(globalWeave.threading2D8) : false;
+			var lifting = liftingMode.in("pegplan", "treadling", "compound") && globalWeave.lifting2D8 ? convert_2d8_str(globalWeave.lifting2D8) : false;
+			var tieup = liftingMode.in("treadling", "compound") && globalWeave.tieup2D8 ? convert_2d8_str(globalWeave.tieup2D8) : false;
+			
+			var palette = app.palette.compress();
+
+			var backgroundColor = g_backgroundColor;
+
+			var authorName = g_authorName;
+			var appVersion = g_appVersion;
+			var projectName = g_projectName;
+			var projectNotes = g_projectNotes;
+
+			var warpSize = g_warpSize;
+			var weftSize = g_weftSize;
+			var warpSpace = g_warpSpace;
+			var weftSpace = g_weftSpace;
+
+			var warpCount = g_warpCount;
+			var weftCount = g_weftCount;
+			var warpDensity = g_warpDensity;
+			var weftDensity = g_weftDensity;
+
+			var screenDPI = g_screenDPI;
+			
+			var stateObj = {
+			    "tms": timeStamp, 
+			    "ver": appVersion,
+			    "ath": authorName,
+			    "pnm": projectName,
+			    "pnt": projectNotes,
+			    "plt": palette,
+			    "wve": weave,
+			    "dft": threading,
+			    "lft": lifting,
+			    "tup": tieup,
+			    "bgc": backgroundColor,
+			    "wps": warpSize,
+			    "wfs": weftSize,
+			    "wpp": warpSpace,
+			    "wfp": weftSpace,
+			    "wpc": warpCount,
+			    "wfc": weftCount,
+			    "wpd": warpDensity,
+			    "wfd": weftDensity,
+			    "scd": screenDPI,
+			    "clw": [
+					{
+					    "wpt": warpPattern, 
+				        "wft": weftPattern
+					}
+				]
+			};
+
+			var stateValidity = djb2Code(JSON.stringify(stateObj));
+			stateObj.psc = stateValidity;
+			return JSON.stringify(stateObj);
+
+		},
+
+		setState: function(instanceId = 0, stateData, options = false){
+
+			// console.log(["app.setState", instanceId]);
+
+			var stateObj = JSON.parse(stateData);
+
+			var timeStamp = stateObj.tms;
+			var appVersion = stateObj.ver;
+			var authorName = stateObj.ath;
+			var projectName = stateObj.pnm;
+			var projectNotes = stateObj.pnt;
+
+			var palette = stateObj.plt;
+			var weave = stateObj.wve;
+			var threading = stateObj.dft;
+			var lifting = stateObj.lft;
+			var tieup = stateObj.tup;
+
+			var artworkDataURL = stateObj.atw;
+
+			var warpSize = stateObj.wpz;
+			var weftSize = stateObj.wfz;
+			var warpSpace = stateObj.wpp;
+			var weftSpace = stateObj.wfp;
+			var warpCount = stateObj.wpc;
+			var weftCount = stateObj.wfc;
+			var warpDensity = stateObj.wpd;
+			var weftDensity = stateObj.wfd;
+			var screenDPI = stateObj.scd;
+			var backgroundColor = stateObj.bgc;
+
+			var warpPattern = stateObj.clw[0].wpt;
+			var weftPattern = stateObj.clw[0].wft;
+
+			if ( !options || (options.hasOwnProperty("palette") && options.palette) ) {
+				app.palette.setFromCompressed(palette);
+			}
+
+			var setPattern = false;
+
+			if ( !options || (options.hasOwnProperty("warp") && options.warp) ) {
+				setPattern = true;
+				globalPattern.set(23, "warp", decompress1D(warpPattern), false, 0, false, false);
+			}
+
+			if ( !options || (options.hasOwnProperty("weft") && options.weft) ) {
+				setPattern = true;
+				globalPattern.set(24, "weft", decompress1D(weftPattern), false, 0, false, false);
+			}
+
+			if ( !options || (options.hasOwnProperty("weave") && options.weave) ) {
+
+				if ( weave ){
+					globalWeave.setGraph2D8("weave", convert_str_2d8(weave), 0, 0, false, false);
+				} else {
+
+					if ( threading ){
+						globalWeave.setGraph2D8("threading", convert_str_2d8(threading), 0, 0, false, false);
+					}
+
+					if ( lifting ){
+						globalWeave.setGraph2D8("lifting", convert_str_2d8(lifting), 0, 0, false, false);
+					}
+
+					if ( tieup ){
+						globalWeave.setGraph2D8("tieup", convert_str_2d8(tieup), 0, 0, false, false);
+					} else {
+						globalWeave.setStraightTieup(Math.max(globalWeave.threading2D8[0].length, globalWeave.lifting2D8.length));
+					}
+
+					globalWeave.setWeaveFromParts(false, false, false, false, false);
+
+				}
+
+				globalWeave.setGraph2D8("weave");
+
+			}
+
+			if ( setPattern ){
+				globalPattern.render8(2);
+			}
+
+			/*
+
+			if (importArtwork) {
+				globalArtwork.drawDataURL(artworkDataURL);
+			}
+
+			*/
+
+			if ( !options || (options.hasOwnProperty("settings") && options.settings) ) {
+
+			/*
+
+				setSimulationParameters(warpSize, weftSize, warpSpace, weftSpace, warpCount, weftCount, warpDensity, weftDensity, screenDPI, 1, 1);
+				g_projectNotes = projectNotes;
+				$("#project-properties-notes").val(projectNotes);	
+
+				if( projectName === "" ){
+					
+					setProjectName("Untitled Project");
+					
+				} else {
+
+					setProjectName(projectName, false);
+				
+				}
+
+			*/
+
+			}
+
+
+		},
+
+		validateState: function(state) {
+			var isValid = false;
+			if ( IsJsonString(state) ){
+				var projectObj = JSON.parse(state);
+				var projectFileSecurityCode = projectObj.psc;
+				delete projectObj.psc;
+				var projectContentSecurityCode = djb2Code(JSON.stringify(projectObj));
+				isValid = projectFileSecurityCode == projectContentSecurityCode ? true : false ;
+			}
+			return isValid;
+		},
+
+		saveConfigurations: function(instanceId){
+
+			console.log(["saveConfigurations", instanceId]);
+
+			var timeStamp = Date.now();
+			var pointPlusGrid = g_pointPlusGrid;
+			var showGrid = g_showGrid;
+
+			var seamlessWeave = globalWeave.seamlessWeave;
+			var seamlessThreading = globalWeave.seamlessThreading;
+			var seamlessLifting = globalWeave.seamlessLifting;
+			var seamlessWarp = globalPattern.seamlessWarp;
+			var seamlessWeft = globalPattern.seamlessWeft;
+
+			var graphDrawStyle = globalWeave.drawStyle;
+			var liftingMode = globalWeave.liftingMode;
+			var activeTab = app.tabs.active;
+
+			var config = {
+			    tms: timeStamp, 
+			    ppg: pointPlusGrid,
+			    sgr: showGrid,
+			    slw: seamlessWeave,
+			    sld: seamlessThreading,
+			    sll: seamlessLifting,
+			    slp: seamlessWarp,
+			    slt: seamlessWeft,
+			    gds: graphDrawStyle,
+			    atb: activeTab,
+			    lfm: liftingMode
+			};
+
+			//console.log(config);
+
+			localStorage[app.configStorageID] = JSON.stringify(config);
+
+		},
+
+		restoreConfigurations: function(configs, render = true){
+
+			configs = configs ? configs : localStorage[app.configStorageID];
+
+			if ( configs ){
+
+				var config = JSON.parse(configs);
+				var pointPlusGrid = config.ppg;
+				var showGrid = config.sgr;
+				var seamlessWeave = config.slw;
+				var seamlessThreading = config.sld;
+				var seamlessLifting = config.sll;
+				var seamlessWarp = config.slp;
+				var seamlessWeft = config.slt;
+				var liftingMode = config.lfm;
+				var graphDrawStyle = config.gds;
+				var activeTab = config.atb;
+
+				globalWeave.setProps(10,{
+					pointPlusGrid: config.ppg,
+					showGrid: config.sgr,
+					seamlessWeave: config.slw,
+					seamlessThreading: config.sld,
+					seamlessLifting: config.sll,
+					seamlessWarp: config.slp,
+					seamlessWeft: config.slt,
+					graphDrawStyle: config.gds,
+					render: false
+				});
+
+				setLiftingMode(liftingMode);
+				mainTabbar.tabs(activeTab).setActive();
+
+			}
+
+		}
+
 	}
 
 	var globalWeave = {
@@ -11390,8 +13063,8 @@ $(document).ready ( function(){
 		ends : 0,
 		picks : 0,
 		shafts : 0,
-		draft1D : false,
-		draft2D8 : false,
+		threading1D : false,
+		threading2D8 : false,
 		tieup2D8 : false,
 		lifting2D8 : false,
 		treadling1D : false,
@@ -11400,7 +13073,7 @@ $(document).ready ( function(){
 		
 		seamless : false,
 		seamlessWeave : false,
-		seamlessDraft : false, 
+		seamlessThreading : false, 
 		seamlessLifting : false,
 		
 		viewW : 0,
@@ -11422,6 +13095,15 @@ $(document).ready ( function(){
 		maxPPG : Math.floor(16 * g_pixelRatio),
 
 		autoTrim : true,
+
+		liftingMode : "weave", // "weave", "pegplan", "treadling", "compound"
+
+		onTabSelect : function(){
+
+			createWeaveLayout(22);
+	    	globalStatusbar.set("weaveIntersection", "-", "-");
+
+		},
 
 		new : function(ends, picks){
 			this.set(36, newArray2D8(19, ends, picks));
@@ -11459,20 +13141,21 @@ $(document).ready ( function(){
 			if ( render){
 				globalWeave.render2D8(12, "weave");
 				globalPattern.render8(8);
-				if ( g_liftingMode !== "weave"){
+				if ( globalWeave.liftingMode !== "weave"){
 					globalWeave.render2D8(13, "lifting");
-					globalWeave.render2D8(14, "draft");
+					globalWeave.render2D8(14, "threading");
 				}
 			}
 
 		},
 
-		setDraft1D : function(){
+		setThreading1D : function(){
+			console.log("setThreading1D");
 			var x;
-			var draftW = this.draft2D8.length;
-			this.draft1D = [];
-			for (x = 0; x < draftW; x++) {
-				this.draft1D.push(this.draft2D8[x].indexOf(1)+1);				
+			var threadingW = this.threading2D8.length;
+			this.threading1D = [];
+			for (x = 0; x < threadingW; x++) {
+				this.threading1D.push(this.threading2D8[x].indexOf(1)+1);				
 			}
 		},
 
@@ -11494,8 +13177,8 @@ $(document).ready ( function(){
 			if ( graph == "weave" ){
 				seamlessX = this.seamlessWeave;
 				seamlessY = this.seamlessWeave;
-			} else if ( graph == "draft" ){
-				seamlessX = this.seamlessDraft;
+			} else if ( graph == "threading" ){
+				seamlessX = this.seamlessThreading;
 			}  else if ( graph == "lifting" ){
 				seamlessY = this.seamlessLifting;
 			}
@@ -11518,7 +13201,7 @@ $(document).ready ( function(){
 			} else if ( startEnd && startPick && !lastEnd && !lastPick ){
 
 
-				startEnd = globalWeave.seamless && ["weave", "draft"].includes(graph) ? mapNumber(startEnd, 1, arrW) : startEnd;
+				startEnd = globalWeave.seamless && ["weave", "threading"].includes(graph) ? mapNumber(startEnd, 1, arrW) : startEnd;
 				startPick = globalWeave.seamless && ["weave", "lifting"].includes(graph) ? mapNumber(startPick, 1, arrH) : startPick;
 
 				if ( arr[startEnd-1] !== undefined && arr[startPick-1] !== undefined ){
@@ -11556,8 +13239,8 @@ $(document).ready ( function(){
 			if ( graph == "weave" ){
 				seamlessX = this.seamlessWeave;
 				seamlessY = this.seamlessWeave;
-			} else if ( graph == "draft" ){
-				seamlessX = this.seamlessDraft;
+			} else if ( graph == "threading" ){
+				seamlessX = this.seamlessThreading;
 			}  else if ( graph == "lifting" ){
 				seamlessY = this.seamlessLifting;
 			}
@@ -11633,15 +13316,15 @@ $(document).ready ( function(){
 
 			//console.log(["render2D8 Instance", instanceId]);
 
-			if ((graph == "lifting" || graph == "all" ) && g_liftingMode !== "weave"){
+			if ((graph == "lifting" || graph == "all" ) && globalWeave.liftingMode !== "weave"){
 				this.renderGraph2D8(g_liftingContext, this.lifting2D8, "bl", globalTieup.scrollX, globalWeave.scrollY, false, globalWeave.seamlessLifting);
 			}
 
-			if ((graph == "draft" || graph == "all" ) && g_liftingMode !== "weave"){
-				this.renderGraph2D8(g_draftContext, this.draft2D8, "bl", globalWeave.scrollX, globalTieup.scrollY, globalWeave.seamlessDraft, false);
+			if ((graph == "threading" || graph == "all" ) && globalWeave.liftingMode !== "weave"){
+				this.renderGraph2D8(g_threadingContext, this.threading2D8, "bl", globalWeave.scrollX, globalTieup.scrollY, globalWeave.seamlessThreading, false);
 			}
 
-			if ((graph == "tieup" || graph == "all" ) && g_liftingMode == "treadling"){
+			if ((graph == "tieup" || graph == "all" ) && globalWeave.liftingMode == "treadling"){
 				this.renderGraph2D8(g_tieupContext, this.tieup2D8, "bl", globalTieup.scrollX, globalTieup.scrollY, false, false);
 			}
 
@@ -11687,21 +13370,19 @@ $(document).ready ( function(){
 				var pgW = g_pointPlusGrid;
 				var pgH = g_pointPlusGrid;
 
-				console.log([pgW, pgH, ctxW, ctxH, scrollX, scrollY]);
-
 				for (y = 0; y < ctxH; ++y) {
 					yTranslated = Math.floor((y-scrollY)/pgH);
 					i = (ctxH - y - 1) * ctxW;
 					for (x = 0; x < ctxW; ++x) {
 						xTranslated = Math.floor((x-scrollX)/pgW);
-						pixels[i + x] = (xTranslated+yTranslated) % 2 ? globalColors.BGLight32 : globalColors.BGDark32;
+						pixels[i + x] = (xTranslated+yTranslated) % 2 ? app.colors.BGLight32 : app.colors.BGDark32;
 					}
 				}			
 			}
 
 			// Draw Grid at Bottom
 			if ( g_showGrid && g_pointPlusGrid >= g_showGridMinPointPlusGrid && drawStyle !== "graph" ){
-				drawGridOnBuffer(pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, globalColors.gridLight32, globalColors.gridDark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
+				drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, app.colors.gridLight32, app.colors.gridDark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
 			}
 
 			// if Pattern is empty then draw as graph
@@ -11752,11 +13433,11 @@ $(document).ready ( function(){
 				if ( drawStyle.in("color","yarn") ){
 					
 					for (x = 0; x < xDrawPoints; ++x) {
-						warpPattern32[x] = globalPalette.colors[globalPattern.warp[(x + xOffsetPoints) % warpPatternSize]].color32;
+						warpPattern32[x] = app.palette.colors[globalPattern.warp[(x + xOffsetPoints) % warpPatternSize]].color32;
 						warpPatternTranslated[x] = globalPattern.warp[(x + xOffsetPoints) % warpPatternSize];
 					}
 					for (y = 0; y < yDrawPoints; ++y) {
-						weftPattern32[y] = globalPalette.colors[globalPattern.weft[(y + yOffsetPoints) % weftPatternSize]].color32;
+						weftPattern32[y] = app.palette.colors[globalPattern.weft[(y + yOffsetPoints) % weftPatternSize]].color32;
 						weftPatternTranslated[y] = globalPattern.weft[(y + yOffsetPoints) % weftPatternSize];
 					}
 
@@ -11773,10 +13454,10 @@ $(document).ready ( function(){
 					var weftColors = globalPattern.colors("weft");
 
 					warpColors.forEach(function(code,i){
-						yarnColors.warp[code] = globalPalette.getGradient(code, g_pointW);
+						yarnColors.warp[code] = app.palette.getGradient(code, g_pointW);
 					});
 					weftColors.forEach(function(code,i){
-						yarnColors.weft[code] = globalPalette.getGradient(code, g_pointW);
+						yarnColors.weft[code] = app.palette.getGradient(code, g_pointW);
 					});
 
 					var warpPointW = g_pointW;
@@ -11786,16 +13467,16 @@ $(document).ready ( function(){
 
 					// background Threads
 					if ( g_gridThickness){
-						drawRectBuffer(g_origin, pixels, 0, 0, drawAreaW, drawAreaH, ctxW, ctxH, "color32", globalColors.black32, 1);
+						drawRectBuffer(app.origin, pixels, 0, 0, drawAreaW, drawAreaH, ctxW, ctxH, "color32", app.colors.black32, 1);
 						for ( x = 0; x < xDrawPoints; ++x) {
 							drawX = x * g_pointPlusGrid + pointOffsetX;
 							gradient = yarnColors.warp[warpPatternTranslated[x]];
-							drawRectBuffer(g_origin, pixels, drawX, 0, warpPointW, drawAreaH, ctxW, ctxH, "gradient", gradient, 1, "h");
+							drawRectBuffer(app.origin, pixels, drawX, 0, warpPointW, drawAreaH, ctxW, ctxH, "gradient", gradient, 1, "h");
 						}
 						for ( y = 0; y < yDrawPoints; ++y) {
 							drawY = y * g_pointPlusGrid + pointOffsetY;
 							gradient = yarnColors.weft[weftPatternTranslated[y]];
-							drawRectBuffer(g_origin, pixels, 0, drawY, drawAreaW, weftPointH, ctxW, ctxH, "gradient", gradient, 1, "v");
+							drawRectBuffer(app.origin, pixels, 0, drawY, drawAreaW, weftPointH, ctxW, ctxH, "gradient", gradient, 1, "v");
 						}
 					}
 
@@ -11808,10 +13489,10 @@ $(document).ready ( function(){
 							state = arr2D8[arrX][arrY];
 							if (state){
 								gradient = yarnColors.warp[warpPatternTranslated[x]];
-								drawRectBuffer(g_origin, pixels, drawX, drawY - g_gridThickness, warpPointW, warpPointH, ctxW, ctxH, "gradient", gradient, 1, "h");
+								drawRectBuffer(app.origin, pixels, drawX, drawY - g_gridThickness, warpPointW, warpPointH, ctxW, ctxH, "gradient", gradient, 1, "h");
 							} else {
 								gradient = yarnColors.weft[weftPatternTranslated[y]];
-								drawRectBuffer(g_origin, pixels, drawX - g_gridThickness, drawY, weftPointW, weftPointH, ctxW, ctxH, "gradient", gradient, 1, "v");
+								drawRectBuffer(app.origin, pixels, drawX - g_gridThickness, drawY, weftPointW, weftPointH, ctxW, ctxH, "gradient", gradient, 1, "v");
 							}
 						}
 					}
@@ -11826,14 +13507,14 @@ $(document).ready ( function(){
 							drawY = y * g_pointPlusGrid + pointOffsetY;
 							state = arr2D8[arrX][arrY];
 							color = state ? warpPattern32[x] : weftPattern32[y];
-							drawRectBuffer(g_origin, pixels, drawX, drawY, g_pointPlusGrid, g_pointPlusGrid, ctxW, ctxH, "color32", color, 1);
+							drawRectBuffer(app.origin, pixels, drawX, drawY, g_pointPlusGrid, g_pointPlusGrid, ctxW, ctxH, "color32", color, 1);
 							if ( g_gridThickness ){
 								if (state){
-									drawRectBuffer(g_origin, pixels, drawX+g_pointPlusGrid-g_gridThickness, drawY, g_gridThickness, g_pointPlusGrid, ctxW, ctxH, "color32", globalColors.black32, 1);
-									drawRectBuffer(g_origin, pixels, drawX-g_gridThickness, drawY, g_gridThickness, g_pointPlusGrid, ctxW, ctxH, "color32", globalColors.black32, 1);
+									drawRectBuffer(app.origin, pixels, drawX+g_pointPlusGrid-g_gridThickness, drawY, g_gridThickness, g_pointPlusGrid, ctxW, ctxH, "color32", app.colors.black32, 1);
+									drawRectBuffer(app.origin, pixels, drawX-g_gridThickness, drawY, g_gridThickness, g_pointPlusGrid, ctxW, ctxH, "color32", app.colors.black32, 1);
 								} else {
-									drawRectBuffer(g_origin, pixels, drawX, drawY+g_pointPlusGrid-g_gridThickness, g_pointPlusGrid, g_gridThickness, ctxW, ctxH, "color32", globalColors.black32, 1);
-									drawRectBuffer(g_origin, pixels, drawX, drawY-g_gridThickness, g_pointPlusGrid, g_gridThickness, ctxW, ctxH, "color32", globalColors.black32, 1);
+									drawRectBuffer(app.origin, pixels, drawX, drawY+g_pointPlusGrid-g_gridThickness, g_pointPlusGrid, g_gridThickness, ctxW, ctxH, "color32", app.colors.black32, 1);
+									drawRectBuffer(app.origin, pixels, drawX, drawY-g_gridThickness, g_pointPlusGrid, g_gridThickness, ctxW, ctxH, "color32", app.colors.black32, 1);
 								}
 							}
 						}
@@ -11887,14 +13568,135 @@ $(document).ready ( function(){
 
 			// Draw Grid at Top
 			if ( g_showGrid && g_pointPlusGrid >= g_showGridMinPointPlusGrid && drawStyle == "graph" ){					
-				drawGridOnBuffer(pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, globalColors.gridLight32, globalColors.gridDark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
+				drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, app.colors.gridLight32, app.colors.gridDark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
 			}
 
 			ctx.putImageData(imagedata, 0, 0);
 
 		},
 
-		setProps : function(instanceId, prop, value, render = true, var1 = -1, var2 = -1) {
+		setProps : function(instanceId, propObj) {
+
+			// console.log([instanceId, propObj]);
+
+			if ( propObj.hasOwnProperty("pointPlusGrid") || propObj.hasOwnProperty("showGrid") ){
+
+				var pointPlusGrid = propObj.hasOwnProperty("pointPlusGrid") ? propObj["pointPlusGrid"] : g_pointPlusGrid;
+				var showGrid = propObj.hasOwnProperty("showGrid") ? propObj["showGrid"] : g_showGrid;
+
+				var currentPointPlusGrid = g_pointPlusGrid;
+
+				pointPlusGrid = limitNumber(pointPlusGrid, globalWeave.minPPG, globalWeave.maxPPG);
+
+				if ( pointPlusGrid >= globalWeave.maxPPG ){
+					weaveToolbar.disableItem("toolbar-weave-zoom-in");
+				} else {
+					weaveToolbar.enableItem("toolbar-weave-zoom-in");
+				}
+
+				if ( pointPlusGrid <= globalWeave.minPPG ){
+					weaveToolbar.disableItem("toolbar-weave-zoom-out");
+					weaveToolbar.disableItem("toolbar-weave-zoom-reset");
+				} else {
+					weaveToolbar.enableItem("toolbar-weave-zoom-out");
+					weaveToolbar.enableItem("toolbar-weave-zoom-reset");
+				}
+
+				g_showGridPossible = pointPlusGrid >= g_showGridMinPointPlusGrid;
+				var gridThickness = showGrid && g_showGridPossible ? g_gridThicknessDefault : 0;
+				var pointW = pointPlusGrid - gridThickness;
+				
+				if ( g_showGridPossible ){
+					weaveToolbar.enableItem("toolbar-weave-grid-show");
+				} else {
+					weaveToolbar.disableItem("toolbar-weave-grid-show");
+				}
+
+				weaveToolbar.setItemState("toolbar-weave-grid-show", showGrid);
+
+				g_showGrid = showGrid;
+				g_pointW = pointW;
+				g_gridThickness = gridThickness;
+				g_pointPlusGrid = pointPlusGrid;
+
+				if ( propObj.hasOwnProperty("zoomAtX") && propObj.hasOwnProperty("zoomAtY") ){
+
+					var zoomAtX = propObj.zoomAtX;
+					var zoomAtY = propObj.zoomAtY;
+
+					var zoomRatio = g_pointPlusGrid / currentPointPlusGrid;
+					var currentScrollX = globalWeave.scrollX;
+					var currentScrollY = globalWeave.scrollY;
+					var newScrollX = -Math.round((zoomAtX - currentScrollX) * zoomRatio - zoomAtX);
+					var newScrollY = -Math.round((zoomAtY - currentScrollY) * zoomRatio - zoomAtY);
+					globalWeave.setScrollXY(newScrollX, newScrollY, false);
+
+				} else {
+					globalWeave.scrollX = Math.round(globalWeave.scrollX * g_pointPlusGrid / currentPointPlusGrid);
+					globalWeave.scrollY = Math.round(globalWeave.scrollY * g_pointPlusGrid / currentPointPlusGrid);
+					globalTieup.scrollX = Math.round(globalTieup.scrollX * g_pointPlusGrid / currentPointPlusGrid);
+					globalTieup.scrollY = Math.round(globalTieup.scrollY * g_pointPlusGrid / currentPointPlusGrid);
+				}
+
+			}
+
+			if ( propObj.hasOwnProperty("seamlessWeave") ){
+				globalWeave.seamlessWeave = propObj.seamlessWeave;
+				layoutMenu.setCheckboxState("view-seamless-weave", propObj.seamlessWeave);
+			}
+
+			if ( propObj.hasOwnProperty("seamlessThreading") ){
+				globalWeave.seamlessThreading = propObj.seamlessThreading;
+				layoutMenu.setCheckboxState("view-seamless-threading", propObj.seamlessThreading);
+			}
+
+			if ( propObj.hasOwnProperty("seamlessLifting") ){
+				globalWeave.seamlessLifting = propObj.seamlessLifting;
+				layoutMenu.setCheckboxState("view-seamless-lifting", propObj.seamlessLifting);
+			}
+
+			if ( propObj.hasOwnProperty("seamlessWarp") ){
+				globalPattern.seamlessWarp = propObj.seamlessWarp;
+				layoutMenu.setCheckboxState("view-seamless-warp", propObj.seamlessWarp);
+			}
+
+			if ( propObj.hasOwnProperty("seamlessWeft") ){
+				globalPattern.seamlessWeft = propObj.seamlessWeft;
+				layoutMenu.setCheckboxState("view-seamless-weft", propObj.seamlessWeft);
+			}
+
+			if ( propObj.hasOwnProperty("graphDrawStyle") ){
+
+				globalWeave.drawStyle = propObj.graphDrawStyle;
+				setToolbarDropDown(weaveToolbar, "toolbar-weave-draw-style", "toolbar-weave-draw-style-"+propObj.graphDrawStyle);
+			
+			}
+
+			if ( propObj.hasOwnProperty("liftingMode") ){
+
+				if (globalWeave.liftingMode !== propObj.liftingMode){
+					globalWeave.liftingMode = propObj.liftingMode;
+					setToolbarDropDown(weaveToolbar, "toolbar-lifting-mode", "toolbar-lifting-mode-"+propObj.liftingMode);
+					app.weave.layout.needUpdate = true;
+				}
+
+			}
+
+			app.saveConfigurations(10);
+
+			var doRender = !propObj.hasOwnProperty("render") || propObj;
+
+			if ( app.weave.layout.needUpdate ){
+				createWeaveLayout(15, false );
+			}
+
+			if ( doRender ){
+				renderAll();
+			}
+			
+		},
+
+		setProps_old : function(instanceId, prop, value, render = true, var1 = -1, var2 = -1) {
 
 			// console.log([instanceId, prop, value]);
 
@@ -11961,9 +13763,9 @@ $(document).ready ( function(){
 				layoutMenu.setCheckboxState("view-seamless-weave", value);
 			}
 
-			if ( prop == "seamlessDraft" ){
-				globalWeave.seamlessDraft = value;
-				layoutMenu.setCheckboxState("view-seamless-draft", value);
+			if ( prop == "seamlessThreading" ){
+				globalWeave.seamlessThreading = value;
+				layoutMenu.setCheckboxState("view-seamless-threading", value);
 			}
 
 			if ( prop == "seamlessLifting" ){
@@ -11989,27 +13791,39 @@ $(document).ready ( function(){
 			
 			}
 
+			if ( prop == "liftingMode"){
+
+				if (globalWeave.liftingMode !== mode){
+					globalWeave.liftingMode = mode;
+					setToolbarDropDown(weaveToolbar, "toolbar-lifting-mode", "toolbar-lifting-mode-"+mode);
+					
+					createWeaveLayout(15, render);
+				}
+
+			}
+
+			app.saveConfigurations(10);
+
 			if ( render ){
-				
-				this.updateScrollingParameters(1);
-				globalTieup.updateScrollingParameters(3);
-				globalPattern.render8();
-				this.render2D8(15);
-				updateAppSettings();
+				renderAll();
 			}
 			
 		},
 
 		zoom : function(amount){
-			if ( amount ){
-				globalWeave.setProps(18, "pointPlusGrid", g_pointPlusGrid+amount);
-			} else {
-				globalWeave.setProps(19, "pointPlusGrid", 1);
-			}
+
+			var newPPG = amount ? g_pointPlusGrid+amount : 1;
+			globalWeave.setProps(18, {pointPlusGrid: newPPG});
+
 		},
 
 		zoomAt : function(amount, pointX, pointY){
-			globalWeave.setProps(20, "pointPlusGrid", g_pointPlusGrid+amount, true, pointX, pointY);
+
+			globalWeave.setProps(20, {
+				pointPlusGrid: g_pointPlusGrid+amount,
+				zoomAtX: pointX,
+				zoomAtY: pointY
+			});
 		},
 
 		renderGraphPoint : function(ctx, end, pick, state = null){
@@ -12028,26 +13842,26 @@ $(document).ready ( function(){
 			}
 		},
 
-		setDraft2D : function(data , colNum = 0, shaftNum = 0,  render = true, renderSimulation = true){
+		setThreading2D : function(data , colNum = 0, shaftNum = 0,  render = true, renderSimulation = true){
 			var x, y, shaftState, treadleIndex;
 			if ( data == "" || data == "toggle" || data == "T" ){
-				data = this.draft2D8[colNum-1][shaftNum-1] == 0 ? 1 : 0;
+				data = this.threading2D8[colNum-1][shaftNum-1] == 0 ? 1 : 0;
 			}
-			var draftW = this.draft2D8.length;
-			var draftH = this.draft2D8[0].length;
+			var threadingW = this.threading2D8.length;
+			var threadingH = this.threading2D8[0].length;
 			if ( $.isArray(data) ){
 				if ( colNum && rowNum){
-					this.draft2D8 = paste2D_old(data, this.draft2D8, colNum-1, shaftNum-1);
+					this.threading2D8 = paste2D_old(data, this.threading2D8, colNum-1, shaftNum-1);
 				} else {
-					this.draft2D8 = newArray2D8(22, draftW, draftH);
-					this.draft2D8 = data;
+					this.threading2D8 = newArray2D8(22, threadingW, threadingH);
+					this.threading2D8 = data;
 				}
 			} else if ( data == 0 || data == 1 ){
-				this.draft2D8[colNum-1] = [1].repeat(draftH);
-				this.draft2D8[colNum-1][shaftNum-1] = data;
-				if ( g_liftingMode == "pegplan" ){
+				this.threading2D8[colNum-1] = [1].repeat(threadingH);
+				this.threading2D8[colNum-1][shaftNum-1] = data;
+				if ( globalWeave.liftingMode == "pegplan" ){
 					this.setEnd(colNum, this.lifting2D8[shaftNum-1]);
-				} else if ( g_liftingMode == "treadling"){
+				} else if ( globalWeave.liftingMode == "treadling"){
 					this.setTreadling1D();
 					var liftingPicks = this.lifting2D8[0].length;
 					for (y = 0; y < liftingPicks; y++) {
@@ -12058,15 +13872,15 @@ $(document).ready ( function(){
 					globalWeave.render2D(0, "weave");
 				}
 			}
-			this.setDraft1D();
+			this.setThreading1D();
 			if ( render ){
-				this.render2D8(16, "draft");
+				this.render2D8(16, "threading");
 			}
 		},
 
-		lockDraft : function(state){
+		lockThreading : function(state){
 
-			g_LockDraft = state;
+			g_LockThreading = state;
 			if(state){
 				weaveToolbar.setItemState("toolbar-weave-lock-shafts", true);
 			} else {
@@ -12086,8 +13900,8 @@ $(document).ready ( function(){
 			if ( graph == "weave" ){
 				seamlessX = this.seamlessWeave;
 				seamlessY = this.seamlessWeave;
-			} else if ( graph == "draft" ){
-				seamlessX = this.seamlessDraft;
+			} else if ( graph == "threading" ){
+				seamlessX = this.seamlessThreading;
 			}  else if ( graph == "lifting" ){
 				seamlessY = this.seamlessLifting;
 			}
@@ -12169,7 +13983,7 @@ $(document).ready ( function(){
 
 		setGraph2D8 : function(graph, tile2D8 = false, colNum = 0, rowNum = 0, render = true, propagate = true, doAutoTrim = true){
 
-			// console.log(["setGraph2D8", graph, colNum, rowNum]);
+			console.log(["setGraph2D8", graph, colNum, rowNum]);
 
 			var canvas = this[graph+"2D8"];
 
@@ -12188,8 +14002,8 @@ $(document).ready ( function(){
 			if ( graph == "weave" ){
 				seamlessX = this.seamlessWeave;
 				seamlessY = this.seamlessWeave;
-			} else if ( graph == "draft" ){
-				seamlessX = this.seamlessDraft;
+			} else if ( graph == "threading" ){
+				seamlessX = this.seamlessThreading;
 			}  else if ( graph == "lifting" ){
 				seamlessY = this.seamlessLifting;
 			}
@@ -12219,10 +14033,10 @@ $(document).ready ( function(){
 				result = canvas.clone2D8();
 				var blankPart;
 
-				if ( graph == "lifting" && g_liftingMode == "treadling" ){
+				if ( graph == "lifting" && globalWeave.liftingMode == "treadling" ){
 					blankPart = newArray2D8(23, canvasW, tile2D8[0].length, 0);
 					result = paste2D8(blankPart, result, 0, rowNum-1, xOverflow, yOverflow, 0);
-				} else if ( graph == "draft" ){
+				} else if ( graph == "threading" ){
 					blankPart = newArray2D8(24, tile2D8.length, canvasH, 0);
 					result = paste2D8(blankPart, result, colNum-1, 0, xOverflow, yOverflow, 0);
 				}
@@ -12253,32 +14067,40 @@ $(document).ready ( function(){
 				// console.log(["resultWH", sw, sh]);
 				this.ends = sw;
 				this.picks = sh;
+
+
+
+
+			} else if ( graph == "threading" ){
+
+				this.setThreading1D();
+
 			}
 
 			if ( propagate ){
 
-				if ( graph == "lifting" && g_liftingMode == "treadling" && g_LockDraftToTreadling){
+				if ( graph == "lifting" && globalWeave.liftingMode == "treadling" && g_LockThreadingToTreadling){
 
-					var newDraft = this.lifting2D8.clone2D8().rotate2D8("r").flip2D8("y");
-					this.setGraph2D8("draft", newDraft, 0, 0, true, false);
+					var newThreading = this.lifting2D8.clone2D8().rotate2D8("r").flip2D8("y");
+					this.setGraph2D8("threading", newThreading, 0, 0, true, false);
 
-				} else if ( graph == "draft" && g_liftingMode == "treadling" && g_LockDraftToTreadling){
+				} else if ( graph == "threading" && globalWeave.liftingMode == "treadling" && g_LockThreadingToTreadling){
 
-					var newTreadling = this.draft2D8.clone2D8().rotate2D8("l").flip2D8("x");
+					var newTreadling = this.threading2D8.clone2D8().rotate2D8("l").flip2D8("x");
 					this.setGraph2D8("lifting", newTreadling, 0, 0, true, false);
 
 				}
 
-				if ( graph == "weave" && g_liftingMode !== "weave"){
+				if ( graph == "weave" && globalWeave.liftingMode !== "weave"){
 					
-					this.setPartsFromWeave(false);
-					this.render2D8(111, "draft");
+					this.setPartsFromWeave();
+					this.render2D8(111, "threading");
 					this.render2D8(111, "lifting");
 					this.render2D8(111, "tieup");
 
-				} else if ( graph !== "weave" && g_liftingMode !== "weave"){
+				} else if ( graph !== "weave" && globalWeave.liftingMode !== "weave"){
 
-					this.setWeaveFromParts(this.tieup2D8, this.draft2D8, this.lifting2D8);
+					this.setWeaveFromParts(this.threading2D8, this.lifting2D8, this.tieup2D8);
 
 				}
 
@@ -12294,15 +14116,19 @@ $(document).ready ( function(){
 				if ( weaveProps.inLimit ){
 					globalStatusbar.set("shaftCount", weaveProps.shafts);
 				} else {
-					globalStatusbar.set("shaftCount", "> 256");
+					globalStatusbar.set("shaftCount", "Shafts > 256");
 				}
 
 				globalTieup.updateScrollingParameters(3);
 				this.updateScrollingParameters();
 				this.render2D8(17, graph);
-				globalHistory.addStep(8);
+				
 				globalSimulation.update();
 				debugTimeEnd("setGraph2D8Render");
+			}
+
+			if ( propagate ){
+				globalHistory.record(8);
 			}
 
 		},
@@ -12324,7 +14150,7 @@ $(document).ready ( function(){
 			var lifting2D8 = this.lifting2D8.clone();
 
 			if ( colNum && rowNum ){
-				if ( g_liftingMode == "treadling"){
+				if ( globalWeave.liftingMode == "treadling"){
 					var emptyWeave = newArray2D(liftingW, data[0].length, 1);
 					lifting2D8 = paste2D_old(emptyWeave, lifting2D8, 0, rowNum-1, false, globalWeave.seamlessLifting, 1);
 				}
@@ -12335,27 +14161,39 @@ $(document).ready ( function(){
 
 			//this.lifting2D8 = trimWeave(lifting2D8);
 
-			this.setWeaveFromParts(this.tieup2D8, this.draft2D8, this.lifting2D8);
+			this.setWeaveFromParts(this.threading2D8, this.lifting2D8, this.tieup2D8);
 
 			if ( render ){
 				this.render2D8(18, "lifting");
 			}
 		},
 
-		setWeaveFromParts : function (tieup2D8, draft2D8, lifting2D8, render = true, renderSimulation = true){
+		setWeaveFromParts : function (threading2D8, lifting2D8, tieup2D8, render = true, renderSimulation = true){
 
 			var x, y, shaft, treadle, tieupState;
 
-			var draftW = draft2D8.length;
-			var liftingH = lifting2D8[0].length;
-			var draft1D = draft2D8.map(a => a.indexOf(1)+1);
-			var weave2D8 = newArray2D8(25, draftW, liftingH);
+			if ( !threading2D8 ){
+				threading2D8 = this.threading2D8;
+			}
 
-			if ( g_liftingMode == "treadling" ){
+			if ( !lifting2D8 ){
+				lifting2D8 = this.lifting2D8;
+			}
+
+			if ( !tieup2D8 ){
+				tieup2D8 = this.tieup2D8;
+			}
+
+			var threadingW = threading2D8.length;
+			var liftingH = lifting2D8[0].length;
+			var threading1D = threading2D8.map(a => a.indexOf(1)+1);
+			var weave2D8 = newArray2D8(25, threadingW, liftingH);
+
+			if ( globalWeave.liftingMode == "treadling" || globalWeave.liftingMode == "weave"){
 
 				var treadling1D = lifting2D8.rotate2D8("r").flip2D8("y").map(a => a.indexOf(1)+1);
-				for (x = 0; x < draftW; x++) {
-					shaft = draft1D[x];
+				for (x = 0; x < threadingW; x++) {
+					shaft = threading1D[x];
 					for (y = 0; y < liftingH; y++) {
 						treadle = treadling1D[y];
 						if ( shaft && treadle && tieup2D8[treadle-1] !== undefined && tieup2D8[treadle-1][shaft-1] !== undefined ){
@@ -12365,9 +14203,9 @@ $(document).ready ( function(){
 					}
 				}
 
-			} else if ( g_liftingMode == "pegplan" ){
+			} else if ( globalWeave.liftingMode == "pegplan" ){
 
-				draft1D.forEach(function(v, i) {
+				threading1D.forEach(function(v, i) {
 
 					if ( v && lifting2D8[v-1] == undefined ){
 						weave2D8[i] = new Uint8Array(liftingH);
@@ -12378,6 +14216,11 @@ $(document).ready ( function(){
 				});
 
 			}
+
+
+			console.log(globalWeave.liftingMode);
+
+			console.log(weave2D8);
 
 			this.setGraph2D8("weave", weave2D8, 0, 0,  render, false);
 
@@ -12402,12 +14245,12 @@ $(document).ready ( function(){
 			}
 
 			var treadleIndex = colNum-1;
-			this.setDraft1D();
+			this.setThreading1D();
 
 			for ( y = 0; y < this.picks; y++) {
 				if ( this.lifting2D8[treadleIndex][y] == 1){
 					for ( x = 0; x < this.ends; x++) {
-						if ( this.draft1D[x] == rowNum ){
+						if ( this.threading1D[x] == rowNum ){
 							globalWeave.weave2D[x][y] = this.tieup2D8[colNum-1][rowNum-1];
 						}
 					}
@@ -12434,7 +14277,7 @@ $(document).ready ( function(){
 
 		setShaft : function ( shaftNum, endArray, render = true){
 			for ( var x = 0; x < this.ends; x++) {
-				if(this.draft2D8[x][shaftNum-1] == 1){
+				if(this.threading2D8[x][shaftNum-1] == 1){
 					this.setEnd(x+1, endArray, render);
 				}
 			}
@@ -12462,7 +14305,7 @@ $(document).ready ( function(){
 		convertTreadlingToPegplan : function(render = true){
 
 			this.lifting2D8 = tieupTreadlingToPegplan(this.tieup2D8, this.lifting2D8);
-			var shafts = Math.max(this.lifting2D8.length, this.draft2D8[0].length);
+			var shafts = Math.max(this.lifting2D8.length, this.threading2D8[0].length);
 			this.tieup2D8 = newArray2D8(28, shafts, shafts);
 			for (var x = 0; x < shafts; x++) {
 				this.tieup2D8[x][x] = 1;
@@ -12474,7 +14317,16 @@ $(document).ready ( function(){
 
 		},
 
-		setPartsFromWeave : function(render = true, weave2D8 = false){
+		setStraightTieup : function(shafts){
+
+			this.tieup2D8 = newArray2D8(29, shafts, shafts);
+			for (var x = 0; x < shafts; x++) {
+				this.tieup2D8[x][x] = 1;
+			}
+
+		},
+
+		setPartsFromWeave : function(weave2D8 = false, render = false){
 
 			// console.log("setPartsFromWeave");
 
@@ -12485,16 +14337,12 @@ $(document).ready ( function(){
 			if ( weave2D8 !== undefined && weave2D8.length && weave2D8[0].length ){
 
 				var weaveProps = getWeaveProps(weave2D8);
-				this.draft2D8 = weaveProps.draft2D8;
+				this.threading2D8 = weaveProps.threading2D8;
 
-				if ( g_liftingMode == "pegplan" ){
+				if ( globalWeave.liftingMode == "pegplan" ){
 
 					this.lifting2D8 = weaveProps.pegplan2D8;
-					var shaftsInPegplan = this.lifting2D8.length;
-					this.tieup2D8 = newArray2D8(29, shaftsInPegplan, shaftsInPegplan);
-					for (var x = 0; x < shaftsInPegplan; x++) {
-						globalWeave.tieup2D8[x][x] = 1;
-					}
+					this.setStraightTieup(this.lifting2D8.length);
 
 				} else {
 
@@ -12505,12 +14353,12 @@ $(document).ready ( function(){
 
 				if ( render ){
 					
-					if ( g_liftingMode !== "weave" ){
-						this.render2D8(26, "draft");
+					if ( globalWeave.liftingMode !== "weave" ){
+						this.render2D8(26, "threading");
 						this.render2D8(27, "lifting");
 					}
 					
-					if ( g_liftingMode == "treadling" ){
+					if ( globalWeave.liftingMode == "treadling" ){
 						this.render2D8(28, "tieup");
 					}
 				
@@ -12658,7 +14506,7 @@ $(document).ready ( function(){
 
 			//console.log(["updateScrollingParameters", instanceId]);
 
-			if  (g_liftingMode == "treadling" || g_liftingMode == "pegplan"){
+			if  (globalWeave.liftingMode == "treadling" || globalWeave.liftingMode == "pegplan"){
 
 				this.contentW = globals.maxLimitShafts * g_pointPlusGrid;
 				this.contentH = globals.maxLimitShafts * g_pointPlusGrid;
@@ -12679,6 +14527,8 @@ $(document).ready ( function(){
 
 	var globalSimulation = {
 
+		created: false,
+
 		frameW : 0,
 		frameH : 0,
 
@@ -12693,11 +14543,11 @@ $(document).ready ( function(){
 		screenDPI: 110,
 		smoothing: 16,
 
-		warpSize : 3,
-		weftSize : 3,
+		warpSize : 2,
+		weftSize : 2,
 
-		warpSpace: 1,
-		weftSpace: 1,
+		warpSpace: 0,
+		weftSpace: 0,
 
 		warpNumber: 20,
 		weftNumber: 20,
@@ -12713,24 +14563,18 @@ $(document).ready ( function(){
 
 		drawStyle : "flat",
 
-		weftThicknessJitter : 0.05, // 0.01
-		warpThicknessJitter : 0.05, // 0.01
 		warpPosJitter : 0.05, // 0.03
 		weftPosJitter : 0.05, // 0.5
+		warpNodePosJitter : 0.05, // 0.03
+		weftNodePosJitter : 0.05, // 0.5
 
-		repatWpx : 0,
-		repeatHpx : 0,
-		repeatWmm : 0,
-		repeatHmm : 0,
+		textureWpx : 0,
+		textureHpx : 0,
+		textureWmm : 0,
+		textureHmm : 0,
 
-		warpThins: 10,
-		warpThicks: 40,
-		warpNeps: 80,
-
-		weftThins: 10,
-		weftThicks: 40,
-		weftNeps: 80,
-
+		warpWiggleFrequency : 0.5,
+		weftWiggleFrequency : 0.2,
 		warpWiggleRange : 0.05,
 		warpWiggleInc : 0.025,
 		weftWiggleRange : 0.5,
@@ -12741,20 +14585,92 @@ $(document).ready ( function(){
 		warpFloatDeflectionPercent : 100,
 		weftFloatDeflectionPercent : 100,
 
-		mode: "scaled",
+		mode: "quick0",
 		bgcolor: "black",
 		algorithm: 1,
 		multicount : false,
 		downscale : false,
 
-		calcFabricImperfecitons : false,
-		calcYarnImperfecitons : false,
+		params : {
+
+			structure: [
+
+				  ["select", "Mode", "simulationMode", "mode", "1/2", [["quick0", "Quick-0"], ["quick", "Quick"], ["scaled", "Scaled"]]],
+				  ["select", "Draw", "simulationDrawMethod", "drawMethod", "1/2", [["flat", "Flat"], ["linear", "Linear"], ["3d", "3D"]]],
+				  ["check", "Multi-Count", "simulationMultiCount", "multiCount", "2/5", 0],
+				  ["select", "Algorithm", "simulationAlgorithm", "algorithm", "1/2", [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"]]],
+				  ["check", "Downscale", "simulationDownscale", "downscale", "2/5", 0],
+				  ["number", "Warp Size", "simulationWarpSize", "warpSize", "2/5", 2, 1, 16],
+				  ["number", "Weft Size", "simulationWeftSize", "weftSize", "2/5", 2, 1, 16],
+				  ["number", "Warp Space", "simulationWarpSpace", "warpSpace", "2/5", 1, 0, 16],
+				  ["number", "Weft Space", "simulationWeftspace", "weftSpace", "2/5", 1, 0, 16],
+				  ["number", "Warp Number", "simulationWarpNumber", "warpNumber", "2/5", 20, 1, 300],
+				  ["number", "Weft Number", "simulationWeftNumber", "weftNumber", "2/5", 20, 1, 300],
+				  ["number", "Warp Density", "simulationWarpDensity", "warpDensity", "2/5", 20, 10, 300],
+				  ["number", "Weft Density", "simulationWeftDensity", "weftDensity", "2/5", 20, 10, 300],
+				  ["number", "Screen DPI", "simulationScreenDPI", "screenDPI", "2/5", 110, 72, 480, 1, 2],
+				  ["number", "Smoothing", "simulationSmoothing", "smoothing", "2/5", 3, 1, 16],
+				  ["number", "Reed Fill", "simulationReedFill", "reedFill", "2/5", 1, 1, 8],
+				  ["select", "Background", "simulationBackgroundColor", "backgroundColor", "1/2", [["white", "White"], ["grey", "Grey"], ["black", "Black"]]],
+				  
+				  ["control", "Save"]
+
+			],
+
+			yarn: [
+				
+				["check", "Yarn Imperfections", "simulationRenderYarnImperfections", "renderYarnImperfections", "2/5", 0],
+
+				["number", "Warp Thins", "simulationWarpThins", "warpThins", "2/5", 10, 0, 500],
+				["number", "Warp Thicks", "simulationWarpThicks", "warpThicks", "2/5", 40, 0, 500],
+				["number", "Warp Neps", "simulationWarpNeps", "warpNeps", "2/5", 80, 0, 500],
+				["number", "Warp Thickness Jitter", "simulationWarpThicknessJitter", "warpThicknessJitter", "2/5", 0.01, 0, 1, 0.01, 2],
+				["number", "Warp Node Thickness Jitter", "simulationWarpNodeThicknessJitter", "warpNodeThicknessJitter", "2/5", 0.03, 0, 1, 0.01, 2],
+
+				["number", "Weft Thins", "simulationWeftThins", "weftThins", "2/5", 10, 0, 500],
+				["number", "Weft Thicks", "simulationWeftThicks", "weftThicks", "2/5", 40, 0, 500],
+				["number", "Weft Neps", "simulationWeftNeps", "weftNeps", "2/5", 80, 0, 500],
+				["number", "Weft Thickness Jitter", "simulationWeftThicknessJitter", "weftThicknessJitter", "2/5", 0.01, 0, 1, 0.01, 2],
+				["number", "Weft Node Thickness Jitter", "simulationWeftNodeThicknessJitter", "weftNodeThicknessJitter", "2/5", 0.05, 0, 1, 0.01, 2],
+
+				["control", "Save"]
+
+			],
+
+			behaviour: [
+
+				["check", "Fabric Imperfections", "simulationRenderFabricImperfections", "renderFabricImperfections", "2/5", 0],
+
+				["number", "Warp Pos Jitter", "simulationWarpPosJitter", "warpPosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
+				["number", "Weft Pos Jitter", "simulationWeftPosJitter", "weftPosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
+				["number", "Wp Node Pos Jitter", "simulationWarpNodePosJitter", "warpNodePosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
+				["number", "Wf Node Pos Jitter", "simulationWeftNodePosJitter", "weftNodePosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
+
+				["number", "Wp Wiggle Freq", "simulationWarpWiggleFrequency", "warpWiggleFrequency", "2/5", 0.5, 0, 1, 0.1, 2],
+				["number", "Wp Wiggle Range", "simulationWarpWiggleRange", "warpWiggleRange", "2/5", 0.1, 0, 1, 0.01, 2],
+				["number", "Wp Wiggle Inc", "simulationWarpWiggleInc", "wrpWiggleInc", "2/5", 0.01, 0, 1, 0.005, 3],
+
+				["number", "Wf Wiggle Freq", "simulationWeftWiggleFrequency", "weftWiggleFrequency", "2/5", 0.2, 0, 1, 0.1, 2],
+				["number", "Wf Wiggle Range", "simulationWeftWiggleRange", "weftWiggleRange", "2/5", 0.1, 0, 1, 0.01, 2],
+				["number", "Wf Wiggle Inc", "simulationWeftWiggleInc", "weftWiggleInc", "2/5", 0.01, 0, 1, 0.005, 3],
+
+				["number", "Wp Float Lift%", "simulationWarpFloatLiftPercent", "warpFloatLiftPercent", "2/5", 100, 0, 100],
+				["number", "Wf Float Lift%", "simulationWeftFloatLiftPercent", "weftFloatLiftPercent", "2/5", 100, 0, 100],
+
+				["number", "Wp Deflection%", "simulationWarpFloatDeflectionPercent", "warpFloatDeflectionPercent", "2/5", 100, 0, 100],
+				["number", "Wf Deflection%", "simulationWeftFloatDeflectionPercent", "weftFloatDeflectionPercent", "2/5", 100, 0, 100],
+
+				["control", "Save"]
+
+			],
+				
+		},
 
 		update : function(){
 
 			this.needUpdate = true;
 			globalModel.fabric.needUpdate = true;
-			if ( globalTabs.active == "simulation" ){
+			if ( app.tabs.active == "simulation" ){
 				this.render();
 			}
 
@@ -12762,7 +14678,7 @@ $(document).ready ( function(){
 
 		onTabSelect : function(){
 
-			if ( this.needUpdate && this.mode == "quick" ){
+			if ( this.needUpdate && this.params.mode == "quick" ){
 				this.render();
 			}
 
@@ -12785,139 +14701,134 @@ $(document).ready ( function(){
 
 		},
 
-		applyFabricParameters : function(){
+		addIPI : function(profileArray, xNodes, yNodes, yarnSet, frequency, minLength, maxLength, minChangePercent, maxChangePercent){
 
-			this.mode = $("#simulationmode").val();
-			this.simulationRenderingMode = $("#simulationrenderingmode").val();
-			this.algorithm = $("#simulationalgorithm").val();
-			this.bgcolor = $("#simulationbg").val();
-			this.multicount = $("#simulationmulticount").prop("checked");
-			this.downscale = $("#simulationdownscale").prop("checked");
+			var n, x, y, i, ipLength, ipPos, ipStart, ipEnd, ipNodeIndex, nodeChangeRatio, jitter;
 
-			this.warpSize = $("#warpsizeinput input").numVal();
-			this.weftSize = $("#weftsizeinput input").numVal();
-			this.warpSpace = $("#warpspaceinput input").numVal();
-			this.weftSpace = $("#weftspaceinput input").numVal();
-			this.warpNumber = $("#simulationWarpNumber input").numVal();
-			this.weftNumber = $("#simulationWeftNumber input").numVal();
-			this.warpDensity = $("#warpdensityinput input").numVal();
-			this.weftDensity = $("#weftdensityinput input").numVal();
-			this.screenDPI = $("#screendpiinput input").numVal();
-			this.smoothing = $("#simulationsmoothinginput input").numVal();
-			this.reedFill = $("#reedfillinput input").numVal();
+			var changeRatio = getRandomInt(minChangePercent, maxChangePercent)/100;
+			ipLength = getRandomInt(minLength, maxLength);
 
-			// this.update();
+			if ( yarnSet === "warp" ){
 
-		},
+				for (n = 0; n < frequency; ++n) {
+					
+					ipPos = getRandomInt(1-ipLength, yNodes-1);
+					ipStart = limitNumber(ipPos, 0, yNodes-1);
+					ipEnd = limitNumber(ipPos + ipLength - 1, 0, yNodes-1);
+					x = getRandomInt(0, xNodes-1);
+					ipNodeIndex = ipStart - ipPos;
 
-		updateFabricParameterInputs : function(){
+					if ( ipLength == 1 ){
 
-			$("#simulationmode").val(this.mode);
-			$("#simulationalgorithm").val(this.algorithm);
-			$("#simulationbg").val(this.bgcolor);
-			$("#simulationmulticount").prop("checked", this.multicount);
-			$("#simulationdownscale").prop("checked", this.downscale);
+						y = ipStart;
+						i = y * xNodes + x;
+						jitter = getRandom(-changeRatio/2, changeRatio/2);
+						profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
 
-			$("#warpsizeinput input").val(this.warpSize);
-			$("#weftsizeinput input").val(this.weftSize);
-			$("#warpspaceinput input").val(this.warpSpace);
-			$("#weftspaceinput input").val(this.weftSpace);
-			$("#simulationWarpNumber input").val(this.warpNumber);
-			$("#simulationWeftNumber input").val(this.weftNumber);
-			$("#warpdensityinput input").val(this.warpDensity);
-			$("#weftdensityinput input").val(this.weftDensity);
-			$("#screendpiinput input").val(this.screenDPI);
-			$("#simulationsmoothinginput input").val(this.smoothing);
+					} else if ( ipLength == 2 ){
 
-			$("#simulationalgorithm option[value=\""+this.algorithm+"\"]").prop("selected", true);
-			$("#simulationrenderingmode option[value=\""+this.simulationRenderingMode+"\"]").prop("selected", true);
-			$("#simulationmode option[value=\""+this.mode+"\"]").prop("selected", true);
-			$("#simulationbg option[value=\""+this.bgcolor+"\"]").prop("selected", true);
+						y = ipStart;
+						i = y * xNodes + x;
+						jitter = getRandom(-changeRatio/2, changeRatio/2);
+						profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
 
-			$("#reedfillinput input").val(this.reedFill);
+						y = ipEnd;
+						i = y * xNodes + x;
+						jitter = getRandom(-changeRatio/2, changeRatio/2);
+						profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
 
-		},
+					} else {
 
-		applyImperfectionParameters : function(){
+						for (y = ipStart; y <= ipEnd; ++y) {
 
-			this.warpPosJitter = $("#simulationwarpposjitter input").numVal();
-			this.weftPosJitter = $("#simulationpickposjitter input").numVal();
+							i = y * xNodes + x;
+							nodeChangeRatio = Math.sin(ipNodeIndex/(ipLength-1) * Math.PI) * changeRatio;
+							nodeChangeRatio = Math.round(nodeChangeRatio * 10000)/10000;
+							jitter = getRandom(-nodeChangeRatio/2, nodeChangeRatio/2);
+							profileArray[i] = profileArray[i] * (1+nodeChangeRatio+jitter);
+							ipNodeIndex++;
+							
+						}
 
-			this.warpWiggleRange = $("#simulationwarpwigglerange input").numVal();
-			this.weftWiggleRange = $("#simulationweftwigglerange input").numVal();
-			this.warpWiggleInc = $("#simulationwarpwiggleinc input").numVal();
-			this.weftWiggleInc = $("#simulationweftwiggleinc input").numVal();
+					}
+					
+				}
 
-			this.warpFloatLiftPercent = $("#simulationwarpfloatliftpercent input").numVal();
-			this.warpFloatDeflectionPercent = $("#simulationwarpfloatdeflectionpercent input").numVal();
+			} else {
 
-			this.weftFloatLiftPercent = $("#simulationweftfloatliftpercent input").numVal();
-			this.weftFloatDeflectionPercent = $("#simulationweftfloatdeflectionpercent input").numVal();
+				for (n = 0; n < frequency; ++n) {
 
-			this.warpThins = $("#warpthins input").numVal();
-			this.warpThicks = $("#warpthicks input").numVal();
-			this.warpNeps = $("#warpneps input").numVal();
+					ipPos = getRandomInt(1-ipLength, xNodes-1);
+					ipStart = limitNumber(ipPos, 0, xNodes-1);
+					ipEnd = limitNumber(ipPos + ipLength - 1, 0, xNodes-1);
+					y = getRandomInt(0, yNodes-1);
+					ipNodeIndex = ipStart - ipPos;
 
-			this.weftThins = $("#weftthins input").numVal();
-			this.weftThicks = $("#weftthicks input").numVal();
-			this.weftNeps = $("#weftneps input").numVal();
+					if ( ipLength == 1 ){
 
-			this.warpThicknessJitter = $("#simulationwarpthicknessjitter input").numVal();
-			this.weftThicknessJitter = $("#simulationweftthicknessjitter input").numVal();
+						x = ipStart;
+						i = y * xNodes + x;
+						jitter = getRandom(-changeRatio/2, changeRatio/2);
+						profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
 
-			// this.update();
+					} else if ( ipLength == 2 ){
 
-		},
+						x = ipStart;
+						i = y * xNodes + x;
+						jitter = getRandom(-changeRatio/2, changeRatio/2);
+						profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
 
-		updateImperfectionParametersInputs : function(){
+						x = ipEnd;
+						i = y * xNodes + x;
+						jitter = getRandom(-changeRatio/2, changeRatio/2);
+						profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
 
-			$("#simulationwarpposjitter input").val(this.warpPosJitter);
-			$("#simulationpickposjitter input").val(this.weftPosJitter);
+					} else {
 
-			$("#simulationwarpwigglerange input").val(this.warpWiggleRange);
-			$("#simulationwarpwiggleinc input").val(this.warpWiggleInc);
-			$("#simulationweftwigglerange input").val(this.weftWiggleRange);
-			$("#simulationweftwiggleinc input").val(this.weftWiggleInc);
+						for (x = ipStart; x <= ipEnd; ++x) {
 
-			$("#simulationwarpfloatliftpercent input").val(this.warpFloatLiftPercent);
-			$("#simulationwarpfloatdeflectionpercent input").val(this.warpFloatDeflectionPercent);
+							i = y * xNodes + x;
+							nodeChangeRatio = Math.sin(ipNodeIndex/(ipLength-1) * Math.PI) * changeRatio;
+							nodeChangeRatio = Math.round(nodeChangeRatio * 10000)/10000;
+							jitter = getRandom(-nodeChangeRatio/2, nodeChangeRatio/2);
+							profileArray[i] = profileArray[i] * (1+nodeChangeRatio+jitter);
+							ipNodeIndex++;
+							
+						}
 
-			$("#simulationweftfloatliftpercent input").val(this.weftFloatLiftPercent);
-			$("#simulationweftfloatdeflectionpercent input").val(this.weftFloatDeflectionPercent);
+					}
+					
+				}
 
-			$("#warpthins input").val(this.warpThins);
-			$("#warpthicks input").val(this.warpThicks);
-			$("#warpneps input").val(this.warpNeps);
-
-			$("#weftthins input").val(this.weftThins);
-			$("#weftthicks input").val(this.weftThicks);
-			$("#weftneps input").val(this.weftNeps);
-
-			$("#simulationwarpthicknessjitter input").val(this.warpThicknessJitter);
-			$("#simulationweftthicknessjitter input").val(this.weftThicknessJitter);
+			}	
 
 		},
 
 		render : function(){
 
+				setLoadingbar(0, "renderSimulation", true, "Rendering Simulation");
 				var ctxW = Math.floor(g_simulationCanvas.clientWidth * g_pixelRatio);
 				var ctxH = Math.floor(g_simulationCanvas.clientHeight * g_pixelRatio);
-				this.renderTo(g_simulationContext, ctxW, ctxH, globalWeave.weave2D8, "bl", this.scrollX, this.scrollY, false, false, "yarn");
-				this.needUpdate = false;
-
+				this.renderTo(g_simulationContext, ctxW, ctxH, globalWeave.weave2D8, "bl", this.scrollX, this.scrollY, function(){
+					setLoadingbar("hide");
+					globalSimulation.needUpdate = false;
+					globalSimulation.created = true;
+				});
+				
 		},
 
-		renderTo : function(ctxTarget, ctxW, ctxH, arr2D8, origin = "bl", scrollX = 0, scrollY = 0, seamlessX = false, seamlessY = false){
+		renderTo : function(displayContext, ctxW, ctxH, arr2D8, origin = "bl", scrollX = 0, scrollY = 0, callback = false){
 
 			// console.log(arguments);
-			// console.log(["renderGraph2D8", ctxTarget]);
+			// console.log(["renderGraph2D8", displayContext]);
 
-			debugTime("simulationDrawOld");
+			debugTime("render");
 
-			var graphId = getGraphId(ctxTarget.canvas.id);
-			debugTime("renderTo > " + graphId);
+			debugTime("setup");
 
-			//ctxTarget.clearRect(0, 0, ctxW, ctxH);
+			var graphId = getGraphId(displayContext.canvas.id);
+			
+			//displayContext.clearRect(0, 0, ctxW, ctxH);
 
 			var x, y, i, j, c, sx, sy, newDrawX, newDrawY, pointW, pointH, state, arrX, arrY, drawX, drawY, color, r, g, b, a, patternX, patternY, patternIndex, gradient, code, warpCode, weftCode, opacity;
 			var dark32, light32;
@@ -12929,35 +14840,30 @@ $(document).ready ( function(){
 			var n, nodeX, nodeY, il, ir, ib, it, nodeHT, bNodeHT, tNodeHT, lNodeHT, rNodeHT, centerNode, iFirst, iLast, lNodeX, rNodeX, bNodeY, tNodeY, floatSAbs;
 			var warpBackFloats, weftBackFloats, fabricBackFloats, floatSizeToRender;
 			var warpFaceFloats, weftFaceFloats, fabricFaceFloats;
-
-			var arrW = 0;
-			var arrH = 0;
+			var repeatW, repeatH;
+			var warpDensity, weftDensity;
+			var drawW, drawH;
 
 			if ( arr2D8 !== undefined && arr2D8.length && arr2D8[0] !== undefined && arr2D8[0].length){
+
+				var mode = this.params.mode;
+	      		var screenDPI = this.params.screenDPI;
 				
-				arrW = arr2D8.length;
-				arrH = arr2D8[0].length;
+				var arrW = arr2D8.length;
+				var arrH = arr2D8[0].length;
+
+				var displayW = displayContext.canvas.width;
+				var displayH = displayContext.canvas.height;
 
 				var warpRepeat = [arrW, globalPattern.warp.length].lcm();
 				var weftRepeat = [arrH, globalPattern.weft.length].lcm();
-	      		var mode = this.mode;
-	      		var screenDPI = this.screenDPI;
-	      		var bgcolor = this.bgcolor;
-	      		
 
-	      		var imagedata = ctxTarget.createImageData(ctxW, ctxH);
+				if ( mode.in("quick", "quick0") ){
 
-	      		if ( mode === "quick0" ){
-
-		      		var pixels = new Uint32Array(imagedata.data.buffer);
-
-					simulationBGColor = globalColors[bgcolor+"32"];
-					drawRectBuffer(g_origin, pixels, 0, 0, ctxW, ctxH, ctxW, ctxH, "color32", simulationBGColor);
-
-	      			var warpSize = this.warpSize;
-					var weftSize = this.weftSize;
-					var warpSpace = this.warpSpace;
-					var weftSpace = this.weftSpace;
+					var warpSize = this.params.warpSize;
+					var weftSize = this.params.weftSize;
+					var warpSpace = this.params.warpSpace;
+					var weftSpace = this.params.weftSpace;
 
 					var halfWarpSpace = Math.floor(warpSpace/2);
 					var halfWeftSpace = Math.floor(weftSpace/2);
@@ -12965,11 +14871,66 @@ $(document).ready ( function(){
 					intersectionW = warpSize + warpSpace;
 					intersectionH = weftSize + weftSpace;
 
-					var repeatW = warpRepeat * intersectionW;
-					var repeatH = weftRepeat * intersectionH;
-
 					var xIntersections = Math.ceil(ctxW/intersectionW);
 					var yIntersections = Math.ceil(ctxH/intersectionH);
+
+					warpDensity = screenDPI / intersectionW;
+					weftDensity = screenDPI / intersectionH;
+
+					drawW = ctxW;
+					drawH = ctxH;
+
+					this.textureWpx = Math.round(warpRepeat * intersectionW);
+					this.textureHpx = Math.round(weftRepeat * intersectionH);
+
+				} else if ( mode == "scaled" ){
+
+					var smoothingFactor = this.params.smoothing;
+                    var downscale = this.params.downscale;
+                    var multicount = this.params.multiCount;
+                    var algorithm = this.params.algorithm;
+
+                    warpDensity = this.params.warpDensity;
+					weftDensity = this.params.weftDensity;
+
+                    intersectionW = screenDPI / warpDensity * smoothingFactor;
+                    intersectionH = screenDPI / weftDensity * smoothingFactor;
+
+                    var drawW = downscale ? ctxW * smoothingFactor : ctxW;
+                    var drawH = downscale ? ctxH * smoothingFactor : ctxH;
+
+                    drawW = downscale ? ctxW * smoothingFactor : ctxW;
+                    drawH = downscale ? ctxH * smoothingFactor : ctxH;
+
+                    this.textureWpx = Math.round(warpRepeat * intersectionW / smoothingFactor);
+					this.textureHpx = Math.round(weftRepeat * intersectionH / smoothingFactor);
+
+				}
+
+				this.textureWmm = Math.round(warpRepeat / warpDensity * 25.4);
+                this.textureHmm = Math.round(weftRepeat / weftDensity * 25.4);
+
+	      		var warpColors = globalPattern.colors("warp");
+				var weftColors = globalPattern.colors("weft");
+
+				g_simulationDrawContext = getCtx(10, "buffer-canvas", "g_simulationDrawCanvas", drawW, drawH, false);
+				g_simulationDrawCanvas.width = drawW;
+				g_simulationDrawCanvas.height = drawH;
+
+				var drawPixels = g_simulationDrawContext.createImageData(drawW, drawH);
+				var drawPixels8 = drawPixels.data;
+                var drawPixels32 = new Uint32Array(drawPixels8.buffer);
+
+				var simulationBGColor32 = app.colors[this.params.backgroundColor+32];
+				var simulationBGColor8 = app.colors.rgba[this.params.backgroundColor];
+
+				debugTimeEnd("setup", "simulation");
+
+				debugTime("Calculations");
+
+	      		if ( mode === "quick0" ){
+
+					drawRectBuffer(app.origin, drawPixels32, 0, 0, ctxW, ctxH, ctxW, ctxH, "color32", simulationBGColor32);
 
 					var fillStyle = "gradient";
 
@@ -12978,40 +14939,41 @@ $(document).ready ( function(){
 						weft: [],
 					};
 
-					var warpColors = globalPattern.colors("warp");
-					var weftColors = globalPattern.colors("weft");
-
 					if ( fillStyle == "color32" ){
 
 						warpColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							yarnColors.warp[code] = color.color32;
 						});
 
 						weftColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							yarnColors.weft[code] = color.color32;
 						});
 
 					} else if ( fillStyle == "gradient" ){
 
 						warpColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							yarnColors.warp[code] = getSubGradient(color.lineargradient, warpSize);
 						});
 
 						weftColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							yarnColors.weft[code] = getSubGradient(color.lineargradient, weftSize);
 						});
 
 					}
 
+					debugTimeEnd("Calculations", "simulation");
+
+					debugTime("Draw");
+
 					// warp full threads
 					for ( x = 0; x < xIntersections; ++x) {
 						drawX = x * intersectionW + halfWarpSpace;
 						code = globalPattern.warp[x % globalPattern.warp.length];
-						drawRectBuffer(g_origin, pixels, drawX, 0, warpSize, ctxH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
+						drawRectBuffer(app.origin, drawPixels32, drawX, 0, warpSize, ctxH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
 						
 					}
 
@@ -13019,7 +14981,7 @@ $(document).ready ( function(){
 					for ( y = 0; y < yIntersections; ++y) {
 						drawY = y * intersectionH + halfWeftSpace;
 						code = globalPattern.weft[y % globalPattern.weft.length];
-						drawRectBuffer(g_origin, pixels, 0, drawY, ctxW, weftSize, ctxW, ctxH, fillStyle, yarnColors.weft[code], 1, "v");
+						drawRectBuffer(app.origin, drawPixels32, 0, drawY, ctxW, weftSize, ctxW, ctxH, fillStyle, yarnColors.weft[code], 1, "v");
 					}
 
 					// warp floats
@@ -13027,41 +14989,19 @@ $(document).ready ( function(){
 						arrX = loopNumber(x, arrW);
 						drawX = x * intersectionW + halfWarpSpace;
 						code = globalPattern.warp[x % globalPattern.warp.length];
-						color = globalPalette.colors[code];
+						color = app.palette.colors[code];
 						for ( y = 0; y < yIntersections; ++y) {
 							arrY = loopNumber(y, arrH);
 							drawY = y * intersectionH;
 							if (arr2D8[arrX][arrY]){
-								drawRectBuffer(g_origin, pixels, drawX, drawY, warpSize, intersectionH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
+								drawRectBuffer(app.origin, drawPixels32, drawX, drawY, warpSize, intersectionH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
 							}
 						}
 					}
 
-					ctxTarget.putImageData(imagedata, 0, 0);
-
 	      		} else if ( mode === "quick" ){
 
-	      			var pixels = imagedata.data;
-
-					simulationBGColor = globalColors.rgba[bgcolor];
-					drawRectBuffer4(g_origin, pixels, 0, 0, ctxW, ctxH, ctxW, ctxH, "rgba", simulationBGColor);
-
-	      			var warpSize = this.warpSize;
-					var weftSize = this.weftSize;
-					var warpSpace = this.warpSpace;
-					var weftSpace = this.weftSpace;
-
-					var halfWarpSpace = Math.floor(warpSpace/2);
-					var halfWeftSpace = Math.floor(weftSpace/2);
-
-					intersectionW = warpSize + warpSpace;
-					intersectionH = weftSize + weftSpace;
-
-					var repeatW = warpRepeat * intersectionW;
-					var repeatH = weftRepeat * intersectionH;
-
-					var xIntersections = Math.ceil(ctxW/intersectionW);
-					var yIntersections = Math.ceil(ctxH/intersectionH);
+					drawRectBuffer4(app.origin, drawPixels8, drawPixels32, 0, 0, ctxW, ctxH, ctxW, ctxH, "rgba", simulationBGColor8);
 
 					var fillStyle = "gradient";
 
@@ -13070,42 +15010,43 @@ $(document).ready ( function(){
 						weft: [],
 					};
 
-					var warpColors = globalPattern.colors("warp");
-					var weftColors = globalPattern.colors("weft");
-
 					if ( fillStyle == "rgba" ){
 
 						warpColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							yarnColors.warp[code] = color.rgba;
 						});
 
 						weftColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							yarnColors.weft[code] = color.rgba;
 						});
 
 					} else if ( fillStyle == "gradient" ){
 
 						warpColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							// yarnColors.warp[code] = getSubGradient(color.lineargradient, warpSize);
 							yarnColors.warp[code] = getSubGradientData(color.gradientData, warpSize);
 						});
 
 						weftColors.forEach(function(code,i){
-							color = globalPalette.colors[code];
+							color = app.palette.colors[code];
 							// yarnColors.weft[code] = getSubGradient(color.lineargradient, weftSize);
 							yarnColors.weft[code] = getSubGradientData(color.gradientData, weftSize);
 						});
 
 					}
 
+					debugTimeEnd("Calculations", "simulation");
+
+					debugTime("Draw");
+
 					// warp full threads
 					for ( x = 0; x < xIntersections; ++x) {
 						drawX = x * intersectionW + halfWarpSpace;
 						code = globalPattern.warp[x % globalPattern.warp.length];
-						drawRectBuffer4(g_origin, pixels, drawX, 0, warpSize, ctxH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
+						drawRectBuffer4(app.origin, drawPixels8, drawPixels32, drawX, 0, warpSize, ctxH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
 						
 					}
 
@@ -13113,7 +15054,7 @@ $(document).ready ( function(){
 					for ( y = 0; y < yIntersections; ++y) {
 						drawY = y * intersectionH + halfWeftSpace;
 						code = globalPattern.weft[y % globalPattern.weft.length];
-						drawRectBuffer4(g_origin, pixels, 0, drawY, ctxW, weftSize, ctxW, ctxH, fillStyle, yarnColors.weft[code], 1, "v");
+						drawRectBuffer4(app.origin, drawPixels8, drawPixels32, 0, drawY, ctxW, weftSize, ctxW, ctxH, fillStyle, yarnColors.weft[code], 1, "v");
 					}
 
 					// warp floats
@@ -13121,49 +15062,26 @@ $(document).ready ( function(){
 						arrX = loopNumber(x, arrW);
 						drawX = x * intersectionW + halfWarpSpace;
 						code = globalPattern.warp[x % globalPattern.warp.length];
-						color = globalPalette.colors[code];
+						color = app.palette.colors[code];
 						for ( y = 0; y < yIntersections; ++y) {
 							arrY = loopNumber(y, arrH);
 							drawY = y * intersectionH;
 							if (arr2D8[arrX][arrY]){
-								drawRectBuffer4(g_origin, pixels, drawX, drawY, warpSize, intersectionH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
+								drawRectBuffer4(app.origin, drawPixels8, drawPixels32, drawX, drawY, warpSize, intersectionH, ctxW, ctxH, fillStyle, yarnColors.warp[code], 1, "h");
 							}
 						}
 					}
 
-					ctxTarget.putImageData(imagedata, 0, 0);
-
 	      		} else if ( mode === "scaled" ){
+
+					debugTime("Calculations.1");
 
 	      			var jitter, drawSingleRepeat, testingMode;
                     var m, sx, sy, lx, ly, floatL, nodei;
                     var floatNode, floatGradient, nodeColor32, ytpPos, yarnThickness, floatNodeRelativePos, floatLift;
 
-                    var smoothingUpscale = this.smoothing;
-                    var downscale = this.downscale;
-                    var multicount = this.multicount;
-                    var algorithm = this.algorithm;
-
-                    var warpDensity = this.warpDensity;
-                    var weftDensity = this.weftDensity;
-
-                    intersectionW = screenDPI / warpDensity * smoothingUpscale;
-                    intersectionH = screenDPI / weftDensity * smoothingUpscale;
-
-                    var upscaleW = downscale ? ctxW * smoothingUpscale : ctxW;
-                    var upscaleH = downscale ? ctxH * smoothingUpscale : ctxH;
-
-                    var xNodes = Math.ceil(upscaleW / intersectionW);
-                    var yNodes = Math.ceil(upscaleH / intersectionH);
-
-                    var repeatWmm = Math.round(warpRepeat / screenDPI * 25.4);
-                    var repeatHmm = Math.round(warpRepeat / screenDPI * 25.4);
-
-                    this.repeatWpx = Math.round(warpRepeat / warpDensity * screenDPI);
-                    this.repeatHpx = Math.round(weftRepeat / weftDensity * screenDPI);
-
-                    this.repeatWmm = repeatWmm;
-                    this.repeatHmm = repeatHmm;
+                    var xNodes = Math.ceil(drawW / intersectionW);
+                    var yNodes = Math.ceil(drawH / intersectionH);
 
 		      		// Basic Physical Values ------------------------------------------
 
@@ -13180,18 +15098,18 @@ $(document).ready ( function(){
 					var weftDeflectionProfile = new Float32Array(xNodes * yNodes);
 
 					var dentingEffect = [];
-					if ( this.reedFill == 1 ){
+					if ( this.params.reedFill == 1 ){
 						dentingEffect = [0];
-					} else if ( this.reedFill == 2 ){
+					} else if ( this.params.reedFill == 2 ){
 						dentingEffect = [0.5,-0.5];
-					} else if ( this.reedFill == 3 ){
+					} else if ( this.params.reedFill == 3 ){
 						dentingEffect = [0.5, 0, -0.5];
-					} else if ( this.reedFill == 4 ){
+					} else if ( this.params.reedFill == 4 ){
 						dentingEffect = [0.5, 0.25, -0.25, -0.5];
-					} else if ( this.reedFill == 5 ){
+					} else if ( this.params.reedFill == 5 ){
 						dentingEffect = [0.5, 0.25, 0, -0.25, -0.5];
 					}
-					var dentingSpacePx = this.dentingSpace / 25.4 * screenDPI * smoothingUpscale;
+					var dentingSpacePx = this.dentingSpace / 25.4 * screenDPI * smoothingFactor;
 
 					// Nep 1mm-5mm
 					// thick 50% fault 6mm-30mm
@@ -13202,9 +15120,9 @@ $(document).ready ( function(){
 					var totalWarpYarnKmInView = ctxH / screenDPI * xNodes / 39.37 / 1000;
 					var totalWeftYarnKmInView = ctxW / screenDPI * yNodes / 39.37 / 1000;
 
-					var warpYarnThinPlaces = Math.round(this.warpThins * totalWarpYarnKmInView);
-					var warpYarnThickPlaces = Math.round(this.warpThicks * totalWarpYarnKmInView);
-					var warpYarnNeps = Math.round(this.warpNeps * totalWarpYarnKmInView);
+					var warpYarnThinPlaces = Math.round(this.params.warpThins * totalWarpYarnKmInView);
+					var warpYarnThickPlaces = Math.round(this.params.warpThicks * totalWarpYarnKmInView);
+					var warpYarnNeps = Math.round(this.params.warpNeps * totalWarpYarnKmInView);
 
 					var warpYarnThinPlaceMinLength = Math.round(4 / 25.4 * warpDensity);
 					var warpYarnThinPlaceMaxLength = Math.round(20 / 25.4 * warpDensity);
@@ -13215,9 +15133,9 @@ $(document).ready ( function(){
 					var warpYarnNepMinLength = Math.round(1 / 25.4 * warpDensity);
 					var warpYarnNepMaxLength = Math.round(5 / 25.4 * warpDensity);
 
-					var weftYarnThinPlaces = Math.round(this.weftThins * totalWeftYarnKmInView);
-					var weftYarnThickPlaces = Math.round(this.weftThicks * totalWeftYarnKmInView);
-					var weftYarnNeps = Math.round(this.weftNeps * totalWeftYarnKmInView);
+					var weftYarnThinPlaces = Math.round(this.params.weftThins * totalWeftYarnKmInView);
+					var weftYarnThickPlaces = Math.round(this.params.weftThicks * totalWeftYarnKmInView);
+					var weftYarnNeps = Math.round(this.params.weftNeps * totalWeftYarnKmInView);
 
 					var weftYarnThinPlaceMinLength = Math.round(4 / 25.4 * weftDensity);
 					var weftYarnThinPlaceMaxLength = Math.round(20 / 25.4 * weftDensity);
@@ -13233,9 +15151,6 @@ $(document).ready ( function(){
 
 					var floatGradients = [];
 
-					var warpColors = globalPattern.colors("warp");
-					var weftColors = globalPattern.colors("weft");
-
 					var shadei;
 					var shade32;
 					var subShadei;
@@ -13246,7 +15161,7 @@ $(document).ready ( function(){
 					var warpPosJitter = 0;
 					var weftPosJitter = 0;
 					var warpThicknessJitter = 0;
-					var weftThicknessJitter;
+					var weftThicknessJitter = 0;
 
 					var warpNodePosJitter = 0;
 					var weftNodePosJitter = 0;
@@ -13265,63 +15180,67 @@ $(document).ready ( function(){
 
 					var weftWiggleRange = 0;
 					var weftWiggleInc = 0;
-					var warpWiggleFrequency = 0;
+					var weftWiggleFrequency = 0;
 					var weftWiggle = 0;
 
-					if ( this.calcFabricImperfecitons ){
+					if ( this.params.renderFabricImperfections ){
 
-						warpPosJitter = this.warpPosJitter;
-						weftPosJitter = this.weftPosJitter;
-						warpThicknessJitter = this.warpThicknessJitter;
-						weftThicknessJitter = this.weftThicknessJitter;
+						warpPosJitter = this.params.warpPosJitter;
+						weftPosJitter = this.params.weftPosJitter;
+						warpThicknessJitter = this.params.warpThicknessJitter;
+						weftThicknessJitter = this.params.weftThicknessJitter;
 
-						warpNodePosJitter = this.warpNodePosJitter;
-						weftNodePosJitter = this.weftNodePosJitter;
-						warpNodeThicknessJitter = this.warpNodeThicknessJitter;
-						weftNodeThicknessJitter = this.weftNodeThicknessJitter;
+						warpNodePosJitter = this.params.warpNodePosJitter;
+						weftNodePosJitter = this.params.weftNodePosJitter;
+						warpNodeThicknessJitter = this.params.warpNodeThicknessJitter;
+						weftNodeThicknessJitter = this.params.weftNodeThicknessJitter;
 						
-						warpFloatLiftPercent = this.warpFloatLiftPercent;
-						weftFloatLiftPercent = this.weftFloatLiftPercent;
-		      			warpFloatDeflectionPercent = this.warpFloatDeflectionPercent;
-		      			weftFloatDeflectionPercent = this.weftFloatDeflectionPercent;
+						warpFloatLiftPercent = this.params.warpFloatLiftPercent;
+						weftFloatLiftPercent = this.params.weftFloatLiftPercent;
+		      			warpFloatDeflectionPercent = this.params.warpFloatDeflectionPercent;
+		      			weftFloatDeflectionPercent = this.params.weftFloatDeflectionPercent;
 
-						warpWiggleRange = this.warpWiggleRange;
-						warpWiggleInc = this.warpWiggleInc;
-						warpWiggleFrequency = this.warpWiggleFrequency;
+						warpWiggleRange = this.params.warpWiggleRange;
+						warpWiggleInc = this.params.warpWiggleInc;
+						warpWiggleFrequency = this.params.warpWiggleFrequency;
 
-						weftWiggleRange = this.weftWiggleRange;
-						weftWiggleInc = this.weftWiggleInc;
-						weftWiggleFrequency = this.weftWiggleFrequency;
+						weftWiggleRange = this.params.weftWiggleRange;
+						weftWiggleInc = this.params.weftWiggleInc;
+						weftWiggleFrequency = this.params.weftWiggleFrequency;
 
 					}
 
+					debugTimeEnd("Calculations.1", "simulation");
+
+					debugTime("Calculations.2");
+
 					for (x = 0; x < xNodes; ++x) {
 
-						if ( this.calcFabricImperfecitons ){
+						if ( this.params.renderFabricImperfections ){
 
-							warpPosJitter = warpPosJitter ? smoothingUpscale * getRandom(-warpPosJitter, warpPosJitter) : 0;
-							warpThicknessJitter = warpThicknessJitter ? smoothingUpscale * getRandom(-warpThicknessJitter, warpThicknessJitter) : 0;
+							warpPosJitter = warpPosJitter ? smoothingFactor * getRandom(-this.params.warpPosJitter, this.params.warpPosJitter) : 0;
+							warpThicknessJitter = warpThicknessJitter ? smoothingFactor * getRandom(-this.params.warpThicknessJitter, this.params.warpThicknessJitter) : 0;
 
 						}
 
 						colorCode = globalPattern.warp[x % globalPattern.warp.length];
-						color = globalPalette.colors[colorCode];
+						color = app.palette.colors[colorCode];
 						if ( multicount ){
-							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
+							yarnThickness = getYarnDia(color.yarn, color.system, "px", screenDPI) * smoothingFactor;
 						} else {
-							yarnThickness = yarnDia(this.warpNumber, "nec", "px", screenDPI) * smoothingUpscale;
+							yarnThickness = getYarnDia(this.params.warpNumber, "nec", "px", screenDPI) * smoothingFactor;
 						}
 						warpPatternTranslated[x] = colorCode;
 
 						for (y = 0; y < yNodes; ++y) {
 
-							if ( this.calcFabricImperfecitons ){
+							if ( this.params.renderFabricImperfections ){
 
-								warpWiggle = Math.round(Math.random()) < warpWiggleFrequency ? warpWiggle+warpWiggleInc : warpWiggle-warpWiggleInc;
+								warpWiggle = Math.random() < warpWiggleFrequency ? warpWiggle+warpWiggleInc : warpWiggle-warpWiggleInc;
 								warpWiggle = limitNumber(warpWiggle, -warpWiggleRange, warpWiggleRange);
 								
-								warpNodePosJitter = warpNodePosJitter ? getRandom(-warpNodePosJitter, warpNodePosJitter) * smoothingUpscale / 2 : 0;
-								warpNodeThicknessJitter = warpNodeThicknessJitter ? smoothingUpscale * getRandom(-warpNodeThicknessJitter, warpNodeThicknessJitter) / 2 : 0;
+								warpNodePosJitter = warpNodePosJitter ? getRandom(-this.params.warpNodePosJitter, this.params.warpNodePosJitter) * smoothingFactor / 2 : 0;
+								warpNodeThicknessJitter = warpNodeThicknessJitter ? smoothingFactor * getRandom(-this.warpNodeThicknessJitter, this.warpNodeThicknessJitter) / 2 : 0;
 
 							}
 							
@@ -13332,7 +15251,7 @@ $(document).ready ( function(){
 							floatS = globalFloats.warpFloatWeave[x][y];
 							floatSAbs = Math.abs(floatS);
 							floatNode = globalFloats.warpFloatNodeWeave[x][y];
-							warpPositionProfile[i] += Math.round( intersectionW * ( x + 0.5 ) + dentingSpacePx * dentingEffect[x % this.reedFill] + warpPosJitter + warpNodePosJitter + warpWiggle * smoothingUpscale);
+							warpPositionProfile[i] += Math.round( intersectionW * ( x + 0.5 ) + dentingSpacePx * dentingEffect[x % this.params.reedFill] + warpPosJitter + warpNodePosJitter + warpWiggle * smoothingFactor);
 
 							// Warp Node Thickness	
 							
@@ -13340,11 +15259,11 @@ $(document).ready ( function(){
 
 							// Intersection Deflection
 							if ( floatNode === 0 ){
-								weftDeflectionProfile[i] += smoothingUpscale * weftFloatDeflectionPercent / 100;
+								weftDeflectionProfile[i] += smoothingFactor * weftFloatDeflectionPercent / 100;
 							}
 
 							if ( floatNode == floatSAbs - 1){
-								weftDeflectionProfile[i] -= smoothingUpscale * weftFloatDeflectionPercent / 100;
+								weftDeflectionProfile[i] -= smoothingFactor * weftFloatDeflectionPercent / 100;
 							}
 
 						}
@@ -13352,32 +15271,32 @@ $(document).ready ( function(){
 
 					for (y = 0; y < yNodes; ++y) {
 
-						if ( this.calcFabricImperfecitons ){
+						if ( this.params.renderFabricImperfections ){
 
-							weftPosJitter = weftPosJitter ? smoothingUpscale * getRandom(-weftPosJitter, weftPosJitter) : 0;
-							weftThicknessJitter = weftThicknessJitter ? smoothingUpscale * getRandom(-weftThicknessJitter, weftThicknessJitter) : 0;
+							weftPosJitter = weftPosJitter ? smoothingFactor * getRandom(-this.params.weftPosJitter, this.params.weftPosJitter) : 0;
+							weftThicknessJitter = weftThicknessJitter ? smoothingFactor * getRandom(-this.params.weftThicknessJitter, this.params.weftThicknessJitter) : 0;
 
 						}
 
 						colorCode = globalPattern.weft[y % globalPattern.weft.length];
-						color = globalPalette.colors[colorCode];
+						color = app.palette.colors[colorCode];
 						if ( multicount ){
-							yarnThickness = yarnDia(color.yarn, color.system, "px", screenDPI) * smoothingUpscale;
+							yarnThickness = getYarnDia(color.yarn, color.system, "px", screenDPI) * smoothingFactor;
 						} else {
-							yarnThickness = yarnDia(this.weftNumber, "nec", "px", screenDPI) * smoothingUpscale;
+							yarnThickness = getYarnDia(this.params.weftNumber, "nec", "px", screenDPI) * smoothingFactor;
 						}
 
 						weftPatternTranslated[y] = colorCode;
 
 						for (x = 0; x < xNodes; ++x) {
 
-							if ( this.calcFabricImperfecitons ){
+							if ( this.params.renderFabricImperfections ){
 
-								weftWiggle = Math.round(Math.random()) < weftWiggleFrequency ? weftWiggle+weftWiggleInc : weftWiggle-weftWiggleInc;
+								weftWiggle = Math.random() < weftWiggleFrequency ? weftWiggle+weftWiggleInc : weftWiggle-weftWiggleInc;
 								weftWiggle = limitNumber(weftWiggle, -weftWiggleRange, weftWiggleRange);
 								
-								weftNodePosJitter = weftNodePosJitter ? getRandom(-weftNodePosJitter, weftNodePosJitter) * smoothingUpscale / 2 : 0;
-								weftNodeThicknessJitter = weftNodeThicknessJitter ? smoothingUpscale * getRandom(-weftNodeThicknessJitter, weftNodeThicknessJitter) / 2 : 0;
+								weftNodePosJitter = weftNodePosJitter ? getRandom(-this.params.weftNodePosJitter, this.params.weftNodePosJitter) * smoothingFactor / 2 : 0;
+								weftNodeThicknessJitter = weftNodeThicknessJitter ? smoothingFactor * getRandom(-this.params.weftNodeThicknessJitter, this.params.weftNodeThicknessJitter) / 2 : 0;
 
 							}
 							
@@ -13387,25 +15306,84 @@ $(document).ready ( function(){
 							floatS = globalFloats.weftFloatWeave[x][y];
 							floatSAbs = Math.abs(floatS);
 							floatNode = globalFloats.weftFloatNodeWeave[x][y];
-							weftPositionProfile[i] += Math.round( intersectionH * ( y + 0.5 ) + weftPosJitter + weftNodePosJitter + weftWiggle * smoothingUpscale);
+							weftPositionProfile[i] += Math.round( intersectionH * ( y + 0.5 ) + weftPosJitter + weftNodePosJitter + weftWiggle * smoothingFactor);
 
 							// Weft Node Thickness	
 							weftThicknessProfile[i] = Math.round(yarnThickness + weftThicknessJitter + weftNodeThicknessJitter);
 
 							// Intersection Deflection
 							if ( floatNode === 0 ){
-								warpDeflectionProfile[i] += smoothingUpscale * warpFloatDeflectionPercent / 100;
+								warpDeflectionProfile[i] += smoothingFactor * warpFloatDeflectionPercent / 100;
 							}
 
 							if ( floatNode == floatSAbs - 1){
-								warpDeflectionProfile[i] -= smoothingUpscale * warpFloatDeflectionPercent / 100;
+								warpDeflectionProfile[i] -= smoothingFactor * warpFloatDeflectionPercent / 100;
 							}
 
 						}
 					}
 
+					if ( this.params.renderYarnImperfections ){
+						debugTime("addIPI");
+						this.addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnThinPlaces, warpYarnThinPlaceMinLength, warpYarnThinPlaceMaxLength, -25,  -25);
+						this.addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnThickPlaces, warpYarnThickPlaceMinLength, warpYarnThickPlaceMaxLength, 50, 50 );
+						this.addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnNeps, warpYarnNepMinLength, warpYarnNepMaxLength, 100, 200 );
+						this.addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnThinPlaces, weftYarnThinPlaceMinLength, weftYarnThinPlaceMaxLength, -25, -25 );
+						this.addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnThickPlaces, weftYarnThickPlaceMinLength, weftYarnThickPlaceMaxLength, 50, 50 );
+						this.addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnNeps, weftYarnNepMinLength, weftYarnNepMaxLength, 100, 200 );
+						debugTimeEnd("addIPI", "simulation");
+					}
+
 					// console.log(warpDeflectionProfile);
 					// console.log(weftDeflectionProfile);
+
+					debugTimeEnd("Calculations.2", "simulation");
+
+					debugTime("Calculations.3");
+
+					var ip, jp, kp, it, jt, kt, k;
+
+					// Position adjustment for IPIs
+					for (n = 0; n < 2; ++n) {
+
+						// warp IPI Deflection Normalise
+						for (y = 0; y < yNodes; ++y) {
+							for (x = 2; x < xNodes-2; ++x) {
+								i = y * xNodes + x;
+								j = y * xNodes + x + 1;
+								k = y * xNodes + x + 2;
+								ip = warpPositionProfile[i];
+								jp = warpPositionProfile[j];
+								kp = warpPositionProfile[k];
+								it = warpThicknessProfile[i];
+								jt = warpThicknessProfile[j];
+								kt = warpThicknessProfile[k];
+								warpPositionProfile[j] = (kp-kt/2+ip+it/2)/2;
+							}
+
+						}
+
+						for (x = 0; x < xNodes; ++x) {
+							for (y = 2; y < yNodes-2; ++y) {
+								i = y * xNodes + x;
+								j = (y+1) * xNodes + x;
+								k = (y+2) * xNodes + x;
+								ip = weftPositionProfile[i];
+								jp = weftPositionProfile[j];
+								kp = weftPositionProfile[k];
+								it = weftThicknessProfile[i];
+								jt = weftThicknessProfile[j];
+								kt = weftThicknessProfile[k];
+								weftPositionProfile[j] = (kp-kt/2+ip+it/2)/2;
+							}
+
+						}
+
+					}
+
+					debugTimeEnd("Calculations.3", "simulation");
+
+					debugTime("Calculations.4");
 
 					for (n = 0; n < 2; ++n) {
 
@@ -13467,6 +15445,10 @@ $(document).ready ( function(){
 
 					}
 
+					debugTimeEnd("Calculations.4", "simulation");
+
+					debugTime("Calculations.5");
+
 					var affectingFloatS, affectedFloatS, floatCenter, xDeflection, yDeflection, lFloatS, rFloatS, bFloatS, tFloatS;
 
 					
@@ -13495,22 +15477,6 @@ $(document).ready ( function(){
 					}
 					*/
 
-					addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnThinPlaces, warpYarnThinPlaceMinLength, warpYarnThinPlaceMaxLength, -25,  -25);
-					addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnThickPlaces, warpYarnThickPlaceMinLength, warpYarnThickPlaceMaxLength, 50, 50 );
-					addIPI(warpThicknessProfile, xNodes, yNodes, "warp", warpYarnNeps, warpYarnNepMinLength, warpYarnNepMaxLength, 60, 120 );
-
-					addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnThinPlaces, weftYarnThinPlaceMinLength, weftYarnThinPlaceMaxLength, -25, -25 );
-					addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnThickPlaces, weftYarnThickPlaceMinLength, weftYarnThickPlaceMaxLength, 50, 50 );
-					addIPI(weftThicknessProfile, xNodes, yNodes, "weft", weftYarnNeps, weftYarnNepMinLength, weftYarnNepMaxLength, 60, 120 );
-
-					if ( bgcolor === "white" ){
-						simulationBGColor = globalColors.white32;
-					} else if ( bgcolor === "grey" ){
-						simulationBGColor = globalColors.grey32;
-					} else {
-						simulationBGColor = globalColors.black32;
-					} 
-
 					var drawWarpFaceFloats = true;
 					var drawWarpBackFloats = true;
 					var drawWeftFaceFloats = true;
@@ -13524,20 +15490,17 @@ $(document).ready ( function(){
 					weftBackFloats = globalFloats.weft.back;
 					fabricBackFloats = warpBackFloats.concat(weftBackFloats).unique().sort((a,b) => a-b);
 
-					// Upscale Canvas --------------------------------------------------
-					g_upscaleContext = getCtx(10, "upscale-canvas", "g_upscaleCanvas", upscaleW, upscaleH, false);
-					g_upscaleCanvas.width = upscaleW;
-					g_upscaleCanvas.height = upscaleH;
+                    debugTimeEnd("Calculations.5", "simulation");
 
-					var uPixels = g_upscaleContext.createImageData(upscaleW, upscaleH);
-					var uPixels8 = uPixels.data;
-                    var uPixels32 = new Uint32Array(uPixels8.buffer);
+                    debugTimeEnd("Calculations", "simulation");
+
+					debugTime("Draw");
 
                     if ( algorithm == 1 ){
 
                     	for (c = 0; c < warpColors.length; c++) {
 							code = warpColors[c];
-							gradient = globalPalette.colors[code].lineargradient;
+							gradient = app.palette.colors[code].lineargradient;
 							for (i = 0; i < globalFloats.warp.face.length; i++) {
 								floatL = globalFloats.warp.face[i];
 								floatGradients[code+"-"+floatL] = new Uint32Array(floatL);
@@ -13553,7 +15516,7 @@ $(document).ready ( function(){
 
 						for (c = 0; c < weftColors.length; c++) {
 							code = weftColors[c];
-							gradient = globalPalette.colors[code].lineargradient;
+							gradient = app.palette.colors[code].lineargradient;
 							for (i = 0; i < globalFloats.weft.face.length; i++) {
 								floatL = globalFloats.weft.face[i];
 								floatGradients[code+"-"+floatL] = new Uint32Array(floatL);
@@ -13567,7 +15530,7 @@ $(document).ready ( function(){
 							floatGradients[code+"-dark"] = gradient[gradient.length-1];
 						}
 
-						drawRectBuffer(g_origin, uPixels32, 0, 0, upscaleW, upscaleH, upscaleW, upscaleH, "color32", simulationBGColor);
+						drawRectBuffer(app.origin, drawPixels32, 0, 0, drawW, drawH, drawW, drawH, "color32", simulationBGColor32);
 
 						for (n = fabricBackFloats.length - 1; n >= 0; n--) {
 
@@ -13588,7 +15551,7 @@ $(document).ready ( function(){
 	                                        it = (y+1) * xNodes + x;
 
 	                                        code = warpPatternTranslated[x];
-	                                        color = globalPalette.colors[code];
+	                                        color = app.palette.colors[code];
 
 	                                        floatNode = globalFloats.warpFloatNodeWeave[x][y];
 	                                        nodeThickness = warpThicknessProfile[i];
@@ -13597,7 +15560,7 @@ $(document).ready ( function(){
 
 	                                        nodeColor32 = color.color32;
 
-	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * warpFloatLiftPercent / 100: 0;
 											nodeX = warpPositionProfile[i] + floatLift;
 											//nodeX = warpPositionProfile[i];
 							                nodeY = weftPositionProfile[i];
@@ -13606,7 +15569,7 @@ $(document).ready ( function(){
 	                                        tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
 
 	                                        bNodeY = y ? weftPositionProfile[ib] : 0;
-	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : drawH - 1;
 
 	                                        sx = nodeX - nodeHT;
 	                                        sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
@@ -13614,7 +15577,7 @@ $(document).ready ( function(){
 
 	                                        floatL = ly - sy + 1;
 
-	                                        drawRectBuffer(g_origin, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "color32", nodeColor32);
+	                                        drawRectBuffer(app.origin, drawPixels32, sx, sy, nodeThickness, floatL, drawW, drawH, "color32", nodeColor32);
 
 	                                    }
 	                                }
@@ -13641,7 +15604,7 @@ $(document).ready ( function(){
 											iLast = y * xNodes + xNodes - 1;
 
 											code = weftPatternTranslated[y];
-											color = globalPalette.colors[code];
+											color = app.palette.colors[code];
 
 											floatNode = globalFloats.weftFloatNodeWeave[x][y];
 											nodeThickness = weftThicknessProfile[i];
@@ -13650,7 +15613,7 @@ $(document).ready ( function(){
 
 											nodeColor32 = color.color32;
 
-											floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+											floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * weftFloatLiftPercent / 100: 0;
 											nodeX = warpPositionProfile[i];
 							               	nodeY = weftPositionProfile[i] + floatLift;
 							                //nodeY = weftPositionProfile[i];
@@ -13659,7 +15622,7 @@ $(document).ready ( function(){
 											rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
 
 											lNodeX = x ? warpPositionProfile[il] : 0;
-											rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+											rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : drawW - 1;
 
 											sy = nodeY - nodeHT;
 											sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
@@ -13667,7 +15630,7 @@ $(document).ready ( function(){
 
 											floatL = lx - sx + 1;
 
-											drawRectBuffer(g_origin, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "color32", nodeColor32);
+											drawRectBuffer(app.origin, drawPixels32, sx, sy, floatL, nodeThickness, drawW, drawH, "color32", nodeColor32);
 
 										}
 
@@ -13697,7 +15660,7 @@ $(document).ready ( function(){
 							                it = (y+1) * xNodes + x;
 
 							                code = warpPatternTranslated[x];
-							                color = globalPalette.colors[code];
+							                color = app.palette.colors[code];
 
 							                
 
@@ -13707,7 +15670,7 @@ $(document).ready ( function(){
 							                floatGradient = floatGradients[code+"-"+floatS];
 							                nodeColor32 = floatGradient[floatS-floatNode-1];
 
-											floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+											floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * warpFloatLiftPercent / 100: 0;
 											nodeX = warpPositionProfile[i] + floatLift;
 							                //nodeX = warpPositionProfile[i];
 							                nodeY = weftPositionProfile[i];
@@ -13716,7 +15679,7 @@ $(document).ready ( function(){
 							                tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
 
 							                bNodeY = y ? weftPositionProfile[ib] : 0;
-							                tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+							                tNodeY = y < yNodes-1 ? weftPositionProfile[it] : drawH - 1;
 
 							                sx = nodeX - nodeHT;
 							                sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
@@ -13724,16 +15687,16 @@ $(document).ready ( function(){
 
 							                floatL = ly - sy + 1;
 
-							                drawRectBuffer(g_origin, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "color32", nodeColor32);
+							                drawRectBuffer(app.origin, drawPixels32, sx, sy, nodeThickness, floatL, drawW, drawH, "color32", nodeColor32);
 
 							                centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
 							                if ( floatNode == centerNode ){
-							                    drawRectBuffer(g_origin, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL/2, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
-							                    drawRectBuffer(g_origin, uPixels32, sx, sy+floatL/2, nodeThickness/3, floatL/2, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+							                    drawRectBuffer(app.origin, drawPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL/2, drawW, drawH, "color32", floatGradients[code+"-dark"]);
+							                    drawRectBuffer(app.origin, drawPixels32, sx, sy+floatL/2, nodeThickness/3, floatL/2, drawW, drawH, "color32", floatGradients[code+"-light"]);
 							                } else if ( floatNode < centerNode ){
-							                    drawRectBuffer(g_origin, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+							                    drawRectBuffer(app.origin, drawPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL, drawW, drawH, "color32", floatGradients[code+"-dark"]);
 							                } else if ( floatNode > centerNode){
-							                    drawRectBuffer(g_origin, uPixels32, sx, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+							                    drawRectBuffer(app.origin, drawPixels32, sx, sy, nodeThickness/3, floatL, drawW, drawH, "color32", floatGradients[code+"-light"]);
 							                }
 
 	                                    }
@@ -13761,7 +15724,7 @@ $(document).ready ( function(){
 											iLast = y * xNodes + xNodes - 1;
 
 											code = weftPatternTranslated[y];
-											color = globalPalette.colors[code];
+											color = app.palette.colors[code];
 
 											
 											floatNode = globalFloats.weftFloatNodeWeave[x][y];
@@ -13771,7 +15734,7 @@ $(document).ready ( function(){
 
 											nodeColor32 = floatGradient[floatNode];
 
-											floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+											floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * weftFloatLiftPercent / 100: 0;
 
 											nodeX = warpPositionProfile[i];
 											nodeY = weftPositionProfile[i] + floatLift;
@@ -13781,7 +15744,7 @@ $(document).ready ( function(){
 											rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
 
 											lNodeX = x ? warpPositionProfile[il] : 0;
-											rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+											rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : drawW - 1;
 
 											sy = nodeY - nodeHT;
 											sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
@@ -13789,16 +15752,16 @@ $(document).ready ( function(){
 
 											floatL = lx - sx + 1;
 
-											drawRectBuffer(g_origin, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "color32", nodeColor32);
+											drawRectBuffer(app.origin, drawPixels32, sx, sy, floatL, nodeThickness, drawW, drawH, "color32", nodeColor32);
 
 											centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
 											if ( floatNode == centerNode ){
-												drawRectBuffer(g_origin, uPixels32, sx, sy+nodeThickness*0.667, floatL/2, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
-												drawRectBuffer(g_origin, uPixels32, sx+floatL/2, sy, floatL/2, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+												drawRectBuffer(app.origin, drawPixels32, sx, sy+nodeThickness*0.667, floatL/2, nodeThickness/3, drawW, drawH, "color32", floatGradients[code+"-light"]);
+												drawRectBuffer(app.origin, drawPixels32, sx+floatL/2, sy, floatL/2, nodeThickness/3, drawW, drawH, "color32", floatGradients[code+"-dark"]);
 											} else if ( floatNode < centerNode ){
-												drawRectBuffer(g_origin, uPixels32, sx, sy+nodeThickness*0.667, floatL, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-light"]);
+												drawRectBuffer(app.origin, drawPixels32, sx, sy+nodeThickness*0.667, floatL, nodeThickness/3, drawW, drawH, "color32", floatGradients[code+"-light"]);
 											} else if ( floatNode > centerNode){
-												drawRectBuffer(g_origin, uPixels32, sx, sy, floatL, nodeThickness/3, upscaleW, upscaleH, "color32", floatGradients[code+"-dark"]);
+												drawRectBuffer(app.origin, drawPixels32, sx, sy, floatL, nodeThickness/3, drawW, drawH, "color32", floatGradients[code+"-dark"]);
 											}
 
 										} 
@@ -13816,37 +15779,37 @@ $(document).ready ( function(){
                     	// Float Gradient Data
 	                    for (c = 0; c < warpColors.length; c++) {
 	                        code = warpColors[c];
-	                        gradientData = globalPalette.colors[code].gradientData;
+	                        gradientData = app.palette.colors[code].gradientData;
 	                        for (i = 0; i < globalFloats.warp.face.length; i++) {
 	                            floatL = globalFloats.warp.face[i];
 	                            floatGradients[code+"-"+floatL] = [];
 	                            for (nodei = 0; nodei < floatL; nodei++) {
-	                                shadei = Math.ceil(globalPalette.gradientL/(floatL+1)*(nodei+1))-1;
+	                                shadei = Math.ceil(app.palette.gradientL/(floatL+1)*(nodei+1))-1;
 	                                shade32 = getPixelRGBA(gradientData, shadei);
 	                                floatGradients[code+"-"+floatL][nodei] = shade32;
 	                            }
 	                        }
 	                        floatGradients[code+"-light"] = getPixelRGBA(gradientData, 1);
-	                        floatGradients[code+"-dark"] = getPixelRGBA(gradientData, globalPalette.gradientL-1);
+	                        floatGradients[code+"-dark"] = getPixelRGBA(gradientData, app.palette.gradientL-1);
 	                    }
 
 	                    for (c = 0; c < weftColors.length; c++) {
 	                        code = weftColors[c];
-	                        gradientData = globalPalette.colors[code].gradientData;
+	                        gradientData = app.palette.colors[code].gradientData;
 	                        for (i = 0; i < globalFloats.weft.face.length; i++) {
 	                            floatL = globalFloats.weft.face[i];
 	                            floatGradients[code+"-"+floatL] = [];
 	                            for (nodei = 0; nodei < floatL; nodei++) {
-	                                shadei = Math.ceil(globalPalette.gradientL/(floatL+1)*(nodei+1))-1;
+	                                shadei = Math.ceil(app.palette.gradientL/(floatL+1)*(nodei+1))-1;
 	                                shade32 = getPixelRGBA(gradientData, shadei);
 	                                floatGradients[code+"-"+floatL][nodei] = shade32;
 	                            }
 	                        }
 	                        floatGradients[code+"-light"] = getPixelRGBA(gradientData, 1);
-	                        floatGradients[code+"-dark"] = getPixelRGBA(gradientData, globalPalette.gradientL-1);
+	                        floatGradients[code+"-dark"] = getPixelRGBA(gradientData, app.palette.gradientL-1);
 	                    }
 	                    
-	                    drawRectBuffer4(g_origin, uPixels8, uPixels32, 0, 0, upscaleW, upscaleH, upscaleW, upscaleH, "rgba", simulationBGColor);
+	                    drawRectBuffer4(app.origin, drawPixels8, drawPixels32, 0, 0, drawW, drawH, drawW, drawH, "rgba", simulationBGColor8);
 
 	                    for (n = fabricBackFloats.length - 1; n >= 0; n--) {
 
@@ -13867,7 +15830,7 @@ $(document).ready ( function(){
 	                                        it = (y+1) * xNodes + x;
 
 	                                        code = warpPatternTranslated[x];
-	                                        color = globalPalette.colors[code];
+	                                        color = app.palette.colors[code];
 
 	                                        floatNode = globalFloats.warpFloatNodeWeave[x][y];
 	                                        nodeThickness = warpThicknessProfile[i];
@@ -13876,7 +15839,7 @@ $(document).ready ( function(){
 
 	                                        nodeColor32 = color.rgba;
 
-	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * warpFloatLiftPercent / 100: 0;
 	                                        nodeX = warpPositionProfile[i] + floatLift;
 	                                        //nodeX = warpPositionProfile[i];
 	                                        nodeY = weftPositionProfile[i];
@@ -13885,7 +15848,7 @@ $(document).ready ( function(){
 	                                        tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
 
 	                                        bNodeY = y ? weftPositionProfile[ib] : 0;
-	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : drawH - 1;
 
 	                                        sx = nodeX - nodeHT;
 	                                        sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
@@ -13893,7 +15856,7 @@ $(document).ready ( function(){
 
 	                                        floatL = ly - sy + 1;
 
-	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "rgba", nodeColor32);
+	                                        drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy, nodeThickness, floatL, drawW, drawH, "rgba", nodeColor32);
 
 	                                    }
 	                                }
@@ -13920,7 +15883,7 @@ $(document).ready ( function(){
 	                                        iLast = y * xNodes + xNodes - 1;
 
 	                                        code = weftPatternTranslated[y];
-	                                        color = globalPalette.colors[code];
+	                                        color = app.palette.colors[code];
 
 	                                        floatNode = globalFloats.weftFloatNodeWeave[x][y];
 	                                        nodeThickness = weftThicknessProfile[i];
@@ -13929,7 +15892,7 @@ $(document).ready ( function(){
 
 	                                        nodeColor32 = color.rgba;
 
-	                                        floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+	                                        floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * weftFloatLiftPercent / 100: 0;
 	                                        nodeX = warpPositionProfile[i];
 	                                        nodeY = weftPositionProfile[i] + floatLift;
 	                                        //nodeY = weftPositionProfile[i];
@@ -13938,7 +15901,7 @@ $(document).ready ( function(){
 	                                        rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
 
 	                                        lNodeX = x ? warpPositionProfile[il] : 0;
-	                                        rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+	                                        rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : drawW - 1;
 
 	                                        sy = nodeY - nodeHT;
 	                                        sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
@@ -13946,7 +15909,7 @@ $(document).ready ( function(){
 
 	                                        floatL = lx - sx + 1;
 
-	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "rgba", nodeColor32);
+	                                        drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy, floatL, nodeThickness, drawW, drawH, "rgba", nodeColor32);
 
 	                                    }
 
@@ -13975,7 +15938,7 @@ $(document).ready ( function(){
 	                                        it = (y+1) * xNodes + x;
 
 	                                        code = warpPatternTranslated[x];
-	                                        color = globalPalette.colors[code];
+	                                        color = app.palette.colors[code];
 	                                     
 	                                        floatNode = globalFloats.warpFloatNodeWeave[x][y];
 	                                        nodeThickness = warpThicknessProfile[i];
@@ -13983,7 +15946,7 @@ $(document).ready ( function(){
 	                                        floatGradient = floatGradients[code+"-"+floatS];
 	                                        nodeColor32 = floatGradient[floatS-floatNode-1];
 
-	                                        floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * warpFloatLiftPercent / 100: 0;
+	                                        floatLift = floatSAbs > 2 ? -Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * warpFloatLiftPercent / 100: 0;
 	                                        nodeX = warpPositionProfile[i] + floatLift;
 	                                        //nodeX = warpPositionProfile[i];
 	                                        nodeY = weftPositionProfile[i];
@@ -13992,7 +15955,7 @@ $(document).ready ( function(){
 	                                        tNodeHT = y < yNodes-1 ? weftThicknessProfile[it]/2 : 0;
 
 	                                        bNodeY = y ? weftPositionProfile[ib] : 0;
-	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : upscaleH - 1;
+	                                        tNodeY = y < yNodes-1 ? weftPositionProfile[it] : drawH - 1;
 
 	                                        sx = nodeX - nodeHT;
 	                                        sy = (bNodeY + bNodeHT + nodeY - nodeHT)/2;
@@ -14000,16 +15963,16 @@ $(document).ready ( function(){
 
 	                                        floatL = ly - sy + 1;
 
-	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, nodeThickness, floatL, upscaleW, upscaleH, "rgba", nodeColor32);
+	                                        drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy, nodeThickness, floatL, drawW, drawH, "rgba", nodeColor32);
 
 	                                        centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
 	                                        if ( floatNode == centerNode ){
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL/2, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy+floatL/2, nodeThickness/3, floatL/2, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL/2, drawW, drawH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy+floatL/2, nodeThickness/3, floatL/2, drawW, drawH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
 	                                        } else if ( floatNode < centerNode ){
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx+nodeThickness*0.667, sy, nodeThickness/3, floatL, drawW, drawH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
 	                                        } else if ( floatNode > centerNode){
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, nodeThickness/3, floatL, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy, nodeThickness/3, floatL, drawW, drawH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
 	                                        }
 
 	                                    }
@@ -14037,7 +16000,7 @@ $(document).ready ( function(){
 	                                        iLast = y * xNodes + xNodes - 1;
 
 	                                        code = weftPatternTranslated[y];
-	                                        color = globalPalette.colors[code];
+	                                        color = app.palette.colors[code];
 
 	                                        
 	                                        floatNode = globalFloats.weftFloatNodeWeave[x][y];
@@ -14047,7 +16010,7 @@ $(document).ready ( function(){
 
 	                                        nodeColor32 = floatGradient[floatNode];
 
-	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingUpscale * weftFloatLiftPercent / 100: 0;
+	                                        floatLift = floatSAbs > 2 ? Math.sin(floatNode/(floatSAbs-1) * Math.PI) * floatSAbs/10 * smoothingFactor * weftFloatLiftPercent / 100: 0;
 
 	                                        nodeX = warpPositionProfile[i];
 	                                        nodeY = weftPositionProfile[i] + floatLift;
@@ -14057,7 +16020,7 @@ $(document).ready ( function(){
 	                                        rNodeHT = x < xNodes-1 ? warpThicknessProfile[ir]/2 : 0;
 
 	                                        lNodeX = x ? warpPositionProfile[il] : 0;
-	                                        rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : upscaleW - 1;
+	                                        rNodeX = x < xNodes-1 ? warpPositionProfile[ir] : drawW - 1;
 
 	                                        sy = nodeY - nodeHT;
 	                                        sx = (lNodeX + lNodeHT + nodeX - nodeHT)/2;
@@ -14065,16 +16028,16 @@ $(document).ready ( function(){
 
 	                                        floatL = lx - sx + 1;
 
-	                                        drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, floatL, nodeThickness, upscaleW, upscaleH, "rgba", nodeColor32);
+	                                        drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy, floatL, nodeThickness, drawW, drawH, "rgba", nodeColor32);
 
 	                                        centerNode = (floatS % 2) ? Math.ceil(floatS/2)-1 : floatS/2-0.5;
 	                                        if ( floatNode == centerNode ){
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy+nodeThickness*0.667, floatL/2, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx+floatL/2, sy, floatL/2, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy+nodeThickness*0.667, floatL/2, nodeThickness/3, drawW, drawH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx+floatL/2, sy, floatL/2, nodeThickness/3, drawW, drawH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
 	                                        } else if ( floatNode < centerNode ){
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy+nodeThickness*0.667, floatL, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy+nodeThickness*0.667, floatL, nodeThickness/3, drawW, drawH, "rgba_mix", {r:255, g:255, b:255, a:0.5});
 	                                        } else if ( floatNode > centerNode){
-	                                            drawRectBuffer4(g_origin, uPixels8, uPixels32, sx, sy, floatL, nodeThickness/3, upscaleW, upscaleH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
+	                                            drawRectBuffer4(app.origin, drawPixels8, drawPixels32, sx, sy, floatL, nodeThickness/3, drawW, drawH, "rgba_mix", {r:0, g:0, b:0, a:0.5});
 	                                        }
 
 	                                    } 
@@ -14086,60 +16049,61 @@ $(document).ready ( function(){
 	                    }
 
                     }
+
+                    // console.log(warpThicknessProfile);
+                    // console.log(weftThicknessProfile);
+                    // console.log(warpPositionProfile);
+                    // console.log(weftPositionProfile);
 					
-					debugTimeEnd("simulationDrawOld");
-
-					if ( !downscale || smoothingUpscale == 1 ){
-
-						ctxTarget.putImageData(uPixels, 0, ctxH-upscaleH);
-
-					} else {
-
-						debugTime("simulationResize");
-
-						g_upscaleContext.putImageData(uPixels, 0, 0);
-						window.pica().resize(g_upscaleCanvas, ctxTarget.canvas, {
-					
-							quality: 3,
-							alpha: false,
-							unsharpAmount: 100,
-							unsharpRadius: 2,
-							unsharpThreshold: 255,
-							transferable: true
-						
-						}).then(function () {
-
-							debugTimeEnd("simulationResize");
-
-							if ( globalModel.fabric.texture !== undefined ){
-
-								globalModel.fabric.textureWmm = globalSimulation.repeatWmm;
-								globalModel.fabric.textureHmm = globalSimulation.repeatHmm;
-
-								globalModel.fabric.xRepeats = globalModel.mapWmm / globalModel.fabric.textureWmm;
-								globalModel.fabric.yRepeats = globalModel.mapHmm / globalModel.fabric.textureHmm;
-
-								globalModel.fabric.texture.repeat.set(globalModel.fabric.xRepeats, globalModel.fabric.yRepeats);
-
-								globalModel.fabric.texture.needsUpdate = true;
-								globalModel.render();
-
-							}
-
-						}).catch(function (err) {
-						
-							console.log(err);
-							throw err;
-						
-						});
-
-					}
-					
-					// saveCanvasAsImage(g_upscaleCanvas, "upscalecanvas");					
+					//saveCanvasAsImage(g_simulationDrawCanvas, "simulationDrawCanvas.png");
 
 				}
 
-				debugTimeEnd("renderTo > " + graphId);
+				debugTimeEnd("Draw", "simulation");
+
+				var noResize = drawW == displayW && drawH == displayH;
+
+				if ( noResize ){
+
+					debugTime("Put");
+					displayContext.putImageData(drawPixels, 0, 0);
+					debugTimeEnd("Put", "simulation");
+					debugTimeEnd("render", "simulation");
+					if (typeof callback === "function") {
+				    	callback();
+				    }
+
+				} else {
+
+					debugTime("Put");
+					g_simulationDrawContext.putImageData(drawPixels, 0, 0);
+					debugTimeEnd("Put", "simulation");
+					debugTime("Resize");
+					window.pica().resize(g_simulationDrawCanvas, displayContext.canvas, {
+				
+						quality: 3,
+						alpha: false,
+						unsharpAmount: 100,
+						unsharpRadius: 2,
+						unsharpThreshold: 255,
+						transferable: true
+					
+					}).then(function () {
+
+						debugTimeEnd("Resize", "simulation");
+						debugTimeEnd("render", "simulation");
+						if (typeof callback === "function") {
+					    	callback();
+					    }
+
+					}).catch(function (err) {
+					
+						console.log(err);
+						throw err;
+					
+					});
+
+				}
 
 			}
 
@@ -14456,43 +16420,6 @@ $(document).ready ( function(){
 
 			ctx.putImageData(imagedata, 0, 0);
 		
-		}
-
-	};
-
-	var gmy = {};
-
-	var globalMouse = {
-
-		graph : "",
-		isDown : false,
-		which : 0,
-		colNum : 0,
-		rowNum : 0,
-		endNum : 0,
-		pickNum : 0,
-		graphPos : "",
-		currentx : 0,
-		currenty : 0,
-
-		set : function(graph, colNum, rowNum, state = false, which = 0){
-			this.graph = graph;
-			this.colNum = colNum;
-			this.rowNum = rowNum;
-			this.endNum = mapEnds(colNum);
-			this.pickNum = mapPicks(rowNum);
-			this.isDown = state;
-			this.which = which;
-			this.graphPos = graph +"-"+ colNum +"-"+ rowNum;
-		},
-
-		reset : function(){
-			this.graph = "";
-			this.colNum = 0;
-			this.rowNum = 0;
-			this.endNum = 0;
-			this.pickNum = 0;
-			this.isDown = false;
 		}
 
 	};
@@ -14846,7 +16773,7 @@ $(document).ready ( function(){
 				color: "gray"
 			});
 
-			color = tinycolor(globalPalette.colors[alpha].hex);
+			color = tinycolor(app.palette.colors[alpha].hex);
 			brightness = color.getBrightness();
 			textColor = brightness > 128 ? "black" : "white";
 
@@ -14854,7 +16781,7 @@ $(document).ready ( function(){
 				text: num + "\n" + alpha,
 				fontSize: font,
 				alignment: align,
-				fillColor: globalPalette.colors[alpha].hex,
+				fillColor: app.palette.colors[alpha].hex,
 				color: textColor
 			});
 
@@ -14899,7 +16826,7 @@ $(document).ready ( function(){
 				color: "gray"
 			});
 
-			color = tinycolor(globalPalette.colors[alpha].hex);
+			color = tinycolor(app.palette.colors[alpha].hex);
 			brightness = color.getBrightness();
 			textColor = brightness > 128 ? "black" : "white";
 
@@ -14907,7 +16834,7 @@ $(document).ready ( function(){
 				text: num + "\n" + alpha,
 				fontSize: font,
 				alignment: align,
-				fillColor: globalPalette.colors[alpha].hex,
+				fillColor: app.palette.colors[alpha].hex,
 				color: textColor
 			});
 
@@ -15004,12 +16931,12 @@ $(document).ready ( function(){
 				globalTieup.scrollX = Math.ceil(globalTieup.scrollX / g_pointPlusGrid) * g_pointPlusGrid;
 			}
 			updateAllScrollbars();
-			if ( g_liftingMode == "treadling" ){
+			if ( globalWeave.liftingMode == "treadling" ){
 				globalWeave.render2D8(33, "tieup");
 			}
-			if ( g_liftingMode == "treadling" || g_liftingMode == "pegplan" ){
+			if ( globalWeave.liftingMode == "treadling" || globalWeave.liftingMode == "pegplan" ){
 				globalWeave.render2D8(34, "lifting");
-				globalWeave.render2D8(35, "draft");
+				globalWeave.render2D8(35, "threading");
 			}
 		}
 		return false;
@@ -15040,9 +16967,9 @@ $(document).ready ( function(){
 			updateAllScrollbars();
 			globalWeave.render2D8(36, "weave");
 			globalPattern.render8(8);
-			if ( g_liftingMode !== "weave"){
+			if ( globalWeave.liftingMode !== "weave"){
 				globalWeave.render2D8(37, "lifting");
-				globalWeave.render2D8(38, "draft");
+				globalWeave.render2D8(38, "threading");
 			}
 		}
 		return false;
@@ -15150,7 +17077,7 @@ $(document).ready ( function(){
 			"g_warpCanvas" : "warp",
 			"g_weftCanvas" : "weft",
 			"g_tieupCanvas" : "tieup",
-			"g_draftCanvas" : "draft",
+			"g_threadingCanvas" : "threading",
 			"g_liftingCanvas" : "lifting",
 			"g_artowrkCanvas" : "artwork",
 			"g_simulationCanvas" : "simulation",
@@ -15161,14 +17088,14 @@ $(document).ready ( function(){
 			"warp-container" : "warp",
 			"weft-container" : "weft",
 			"tieup-container" : "tieup",
-			"draft-container" : "draft",
+			"threading-container" : "threading",
 			"lifting-container" : "lifting",
 			"artwork-container" : "artwork",
 			"simulation-container" : "simulation",
 			"three-container" : "three",
 			"model-container" : "model"
 		};
-		return graphs[id] || "";
+		return graphs[id] || "-";
 	}
 
 	$(document).mousemove(function(e) {
@@ -15176,28 +17103,28 @@ $(document).ready ( function(){
 		var mousex = e.clientX;
 		var mousey = e.clientY;
 
-		globalMouse.currentx = mousex;
-		globalMouse.currenty = mousey;
+		app.mouse.currentx = mousex;
+		app.mouse.currenty = mousey;
 
 		var target = e.target.id;
 		var graph = getGraphId(target);
 		var mouse;
 
 		debug("graphID", graph);
-		debug("target", target);
+		debug("target", target || "-");
 		debug("document.mouseX/mouseY", mousex +"/"+ mousey);
 
-		//if ( globalMouse.graph == "weave" || (graph == "weave" && !globalMouse.graph) ){;
+		//if ( app.mouse.graph == "weave" || (graph == "weave" && !app.mouse.graph) ){;
 
-		if ( graph == "weave" || gmy.weavePainting ){
+		if ( graph == "weave" || app.storage.weavePainting ){
 
 			mouse = getMouseFromClientXY("weave", mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 
 			globalStatusbar.set("weaveIntersection", mouse.col, mouse.row);
 
-			if (g_graphTool == "hand" && gmy.hand && gmy.handTarget == "weave"){
-				var newScrollX = gmy.handscrollx + mousex - gmy.handsx;
-				var newScrollY = gmy.handscrolly - mousey + gmy.handsy;
+			if (g_graphTool == "hand" && app.storage.hand && app.storage.handTarget == "weave"){
+				var newScrollX = app.storage.handscrollx + mousex - app.storage.handsx;
+				var newScrollY = app.storage.handscrolly - mousey + app.storage.handsy;
 				globalWeave.setScrollXY(newScrollX, newScrollY);
 			}
 
@@ -15218,34 +17145,34 @@ $(document).ready ( function(){
 
 			}
 
-			//if (globalMouse.isDown && globalMouse.which !== 2 && globalMouse.graph == "weave" && g_graphTool == "brush") {
+			//if (app.mouse.isDown && app.mouse.which !== 2 && app.mouse.graph == "weave" && g_graphTool == "brush") {
 
-			if ( gmy.weavePainting ){
-				g_graphBrushState = globalMouse.which === 1 ? 1 : 0;
-				graphLine2D8("weave", mouse.col, mouse.row, globalMouse.colNum, globalMouse.rowNum, g_graphBrushState, true, false, true); 
-				globalMouse.colNum = mouse.col;
-				globalMouse.rowNum = mouse.row;
+			if ( app.storage.weavePainting ){
+				g_graphBrushState = app.mouse.which === 1 ? 1 : 0;
+				graphLine2D8("weave", mouse.col, mouse.row, app.mouse.colNum, app.mouse.rowNum, g_graphBrushState, true, false, true); 
+				app.mouse.colNum = mouse.col;
+				app.mouse.rowNum = mouse.row;
 			}
 
-			if (globalMouse.graph == "weave" && globalMouse.which !== 2 && g_graphTool == "line" && g_graphLineStarted && (gmy.lineX1 !== mouse.col || gmy.lineY1 !== mouse.row) ) {
+			if (app.mouse.graph == "weave" && app.mouse.which !== 2 && g_graphTool == "line" && g_graphLineStarted && (app.storage.lineX1 !== mouse.col || app.storage.lineY1 !== mouse.row) ) {
 				globalWeave.render2D8(39, "weave");
-				if ( globalMouse.isDown){
-					gmy.lineX0 = mouse.col;
-					gmy.lineY0 = mouse.row;
-					gmy.lineX1 = mouse.col;
-					gmy.lineY1 = mouse.row;
-					globalWeave.setGraphPoint2D8("weave", gmy.lineX0, gmy.lineY0, globalMouse.which === 1 ? 1 : 0, true, false);
+				if ( app.mouse.isDown){
+					app.storage.lineX0 = mouse.col;
+					app.storage.lineY0 = mouse.row;
+					app.storage.lineX1 = mouse.col;
+					app.storage.lineY1 = mouse.row;
+					globalWeave.setGraphPoint2D8("weave", app.storage.lineX0, app.storage.lineY0, app.mouse.which === 1 ? 1 : 0, true, false);
 				} else {
-					debug("linePos", gmy.lineX0 +", "+ gmy.lineY0 +", "+ mouse.col +", "+ mouse.row);
-					gmy.lineMouseCurrentCol = mouse.col;
-					gmy.lineMouseCurrentRow = mouse.row;
+					debug("linePos", app.storage.lineX0 +", "+ app.storage.lineY0 +", "+ mouse.col +", "+ mouse.row);
+					app.storage.lineMouseCurrentCol = mouse.col;
+					app.storage.lineMouseCurrentRow = mouse.row;
 					if ( hotkeys.shift ){
-						[gmy.lineX1, gmy.lineY1] = lineSnapToStraightCoordinates(gmy.lineX0, gmy.lineY0, mouse.col, mouse.row);
+						[app.storage.lineX1, app.storage.lineY1] = lineSnapToStraightCoordinates(app.storage.lineX0, app.storage.lineY0, mouse.col, mouse.row);
 					} else {
-						gmy.lineX1 = mouse.col;
-						gmy.lineY1 = mouse.row;
+						app.storage.lineX1 = mouse.col;
+						app.storage.lineY1 = mouse.row;
 					}
-					graphLine2D8("weave", gmy.lineX0, gmy.lineY0, gmy.lineX1, gmy.lineY1, gmy.lineState, true, false);
+					graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
 				}
 
 			}
@@ -15253,11 +17180,11 @@ $(document).ready ( function(){
 		}
 
 		// Patterns --------
-		if ( graph.in("warp","weft") || gmy.patternPainting ){
+		if ( graph.in("warp","weft") || app.storage.patternPainting ){
 
 			var pasteMethod;
 
-			var yarnSet = gmy.patternPainting ? gmy.patternDrawSet : graph;
+			var yarnSet = app.storage.patternPainting ? app.storage.patternDrawSet : graph;
 			var mouse = getMouseFromClientXY(yarnSet, mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 
 			var isWarp = yarnSet == "warp";
@@ -15279,12 +17206,12 @@ $(document).ready ( function(){
 
 			globalStatusbar.set("patternThread", threadTitle, seamlessThreadNum);
 
-			if ( gmy.patternPainting ) {
+			if ( app.storage.patternPainting ) {
 
-				var patternStartNum = gmy.patternPaintingStartNum;
+				var patternStartNum = app.storage.patternPaintingStartNum;
 				var pasteW = Math.abs(rowColNum - patternStartNum) + 1; 
 				var pasteIndex = rowColNum <= patternStartNum ? rowColNum - 1 : rowColNum - pasteW;
-				var code = globalPalette.selected;
+				var code = app.palette.selected;
 				var pasteArr = [code].repeat(pasteW);
 
 				if ( seamless ){
@@ -15295,7 +17222,7 @@ $(document).ready ( function(){
 					pasteMethod = "extend";
 				}
 
-				var newPattern = paste1D(pasteArr, gmy.patternDrawCopy, pasteIndex, pasteMethod, "a");
+				var newPattern = paste1D(pasteArr, app.storage.patternDrawCopy, pasteIndex, pasteMethod, "a");
 				debug("newPattern", newPattern);
 				globalPattern.set(43, yarnSet, newPattern, true, 0, false, false);
 
@@ -15322,11 +17249,11 @@ $(document).ready ( function(){
 
 		}
 
-		// Draft --------
-		if ( graph == "draft" ){
+		// Threading --------
+		if ( graph == "threading" ){
 
 			mouse = getMouseFromClientXY(graph, mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalTieup.scrollY);
-			globalStatusbar.set("draftIntersection", mouse.col, mouse.row);
+			globalStatusbar.set("threadingIntersection", mouse.col, mouse.row);
 
 		}
 
@@ -15342,7 +17269,7 @@ $(document).ready ( function(){
 
 		// Artwork --------
 
-		if ( globalTabs.active == "artwork" ){
+		if ( app.tabs.active == "artwork" ){
 			globalStatusbar.set("artworkIntersection", "-", "-");
 			globalStatusbar.set("artworkColor", "-", "-");
 		}
@@ -15386,9 +17313,30 @@ $(document).ready ( function(){
 		// ThreeD --------
 		if ( graph == "model" ){
 
+			//console.log(e);
+		    var deltaMoveX = e.offsetX-globalModel.prevX;
+		    var deltaMoveY = e.offsetY-globalModel.prevY;
 
+		    debug("deltaMoveX", deltaMoveX, "model");
+		    debug("deltaMoveY", deltaMoveY, "model");
 
+		    if ( globalModel.model && app.mouse.isDown && app.mouse.which == 1 ) {
+		            
+		        globalModel.model.rotation.y += toRadians(deltaMoveX * 0.5);
 
+		        globalModel.controls.target.y += (deltaMoveY*0.05);
+		        globalModel.controls.update();
+
+		        if ( deltaMoveX < 0 ){
+		        	globalModel.rotationDirection = -1;
+			    } else if ( deltaMoveX > 0 ){
+			    	globalModel.rotationDirection = 1;
+			    }
+
+		    }
+
+		    globalModel.prevX = e.offsetX;
+		    globalModel.prevY = e.offsetY;
 
 		}
 
@@ -15421,7 +17369,7 @@ $(document).ready ( function(){
 				if ( scrollPos !== globalTieup.scrollY ){
 					globalTieup.scrollY = scrollPos;
 					globalWeave.render2D8(42, "tieup");
-					globalWeave.render2D8(43, "draft");
+					globalWeave.render2D8(43, "threading");
 				}
 
 			} else if ( asb.id == "weave-scrollbar-x"){
@@ -15429,7 +17377,7 @@ $(document).ready ( function(){
 				if ( scrollPos !== globalWeave.scrollX ){
 					globalWeave.scrollX = scrollPos;
 					globalWeave.render2D8(44, "weave");
-					globalWeave.render2D8(45, "draft");
+					globalWeave.render2D8(45, "threading");
 					globalPattern.render8(9, "warp");
 				}
 
@@ -15497,6 +17445,8 @@ $(document).ready ( function(){
 
 		var mouseButton = e.which;
 
+		app.mouse.isDown = false;
+
 		if ( mouseButton == 1 || mouseButton == 3){
 
 			var mousex = e.clientX;
@@ -15510,26 +17460,26 @@ $(document).ready ( function(){
 			
 			} else {
 
-				if ( gmy.patternPainting ){
+				if ( app.storage.patternPainting ){
 
-					var cleanedPattern = globalPattern[gmy.patternDrawSet].removeItem("0");
-					globalPattern.set(232, gmy.patternDrawSet, cleanedPattern);
-					gmy.patternPainting = false;
-					gmy.patternDrawCopy = false;
+					var cleanedPattern = globalPattern[app.storage.patternDrawSet].removeItem("0");
+					globalPattern.set(232, app.storage.patternDrawSet, cleanedPattern);
+					app.storage.patternPainting = false;
+					app.storage.patternDrawCopy = false;
 					globalPattern.updateStatusbar();
 
 				}
 
-				if ( gmy.weavePainting ){
+				if ( app.storage.weavePainting ){
 
 					graphReserve.setPoints(false, true);
 					globalWeave.setGraph2D8("weave");
-					gmy.weavePainting = false;
+					app.storage.weavePainting = false;
 
 				}
 
 
-				if (globalMouse.isDown && g_graphTool == "selection" && globalMouse.which == 1){
+				if (app.mouse.isDown && g_graphTool == "selection" && app.mouse.which == 1){
 
 					var sc = globalSelection.startCol;
 					var sr = globalSelection.startRow;
@@ -15545,8 +17495,8 @@ $(document).ready ( function(){
 
 				}
 
-				globalMouse.isDown = false;
-				gmy.hand = false;
+				app.mouse.isDown = false;
+				app.storage.hand = false;
 
 			}
 
@@ -15582,8 +17532,8 @@ $(document).ready ( function(){
 			if ( g_graphLineStarted && g_graphTool == "line"){
 
 				globalWeave.render2D8("11", "weave");
-				[gmy.lineX1, gmy.lineY1] = lineSnapToStraightCoordinates(gmy.lineX0, gmy.lineY0, gmy.lineMouseCurrentCol, gmy.lineMouseCurrentRow);
-				graphLine2D8("weave", gmy.lineX0, gmy.lineY0, gmy.lineX1, gmy.lineY1, gmy.lineState, true, false);
+				[app.storage.lineX1, app.storage.lineY1] = lineSnapToStraightCoordinates(app.storage.lineX0, app.storage.lineY0, app.storage.lineMouseCurrentCol, app.storage.lineMouseCurrentRow);
+				graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
 
 			}
 
@@ -15591,7 +17541,7 @@ $(document).ready ( function(){
 
 			if ( g_graphLineStarted && g_graphTool == "line"){
 				globalWeave.render2D8("11", "weave");
-				graphLine2D8("weave", gmy.lineX0, gmy.lineY0, gmy.lineMouseCurrentCol, gmy.lineMouseCurrentRow, gmy.lineState, true, false);
+				graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineMouseCurrentCol, app.storage.lineMouseCurrentRow, app.storage.lineState, true, false);
 			}
 
 		} else if (key == "Escape" && type == "keydown"){
@@ -15601,19 +17551,19 @@ $(document).ready ( function(){
 				globalWeave.render2D8("11", "weave");
 			}
 
-			if ( gmy.patternPainting ){
+			if ( app.storage.patternPainting ){
 
-				globalPattern.set(122, gmy.patternDrawSet, gmy.patternDrawCopy, true, 0, false, false);
-				gmy.patternPainting = false;
-				globalMouse.reset();
+				globalPattern.set(122, app.storage.patternDrawSet, app.storage.patternDrawCopy, true, 0, false, false);
+				app.storage.patternPainting = false;
+				app.mouse.reset();
 
 			}
 
-			if ( gmy.weavePainting ){
-				globalMouse.reset();
+			if ( app.storage.weavePainting ){
+				app.mouse.reset();
 				graphReserve.clear();
 				globalWeave.render2D8("11", "weave");
-				gmy.weavePainting = false;
+				app.storage.weavePainting = false;
 
 			}
 
@@ -15628,7 +17578,7 @@ $(document).ready ( function(){
 			}
 
 			if ( colorPickerPopup.isVisible() ){
-				globalPalette.hideColorPicker();
+				app.palette.hideColorPicker();
 			}
 
 		}
@@ -15648,7 +17598,6 @@ $(document).ready ( function(){
 	    case "s": setGraphTool("selection"); break;
 	  }
 	});
-
 
 });
 

@@ -1708,14 +1708,14 @@ function gradient32Arr2(w, ...colorStop){
 // -------------------------------------------------------------
 // Weave Functions ---------------------------------------------
 // -------------------------------------------------------------
-function draft1D_draft2D8(draft1D){
-	var ends = draft1D.length;
-	var shafts = Math.max(...draft1D);
-	var draft2D8 = newArray2D8(33, ends, shafts);
-	draft1D.forEach(function(shaft, i) {
-		draft2D8[i][shaft - 1] = 1;
+function threading1D_threading2D8(threading1D){
+	var ends = threading1D.length;
+	var shafts = Math.max(...threading1D);
+	var threading2D8 = newArray2D8(33, ends, shafts);
+	threading1D.forEach(function(shaft, i) {
+		threading2D8[i][shaft - 1] = 1;
 	});
-	return draft2D8;
+	return threading2D8;
 }
 
 function countPlainPoints(weave2D8){
@@ -1749,20 +1749,20 @@ function countPlainPoints(weave2D8){
 	return Math.round(counter / (w * h) * 100);
 }
 
-function getWeaveFromParts(tieup, draft, lifting, liftingMode = "treadling"){
+function getWeaveFromParts(tieup, threading, lifting, liftingMode = "treadling"){
 
 	var x, y, shaft, treadle, tieupState;
 
-	var draftW = draft.length;
+	var threadingW = threading.length;
 	var liftingH = lifting[0].length;
-	var draft1D = draft.map(a => a.indexOf(1)+1);
-	var weave = newArray2D8(34, draftW, liftingH);
+	var threading1D = threading.map(a => a.indexOf(1)+1);
+	var weave = newArray2D8(34, threadingW, liftingH);
 
 	if ( liftingMode == "treadling" ){
 
 		var treadling1D = lifting.rotate2D8("r").flip2D8("y").map(a => a.indexOf(1)+1);
-		for (var x = 0; x < draftW; x++) {
-			shaft = draft1D[x];
+		for (var x = 0; x < threadingW; x++) {
+			shaft = threading1D[x];
 			for (var y = 0; y < liftingH; y++) {
 				treadle = treadling1D[y];
 				if ( shaft && treadle && tieup[treadle-1] !== undefined && tieup[treadle-1][shaft-1] !== undefined ){
@@ -1774,7 +1774,7 @@ function getWeaveFromParts(tieup, draft, lifting, liftingMode = "treadling"){
 
 	} else if ( liftingMode == "pegplan" ){
 
-		draft1D.forEach(function(v, i) {
+		threading1D.forEach(function(v, i) {
 
 			if ( v && lifting[v-1] == undefined ){
 				weave[i] = new Uint8Array(liftingH);
@@ -1911,196 +1911,45 @@ function arrayMax(arr) {
   return max;
 };
 
-function addImperfectionToYarnThicknessProfile2D(profileArray2D, yarnSet, frequency, minLength, maxLength, thicknessMultiplier ){
-
-	var n, x, y, ipLength, ipPos, ipStart, ipEnd, ipNodeIndex, thicknessChange;
-
-	var xNodes = profileArray2D.length;
-	var yNodes = profileArray2D[0].length;
-
-	if ( yarnSet === "warp" ){
-
-		for (n = 0; n < frequency; ++n) {
-			ipLength = getRandomInt(minLength, maxLength);
-			ipPos = getRandomInt(1-ipLength, yNodes-1);
-			ipStart = limitNumber(ipPos, 0, yNodes-1);
-			ipEnd = limitNumber(ipPos + ipLength - 1, 0, yNodes-1);
-			x = getRandomInt(0, xNodes-1);
-			ipNodeIndex = ipStart - ipPos;
-
-			if ( ipLength == 1 ){
-
-				y = ipStart;
-				thicknessChange = thicknessMultiplier;
-				profileArray2D[x][y] = 1 + thicknessChange;
-
-			} else if ( ipLength == 2 ){
-
-				y = ipStart;
-				thicknessChange = thicknessMultiplier;
-				profileArray2D[x][y] = 1 + thicknessChange;
-
-				y = ipEnd;
-				thicknessChange = thicknessMultiplier;
-				profileArray2D[x][y] = 1 + thicknessChange;
-
-			} else {
-
-				for (y = ipStart; y <= ipEnd; ++y) {
-					thicknessChange = Math.sin(ipNodeIndex/(ipLength-1) * Math.PI) * thicknessMultiplier;
-					thicknessChange = Math.round(thicknessChange * 10000)/10000;
-					profileArray2D[x][y] = 1 + thicknessChange;
-					ipNodeIndex++;
-					
-				}
-
-			}
-			
-		}
-
-	} else {
-
-		for (n = 0; n < frequency; ++n) {
-			ipLength = getRandomInt(minLength, maxLength);
-			ipPos = getRandomInt(1-ipLength, xNodes-1);
-			ipStart = limitNumber(ipPos, 0, xNodes-1);
-			ipEnd = limitNumber(ipPos + ipLength - 1, 0, xNodes-1);
-			y = getRandomInt(0, yNodes-1);
-			ipNodeIndex = ipStart - ipPos;
-
-			if ( ipLength == 1 ){
-
-				x = ipStart;
-				thicknessChange = thicknessMultiplier;
-				profileArray2D[x][y] = 1 + thicknessChange;
-
-			} else if ( ipLength == 2 ){
-
-				x = ipStart;
-				thicknessChange = thicknessMultiplier;
-				profileArray2D[x][y] = 1 + thicknessChange;
-
-				x = ipEnd;
-				thicknessChange = thicknessMultiplier;
-				profileArray2D[x][y] = 1 + thicknessChange;
-
-			} else {
-
-				for (x = ipStart; x <= ipEnd; ++x) {
-					thicknessChange = Math.sin(ipNodeIndex/(ipLength-1) * Math.PI) * thicknessMultiplier;
-					thicknessChange = Math.round(thicknessChange * 10000)/10000;
-					profileArray2D[x][y] = 1 + thicknessChange;
-					ipNodeIndex++;
-					
-				}
-
-			}
-			
-		}
-
-	}	
-
+function toRadians(angle) {
+    return angle * (Math.PI / 180);
 }
 
-function addIPI(profileArray, xNodes, yNodes, yarnSet, frequency, minLength, maxLength, minChangePercent, maxChangePercent){
+function toDegrees(angle) {
+    return angle * (180 / Math.PI);
+}
 
-	var n, x, y, i, ipLength, ipPos, ipStart, ipEnd, ipNodeIndex, nodeChangeRatio;
+function rgbToHsl(rgba) {
+  var r = rgba.r/255, g = rgba.g/255, b = rgba.b/255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
 
-	var changeRatio = getRandomInt(minChangePercent, maxChangePercent)/100;
-	ipLength = getRandomInt(minLength, maxLength);
+  if(max == min) {
+    h = s = 0; // achromatic
+  } else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch(max){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  //return new Array(h * 360, s * 100, l * 100);
+  return {h: h*360, s: s*100, l: l*100};
+}
 
-	if ( yarnSet === "warp" ){
-
-		for (n = 0; n < frequency; ++n) {
-			
-			ipPos = getRandomInt(1-ipLength, yNodes-1);
-			ipStart = limitNumber(ipPos, 0, yNodes-1);
-			ipEnd = limitNumber(ipPos + ipLength - 1, 0, yNodes-1);
-			x = getRandomInt(0, xNodes-1);
-			ipNodeIndex = ipStart - ipPos;
-
-			if ( ipLength == 1 ){
-
-				y = ipStart;
-				i = y * xNodes + x;
-				jitter = getRandom(-changeRatio/2, changeRatio/2);
-				profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
-
-			} else if ( ipLength == 2 ){
-
-				y = ipStart;
-				i = y * xNodes + x;
-				jitter = getRandom(-changeRatio/2, changeRatio/2);
-				profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
-
-				y = ipEnd;
-				i = y * xNodes + x;
-				jitter = getRandom(-changeRatio/2, changeRatio/2);
-				profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
-
-			} else {
-
-				for (y = ipStart; y <= ipEnd; ++y) {
-
-					i = y * xNodes + x;
-					nodeChangeRatio = Math.sin(ipNodeIndex/(ipLength-1) * Math.PI) * changeRatio;
-					nodeChangeRatio = Math.round(nodeChangeRatio * 10000)/10000;
-					jitter = getRandom(-nodeChangeRatio/2, nodeChangeRatio/2);
-					profileArray[i] = profileArray[i] * (1+nodeChangeRatio+jitter);
-					ipNodeIndex++;
-					
-				}
-
-			}
-			
-		}
-
-	} else {
-
-		for (n = 0; n < frequency; ++n) {
-
-			ipPos = getRandomInt(1-ipLength, xNodes-1);
-			ipStart = limitNumber(ipPos, 0, xNodes-1);
-			ipEnd = limitNumber(ipPos + ipLength - 1, 0, xNodes-1);
-			y = getRandomInt(0, yNodes-1);
-			ipNodeIndex = ipStart - ipPos;
-
-			if ( ipLength == 1 ){
-
-				x = ipStart;
-				i = y * xNodes + x;
-				jitter = getRandom(-changeRatio/2, changeRatio/2);
-				profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
-
-			} else if ( ipLength == 2 ){
-
-				x = ipStart;
-				i = y * xNodes + x;
-				jitter = getRandom(-changeRatio/2, changeRatio/2);
-				profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
-
-				x = ipEnd;
-				i = y * xNodes + x;
-				jitter = getRandom(-changeRatio/2, changeRatio/2);
-				profileArray[i] = profileArray[i] * (1+changeRatio+jitter);
-
-			} else {
-
-				for (x = ipStart; x <= ipEnd; ++x) {
-
-					i = y * xNodes + x;
-					nodeChangeRatio = Math.sin(ipNodeIndex/(ipLength-1) * Math.PI) * changeRatio;
-					nodeChangeRatio = Math.round(nodeChangeRatio * 10000)/10000;
-					jitter = getRandom(-nodeChangeRatio/2, nodeChangeRatio/2);
-					profileArray[i] = profileArray[i] * (1+nodeChangeRatio+jitter);
-					ipNodeIndex++;
-					
-				}
-
-			}
-			
-		}
-
-	}	
-
+function saveFile( blob, filename ) {
+	var link = document.createElement("a");
+	link.href = URL.createObjectURL( blob );
+	link.download = filename;
+	link.click();
+	// URL.revokeObjectURL( url ); breaks Firefox...
+}
+function saveStringAsFile( text, filename ) {
+	saveFile( new Blob( [ text ], { type: 'text/plain' } ), filename );
+}
+function saveArrayBufferAsFile( buffer, filename ) {
+	saveFile( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
 }
