@@ -1219,7 +1219,7 @@ function newArray2D8(instanceId, w, h){
 
 function paste2D_old(tile, canvas, pasteX = 0, pasteY = 0, xOverflow = "trim", yOverflow = "trim", blank = "") {
 
-  var x, y;
+  var x, y, posx, posy;
   
 	tile = tile.clone();
 	canvas = canvas.clone();
@@ -1719,7 +1719,7 @@ function threading1D_threading2D8(threading1D){
 }
 
 function countPlainPoints(weave2D8){
-	var l, r, b, t, tl, bl, tr, br;
+	var l, r, b, t, tl, bl, tr, br, state, lx, rx, ty, by;
 	var w = weave2D8.length;
 	var h = weave2D8[0].length;
 	var counter = 0;
