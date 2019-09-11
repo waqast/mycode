@@ -846,7 +846,7 @@ function hslToHex(h, s, l) {
 // -------------------------------------------------------------
 function paste1D_old(source, target, pasteIndex, loop = true, blank = "") {
 
-	var x;
+	var x, pos;
 
 	source = source.clone();
 	target = target.clone();
