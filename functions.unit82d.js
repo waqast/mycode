@@ -407,7 +407,6 @@ Uint8Array.prototype.transform8 = function(dir){
 
 			res[rw*ry+rx+2] = (sx+sy) % 2 ? 0 : 1 ;
 
-			rx = sx;
 			ry = sy * 2 + 1;
 
     		res[rw*ry+rx+2] = this[i+2];

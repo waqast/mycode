@@ -4614,7 +4614,7 @@ $(document).ready ( function(){
 			// Garbage Pattern
 		} else if (patternStyleNum == 6) {
 
-			pattern = garbagePattern(patternSize, colors, evenPattern);		
+			pattern = garbagePattern(patternSize, colors);		
 
 		}
 
@@ -6112,77 +6112,6 @@ $(document).ready ( function(){
 
     }
 
-    function transform2D8(arr2D8, dir){
-    	var x, y, res;
-    	var ow = arr2D8.length;
-    	var oh = arr2D8[0].length;
-    	var nw = arr2D8[0].length;
-    	var nh = arr2D8.length;
-    	if (dir == "rotater"){
-    		res = newArray2D8(9, nw, nh);
-    		for (x = 0; x < nw; ++x) {
-	    		for (y = 0; y < nh; ++y) {
-	    			res[x][y] = arr2D8[y][nw-x-1];
-	    		}
-	    	}
-    	} else if (dir == "rotatel"){
-    		res = newArray2D8(9, nw, nh);
-    		for (x = 0; x < nw; ++x) {
-	    		for (y = 0; y < nh; ++y) {
-	    			res[x][y] = arr2D8[nh-y-1][x];
-	    		}
-	    	}
-    	} else if (dir == "180"){
-    		res = newArray2D8(10, ow, oh);
-    		for (x = 0; x < ow; ++x) {
-	    		for (y = 0; y < oh; ++y) {
-	    			res[x][y] = arr2D8[ow-x-1][oh-y-1];
-	    		}
-	    	}
-    	} else if (dir == "flipx"){
-    		res = newArray2D8(11, ow, oh);
-    		for (x = 0; x < ow; ++x) {
-	    		for (y = 0; y < oh; ++y) {
-	    			res[x][y] = arr2D8[ow-x-1][y];
-	    		}
-	    	}
-    	} else if (dir == "flipy"){
-    		res = newArray2D8(12, ow, oh);
-    		for (x = 0; x < ow; ++x) {
-	    		for (y = 0; y < oh; ++y) {
-	    			res[x][y] = arr2D8[x][oh-y-1];
-	    		}
-	    	}
-    	}
-    	return res;
-    }
-
-    function trimWeave8(weave, sides = ""){
-		sides = sides.split("");
-
-		var [ends, pick] = weave.get("wh");
-
-		// Remove empty ends from right;
-		if ( sides.includes("r") ){
-			var x = ends - 1;
-			while( x > 1 && allElementsSame(weave[x], 0)){
-				weave.length = x;
-				x -= 1;
-			}
-		}
-		// Remove Empty Piks from top;
-		if ( sides.includes("t") ){
-			weave = transform2D8(1, weave, "rotater");
-			var y = picks - 1;
-			while( y > 1 && allElementsSame(weave[y], 0)){
-				weave.length = y;
-				y -= 1;
-			}
-			weave = transform2D8(2, weave, "rotatel");
-		}
-		return weave;
-	}
-
     function trimWeave2D8(instanceId, weave, sides = ""){
 
     	// logTime("trimWeave2D8");
@@ -7513,11 +7442,11 @@ $(document).ready ( function(){
 		throw new Error("Error");
 	}*/
 
-	function getWeaveProps(weave){
+	function getWeaveProps(weave, shfatLimit = 256){
 
 		var shafts, pegplan2D8, threading1D, threading2D8, tieup2D8, treadling1D, treadling2D8;
 
-		var pd = unique2D(weave, 256);
+		var pd = unique2D(weave, shfatLimit);
 
 		if ( pd.inLimit ){
 
@@ -12291,7 +12220,7 @@ $(document).ready ( function(){
 
 		css = css ? " "+css : "";
 		min = min !== null ? " data-min=\""+min+"\"" : "";
-		max = max !== null ? " data-min=\""+max+"\"" : "";
+		max = max !== null ? " data-max=\""+max+"\"" : "";
 		step = step ? " data-step=\""+step+"\"" : "";
 		precision = precision ? " data-precision=\""+precision+"\"" : "";
 		
@@ -14596,7 +14525,7 @@ $(document).ready ( function(){
 			structure: [
 
 				  ["select", "Mode", "simulationMode", "mode", "1/2", [["quick0", "Quick-0"], ["quick", "Quick"], ["scaled", "Scaled"]]],
-				  ["select", "Draw", "simulationDrawMethod", "drawMethod", "1/2", [["flat", "Flat"], ["linear", "Linear"], ["3d", "3D"]]],
+				  ["select", "Draw", "simulationDrawMethod", "drawMethod", "1/2", [["3d", "3D"], ["flat", "Flat"]]],
 				  ["check", "Multi-Count", "simulationMultiCount", "multiCount", "2/5", 0],
 				  ["select", "Algorithm", "simulationAlgorithm", "algorithm", "1/2", [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"]]],
 				  ["check", "Downscale", "simulationDownscale", "downscale", "2/5", 0],
@@ -14606,12 +14535,12 @@ $(document).ready ( function(){
 				  ["number", "Weft Space", "simulationWeftspace", "weftSpace", "2/5", 1, 0, 16],
 				  ["number", "Warp Number", "simulationWarpNumber", "warpNumber", "2/5", 20, 1, 300],
 				  ["number", "Weft Number", "simulationWeftNumber", "weftNumber", "2/5", 20, 1, 300],
-				  ["number", "Warp Density", "simulationWarpDensity", "warpDensity", "2/5", 20, 10, 300],
-				  ["number", "Weft Density", "simulationWeftDensity", "weftDensity", "2/5", 20, 10, 300],
+				  ["number", "Warp Density", "simulationWarpDensity", "warpDensity", "2/5", 55, 10, 300],
+				  ["number", "Weft Density", "simulationWeftDensity", "weftDensity", "2/5", 55, 10, 300],
 				  ["number", "Screen DPI", "simulationScreenDPI", "screenDPI", "2/5", 110, 72, 480, 1, 2],
 				  ["number", "Smoothing", "simulationSmoothing", "smoothing", "2/5", 3, 1, 16],
 				  ["number", "Reed Fill", "simulationReedFill", "reedFill", "2/5", 1, 1, 8],
-				  ["select", "Background", "simulationBackgroundColor", "backgroundColor", "1/2", [["white", "White"], ["grey", "Grey"], ["black", "Black"]]],
+				  ["select", "Background", "simulationBackgroundColor", "backgroundColor", "1/2", [["black", "Black"], ["white", "White"], ["grey", "Grey"]]],
 				  
 				  ["control", "Save"]
 
@@ -14932,7 +14861,7 @@ $(document).ready ( function(){
 
 					drawRectBuffer(app.origin, drawPixels32, 0, 0, ctxW, ctxH, ctxW, ctxH, "color32", simulationBGColor32);
 
-					var fillStyle = "gradient";
+					var fillStyle = globalSimulation.params.drawMethod == "flat" ? "color32" : "gradient";
 
 					var yarnColors = {
 						warp: [],
@@ -15003,7 +14932,7 @@ $(document).ready ( function(){
 
 					drawRectBuffer4(app.origin, drawPixels8, drawPixels32, 0, 0, ctxW, ctxH, ctxW, ctxH, "rgba", simulationBGColor8);
 
-					var fillStyle = "gradient";
+					var fillStyle = globalSimulation.params.drawMethod == "flat" ? "rgba" : "gradient";
 
 					var yarnColors = {
 						warp: [],
