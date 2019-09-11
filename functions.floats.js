@@ -1,6 +1,6 @@
 function getFloats(weave2D8) {
 
-	var x, y, startX, startY, currentState, nextState, loopingFloat, loopingFloatSize, nextPos, fabricSide;
+	var x, y, startX, startY, currentState, nextState, loopingFloat, loopingFloatSize, nextPos, fabricSide, floatSize;
 
 	var w = weave2D8.length;
 	var h = weave2D8[0].length;

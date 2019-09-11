@@ -118,7 +118,7 @@ Uint8Array.prototype.paste1D8 = function(tile, pasteX = 0, overflow = "trim", bl
 
 Uint8Array.prototype.copy2D8 = function(sx = 0, sy = 0, lx, ly, overflowX, overlfowY, blank){
 
-	var x, y;
+	var x, y, ri, si;
 
 	var sw = this.get("w");
 	var sh = this.get("h");
@@ -1001,10 +1001,11 @@ function patternTextTo1D8(patternText){
 
 
 function weave8ToWeave2D8(weave8){
+	var i, x, y
 	var [w, h] = weave8.get("wh");
 	var weave2D = newArray2D8(58, w, h);
-	for (var x = 0; x < w; ++x) {
-		for (var y = 0; y < h; ++y) {
+	for (x = 0; x < w; ++x) {
+		for (y = 0; y < h; ++y) {
 			i = y * w + x + 2
 			weave2D[x][y] = weave8[i];
 		}	
@@ -1055,10 +1056,11 @@ function convert_2d8_uint8(array2D8){
 }
 
 function convert_uint8_2d8(uint8){
+	var i, x, y;
 	var [w, h] = uint8.get("wh");
 	var array2D8 = newArray2D8(59, w, h);
-	for (var x = 0; x < w; ++x) {
-		for (var y = 0; y < h; ++y) {
+	for (x = 0; x < w; ++x) {
+		for (y = 0; y < h; ++y) {
 			i = y * w + x + 2
 			array2D8[x][y] = uint8[i];
 		}	

@@ -5641,6 +5641,8 @@ $(document).ready ( function(){
 	// Draw Weave Array as B&W 1px to Canvas
 	function drawWeaveToCanvas(ctx, weave, weaveW, weaveH, ctxW, ctxH, xOffset = 0, yOffset = 0){
 
+		var state, arrX, arrY;
+
 		debug("xOffset", xOffset);
 		debug("yOffset", yOffset);
 
@@ -9429,7 +9431,11 @@ $(document).ready ( function(){
 		camera : undefined,
 		controls : undefined,
 		model : undefined,
-		lights : {},
+		lights:{
+			ambient: undefined,
+			point: undefined,
+			spot: undefined
+		},
 
 		fabric: undefined,
 		threads : [],
@@ -9471,12 +9477,6 @@ $(document).ready ( function(){
 		setup: {
 			showAxes: false,
 			bgColor: "white"
-		},
-
-		lights:{
-			ambient: undefined,
-			point: undefined,
-			spot: undefined
 		},
 
 		structure: {
@@ -16386,8 +16386,8 @@ $(document).ready ( function(){
 				
 				if ( this.paste_action_step == 0 ){
 
-					var xOffset = globalWeave.scrollX + (this.pasteStartCol - 1) * unitW;
-					var yOffset = globalWeave.scrollY + (this.pasteStartRow - 1) * unitH;
+					xOffset = globalWeave.scrollX + (this.pasteStartCol - 1) * unitW;
+					yOffset = globalWeave.scrollY + (this.pasteStartRow - 1) * unitH;
 
 					selectionBoxOnBuffer(pixels, unitW, unitH, 1, 1, xOffset, yOffset, ctxW, ctxH, lineThickness, selectionColor32);
 
