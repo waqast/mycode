@@ -7435,7 +7435,7 @@ $(document).ready ( function(){
 			load: function(url, callback ){
 				var img = new Image();
 				img.onload = function() { if (typeof callback === "function" ) {  callback(img); } };
-				img.onerror = function() { "loadImage.error: "+url};
+				img.onerror = function() { console.log("loadImage.error: "+url) };
 				img.src = url;
 			}
 
@@ -7631,7 +7631,7 @@ $(document).ready ( function(){
 
 			} else {
 
-				if ( _material.val !== undefined && _material.val.map !== undefined && _material.val.map ){
+				if ( _material.val.map !== undefined && _material.val.map ){
 					_material.val.map.dispose();
 					_material.val.map = undefined;
 					_material.val.needsUpdate = true;
@@ -7666,7 +7666,7 @@ $(document).ready ( function(){
 
 			} else {
 
-				if ( _material.val !== undefined && _material.val.bumpMap !== undefined && _material.val.bumpMap ){
+				if ( _material.val.bumpMap !== undefined && _material.val.bumpMap ){
 					_material.val.bumpMap.dispose();
 					_material.val.bumpMap = undefined;
 					_material.val.needsUpdate = true;
@@ -8677,16 +8677,16 @@ $(document).ready ( function(){
 
 		setModel: function(){
 
-			var _this = this;
-			var _params = _this.params;
-
-			var folder = "model/objects/";
 			var data = app.wins.modelLibrary.selected.item;
-			var modelId = app.wins.modelLibrary.selected.tab + "-" +data.id;
-
-			var isNewLoading = true;
-
+			
 			if ( data ){
+
+				var _this = this;
+				var _params = _this.params;
+
+				var folder = "model/objects/";
+				var isNewLoading = true;
+				var modelId = app.wins.modelLibrary.selected.tab + "-" +data.id;
 
 				if ( isNewLoading ){
 
@@ -9007,7 +9007,7 @@ $(document).ready ( function(){
 					callback(img);
 				}
 			};
-			img.onerror = function() { "loadImage.error: "+url};
+			img.onerror = function() { console.log("loadImage.error: "+url) };
 			img.src = url;
 
 		},
@@ -11295,7 +11295,7 @@ $(document).ready ( function(){
 	    	control2 = new THREE.Vector3( sx, sy - h/2 , sz+w-bca );
 	    	endPoint = new THREE.Vector3( sx, sy - h/2, sz + w );
 
-	    } else if ( towards = "x" ){
+	    } else if ( towards == "x" ){
 
 	    	control1 = new THREE.Vector3( sx - bca, sy + h/2, sz );
 	    	control2 = new THREE.Vector3( sx - w + bca, sy - h/2 , sz );
