@@ -112,7 +112,7 @@ function drawRectBuffer(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, colo
 
 function drawRectBuffer4(origin, pixels8, pixels32, sx, sy, w, h, ctxW, ctxH, fillType, color, opacity = 1, gradientOrientation) {
 
-	var i, x, y, a;
+	var i, x, y, mix;
 
 	if (origin === "br"){
 		sx = ctxW - sx - w;
@@ -180,8 +180,6 @@ function drawRectBuffer4(origin, pixels8, pixels32, sx, sy, w, h, ctxW, ctxH, fi
 
 			} else if ( fillType === "rgba_mix_0"){
 
-				var mix;
-
 				for (y = sy; y <= ly; ++y) {
 					for (x = sx; x <= lx; ++x) {
 						i = (ctxW * y + x) * 4;
@@ -190,8 +188,6 @@ function drawRectBuffer4(origin, pixels8, pixels32, sx, sy, w, h, ctxW, ctxH, fi
 					}
 				}
 			} else if ( fillType === "rgba_mix"){
-
-				var mix;
 
 				for (y = ly-1; y >= sy; y--) {
 					for (x = lx-1; x >= sx; x--) {
@@ -256,7 +252,7 @@ function drawSubpixel(origin, pixels8, pixels32, x, y, rgba, ctxW, ctxH){
 
 function drawRectBufferSubpixel(origin, pixels, sx, sy, w, h, ctxW, ctxH, fillType, color, opacity = 1, gradientOrientation) {
 
-	var i, x, y, a;
+	var i, x, y;
 
 	if (origin === "br"){
 		sx = ctxW - sx - w;

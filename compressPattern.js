@@ -3,7 +3,6 @@ function compress1D(str){
 	var res, mid, multiples, replacement;
 
 	//logTime("Compress");
-	var strL = Array.isArray(str) ? str.join("").length : str.length;
 	str = Array.isArray(str) ? str.join("") : str;
 	res = cleanPattern(str);
 	res = decompress1D(res);

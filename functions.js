@@ -2005,18 +2005,20 @@ function drawImageToCanvas(url, canvas, options, callback){
 }
 
 function ev(input){
+	var v;
 	var e = $(input);
 	var t = e.prop("type");
 	if ( t == "checkbox" ){
 		v = e.prop("checked");
 	} else {
-		var v = e.val();
+		v = e.val();
 		v = isNumeric(v) ? Number(v) : v;
 	}
 	return v;
 }
 
 Array.prototype.scale = function(len) {
+	var srci;
     var res = Array(Number(len)).fill(0);
     var ratio = this.length / len;
     for (var i = 0; i < len; i++) {

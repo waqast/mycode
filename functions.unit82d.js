@@ -207,20 +207,17 @@ function isTypedArray(obj){
 }
 
 Uint8Array.prototype.get = function(prop, n = 0){
-	var i, x, y;
+	var i, x, y, res;
 	var sw = Number(convertNumberBase([this[0], this[1]], 256, 10).join(""));
 	var sh = (this.length - 2)/sw;
 	var arr8 = this.subarray(2);
-
 	if (prop === "row"){
-
-		var y = loopNumber(n, sh);
-		var res = arr8.subarray(y*sw,y*sw+sw);
+		y = loopNumber(n, sh);
+		res = arr8.subarray(y*sw,y*sw+sw);
 		return res;
-
 	} else if (prop === "col"){
-		var res = new Uint8Array(sh);
-		var x = loopNumber(n, sw);
+		res = new Uint8Array(sh);
+		x = loopNumber(n, sw);
 		for (y = 0; y < sh; ++y) {
 			i = y * sw + x + 2;
 			res[y] = this[i];
@@ -425,7 +422,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 
 	//logTime("transform2D8 ("+instanceId+"): " + command);
 
-	var i, x, y, sx, sy, rx, ry, res, ri, si, ni, srci;
+	var i, x, y, sx, sy, rx, ry, res, ri, ni, srci, dup;
 
 	val = Number(val);
 
@@ -621,13 +618,13 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 		
 	} else if (command === "mirror_stitch_right"){
 
-		var dup = this.clone2D8();
+		dup = this.clone2D8();
 		dup.reverse();
 		res = this.concat(dup.slice(1, -1));
 		
 	} else if (command === "mirror_stitch_left"){
 
-		var dup = this.clone2D8();
+		dup = this.clone2D8();
 		dup.reverse();
 		res = dup.concat(this.slice(1, -1));
 		
