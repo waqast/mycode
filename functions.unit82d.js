@@ -1139,7 +1139,7 @@ function convert_str_2d8(str){
 	return convert_uint8_2d8(convert_str_uint8(str));
 }
 
-Array.prototype.isValid2D8 = function(){
+Array.prototype.is2D8 = function(){
 	return this !== undefined && this.length && this[0] !== undefined && this[0].length;
 }
 

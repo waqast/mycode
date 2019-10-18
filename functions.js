@@ -84,9 +84,9 @@ function getGroupSizeAt(index, array){
 // -------------------------------------------------------------
 function getStripeData(array, index){
   
-  var i;
+  	var i;
 
-	if ( array.length > index ){
+	if (  index < array.length ){
 		var value = array[index];
 		var leftPart = array.slice(0, index).reverse();
 		var rightPart = array.slice(index+1, array.length);
@@ -300,7 +300,14 @@ Array.prototype.insertArrayAt = function(index, itm) {
 	var rightArray = this.slice(index);
 	var modArray = leftArray.concat(itm, rightArray);
 	return modArray;
-	
+};
+
+Array.prototype.insert = function(index) {
+    index = Math.min(index, this.length);
+    arguments.length > 1
+        && this.splice.apply(this, [index, 0].concat([].pop.call(arguments)))
+        && this.insert.apply(this, arguments);
+    return this;
 };
 
 Array.prototype.removeAt = function(index) { 
@@ -1293,6 +1300,10 @@ function strToArr(item){
 	}
 }
 
+Array.prototype.is2DArray = function(arr) {
+	return arr.length && arr[0].length;
+};
+
 Array.prototype.occurrence = function(val) {
   return this.filter(e => e === val).length;
 };
@@ -1619,6 +1630,7 @@ function chunk(a, l) {
 // Return Context ----------------------------------------------
 // -------------------------------------------------------------
 function getCtx(instanceId, parentId, canvasId, canvasW, canvasH, visible = true){
+
 	var pixelRatio = 1;
 	var parent = $("#"+parentId);
 	if ( parent.has("#"+canvasId).length == 0 ){
@@ -1641,7 +1653,7 @@ function getCtx(instanceId, parentId, canvasId, canvasW, canvasH, visible = true
 
 // Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
 function gradient32Arr(w, ...colorStop){
-	var ctx = getCtx(200,"temp-canvas", "g_tempCanvas", w, 1);
+	var ctx = getCtx(200,"noshow", "g_tempCanvas", w, 1);
 	var gradient = ctx.createLinearGradient(0,0,w,0);
 	if ( w == 2){
 		gradient.addColorStop(0, colorStop[3]);
@@ -1659,7 +1671,7 @@ function gradient32Arr(w, ...colorStop){
 
 // Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
 function getGradientData(w, ...colorStop){
-	var ctx = getCtx(200,"temp-canvas", "g_tempCanvas", w, 1);
+	var ctx = getCtx(200,"noshow", "g_tempCanvas", w, 1);
 	var gradient = ctx.createLinearGradient(0,0,w,0);
 	if ( w == 2){
 		gradient.addColorStop(0, colorStop[3]);
@@ -1689,7 +1701,7 @@ function getPixelData(data, index){
 // Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
 function gradient32Arr2(w, ...colorStop){
 	console.log(arguments);
-	var ctx = getCtx(200,"temp-canvas", "g_tempCanvas", w, 1);
+	var ctx = getCtx(200,"noshow", "g_tempCanvas", w, 1);
 	var gradient = ctx.createLinearGradient(0,0,w,0);
 	if ( w == 2){
 		gradient.addColorStop(0, colorStop[3]);
@@ -1716,6 +1728,14 @@ function threading1D_threading2D8(threading1D){
 		threading2D8[i][shaft - 1] = 1;
 	});
 	return threading2D8;
+}
+
+function threading2D8_threading1D(threading2D8){
+	return threading2D8.map(a => a.indexOf(1)+1);
+}
+
+function treadling2D8_treadling1D(treadling2D8){
+	return treadling2D8.rotate2D8("r").flip2D8("y").map(a => a.indexOf(1)+1);
 }
 
 function countPlainPoints(weave2D8){
@@ -1749,45 +1769,35 @@ function countPlainPoints(weave2D8){
 	return Math.round(counter / (w * h) * 100);
 }
 
-function getWeaveFromParts(tieup, threading, lifting, liftingMode = "treadling"){
+function getWeaveFromParts(tieup, threading, lifting){
+	// console.log("getWeaveFromParts");
+	var x, y, shaft, treadle;
+	var ends = threading.length;
+	var picks = lifting[0].length;
+	var threading1D = threading2D8_threading1D(threading);
+	var weave = newArray2D8(34, ends, picks);
 
-	var x, y, shaft, treadle, tieupState;
-
-	var threadingW = threading.length;
-	var liftingH = lifting[0].length;
-	var threading1D = threading.map(a => a.indexOf(1)+1);
-	var weave = newArray2D8(34, threadingW, liftingH);
-
-	if ( liftingMode == "treadling" ){
-
-		var treadling1D = lifting.rotate2D8("r").flip2D8("y").map(a => a.indexOf(1)+1);
-		for (var x = 0; x < threadingW; x++) {
+	if ( tieup ){
+		var treadling1D = treadling2D8_treadling1D(lifting);
+		for (var x = 0; x < ends; x++) {
 			shaft = threading1D[x];
-			for (var y = 0; y < liftingH; y++) {
+			for (var y = 0; y < picks; y++) {
 				treadle = treadling1D[y];
 				if ( shaft && treadle && tieup[treadle-1] !== undefined && tieup[treadle-1][shaft-1] !== undefined ){
-					tieupState = tieup[treadle-1][shaft-1];
-					weave[x][y] = tieupState;
+					weave[x][y] = tieup[treadle-1][shaft-1];
 				}
 			}
 		}
-
-	} else if ( liftingMode == "pegplan" ){
-
+	} else {
 		threading1D.forEach(function(v, i) {
-
 			if ( v && lifting[v-1] == undefined ){
-				weave[i] = new Uint8Array(liftingH);
+				weave[i] = new Uint8Array(picks);
 			} else {
 				weave[i] = lifting[v-1];
 			}
-
 		});
-
 	}
-
 	return weave;
-
 }
 
 function wd_getPixelRatio(){
@@ -1953,3 +1963,70 @@ function saveStringAsFile( text, filename ) {
 function saveArrayBufferAsFile( buffer, filename ) {
 	saveFile( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
 }
+
+function getObjProp(obj, key, def = null ){
+	return obj && key && obj.hasOwnProperty(key) ? obj[key] : def;
+}
+
+function normalizeToNearestRotation(radians){
+	
+	var dir = radians >= 0 ? 1 : -1;
+	var val = loopNumber(Math.abs(radians), Math.PI * 2);
+	if ( val > Math.PI ){
+		val = Math.PI * 2 - val;
+		dir *= -1;
+	}
+	return val * dir;
+}
+
+function drawImageToCanvas(url, canvas, options, callback){
+
+	var ctx = canvas.getContext("2d");
+	var cw = canvas.width;
+	var ch = canvas.height;
+
+	options.repeat = getObjProp(options, "repeat", "no-repeat");
+
+	var img = new Image();
+	img.onload = function() {
+
+		var pattern = ctx.createPattern(img, options.repeat);
+		ctx.rect(0, 0, cw, ch);
+		ctx.fillStyle = pattern;
+		ctx.fill();
+
+		if (typeof callback === "function" ) { 
+			callback(img);
+		}
+	};
+	img.onerror = function() {};
+	img.src = url;
+
+}
+
+function ev(input){
+	var e = $(input);
+	var t = e.prop("type");
+	if ( t == "checkbox" ){
+		v = e.prop("checked");
+	} else {
+		var v = e.val();
+		v = isNumeric(v) ? Number(v) : v;
+	}
+	return v;
+}
+
+Array.prototype.scale = function(len) {
+    var res = Array(Number(len)).fill(0);
+    var ratio = this.length / len;
+    for (var i = 0; i < len; i++) {
+    	srci = Math.floor(ratio*i);
+    	res[i] = this[srci];
+    }
+    return res;
+};
+
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+

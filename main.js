@@ -10,12 +10,6 @@ var favicon = new Favico({
 	textColor : "#fff"
 });
 
-var g_weaveLimitMin = 2;
-var g_weaveLimitMax = 16384;
-var g_patternLimit = 16384;
-var g_repeatLimit = 16384;
-var g_maxShaftsLimit = 96;
-
 var g_weaveArray_imported = [];
 
 var g_paletteCodes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -60,19 +54,12 @@ var g_tieupW = 96;
 var g_artworkWeaveArray_imported = [];
 var g_artworkLoadedSrc = "";
 
-var g_boxSpace = 1;
-var g_boxShadow = 2;
-
-var boxShadowColor = "#666666";
-var boxShadowColorFocus = "#333333";
-
 var g_simulationRepeat = "seamless";
 var g_weaveRepeat = "seamless";
 
 var g_minDraggerSize = 24;
 
 var g_chipUnderRightClick = "";
-var g_patternElementUnderRightClick = "";
 var g_simulationDataUrl = "";
 
 var g_simulationWidth = 0;
@@ -82,10 +69,6 @@ var g_weavePointUnderRightClick = [];
 var g_gridMinor = 1;
 var g_gridMajor = 8;
 var g_patternElementPadding = 0;
-
-var g_LockThreading = false;
-var g_LockLifting = false;
-var g_LockThreadingToTreadling = false;
 
 var g_fileLoaded = false;
 var g_fileLoadedName = "";
@@ -98,35 +81,21 @@ var g_paletteWindowHeight = 69;
 var g_chipHeight = 47;
 var g_appNameVersion = "Weave Designer v4";
 var g_appName = "Weave Designer";
-var g_appVersion = "4";
 var g_patternElementSize = 16;
 
-var g_interfaceLoadCheckCount = 0;
-var g_interfaceLoadCheckTotal = 9;
-var g_scrollbarW = 15;
+
 var g_simulationBackgroundPosition = [];
 
-var g_weaveStyle = "bw";
 var g_executionTime = 0;
 var g_repeatOpasity = 1;
 var g_paletteLockStarDisableLimit = 12;
-var g_modalWinId = false;
 
-var g_projectName = "Untitled Project";
-var g_authorName = "Waqas Tariq";
-var g_loadedProjectName = "";
-var g_loadedProjectFileName = "";
-var g_projectNotes = "";
-var g_doRender = false;
-var g_enableWarp = true;
-var g_enableWeft = true;
 var weaveSelectionColor = "rgba(0,0,255,0.5)";
 
-var g_graphTool = "pointer"; // "pointer", "line", "fill", "brush", "zoom", "hand", "selection"
 var g_graphLineStarted = false;
 var g_graphBrushState = 1;
 var g_graphFillState = "";
-var g_backgroundColor = "Z";
+
 var floodFillCount = 0;
 var g_graphDrawState = "T"; // U = up, D = down, T = toggle
 var g_endNumUnderMouse = "";
@@ -150,7 +119,15 @@ var g_weaveCanvas, g_weaveContext,
 	g_tempCanvas4, g_tempContext4,
 
 	g_simulationDrawCanvas, g_simulationDrawContext,
-	g_modelTextureCanvas, g_modelTextureContext,
+
+	g_modelFabricMapCanvas, g_modelFabricMapContext,
+	g_modelFabricBumpMapCanvas, g_modelFabricBumpMapContext,
+
+	g_modelWeaveMapCanvas, g_modelWeaveMapContext,
+	g_modelWeaveBumpMapCanvas, g_modelWeaveBumpMapContext,
+
+	g_modelImageMapCanvas, g_modelImageMapContext,
+	g_modelImageBumpMapCanvas, g_modelImageBumpMapContext,
 
 	g_simulationCanvas, g_simulationContext,
 	g_artworkCanvas, g_artworkContext;
@@ -158,9 +135,11 @@ var g_weaveCanvas, g_weaveContext,
 // ----------------------------------------------------------------------------------
 // On Load
 // ----------------------------------------------------------------------------------
-var dhxWins, dhxLayout, layoutMenu;
+var dhxWins, dhxLayout;
 
 $(document).ready ( function(){
+
+	// setLoadingbar(0, "uiload", true, "Loading UI");
 
 	// Tab ID
 	var hexTimestamp = Date.now().toString(16);
@@ -173,75 +152,11 @@ $(document).ready ( function(){
 	//g_pointW *= g_pixelRatio;
 	//g_pointPlusGrid *= g_pixelRatio;
 	//g_gridThickness *= g_pixelRatio;
-	//g_boxShadow *= g_pixelRatio;
+	//app.ui.shadow *= g_pixelRatio;
 	//g_warpSize *= g_pixelRatio;
 	//g_weftSize *= g_pixelRatio;
 	//g_warpSpace *= g_pixelRatio;
 	//g_weftSpace *= g_pixelRatio;
-
-	// ----------------------------------------------------------------------------------
-	// Interface Load Check
-	// ----------------------------------------------------------------------------------
-	function interfaceLoadCheck(instanceId = 0) {
-
-		// console.log(["interfaceLoadCheck", instanceId]);
-
-		// checkAppLoadingDelay();
-
-		g_interfaceLoadCheckCount++;
-		debug("UI Load Checkpoints", g_interfaceLoadCheckCount);
-
-		// console.log(["Load Checks", g_interfaceLoadCheckCount, g_interfaceLoadCheckTotal]);
-
-		$("div.main-overlay-caption").text("Loading interface"+".".repeat(g_interfaceLoadCheckCount));
-		
-		if (g_interfaceLoadCheckCount >= g_interfaceLoadCheckTotal) {
-
-			globalHistory.stop();
-
-			createLayout(2, false);
-			createPaletteLayout();
-
-			app.restoreConfigurations(false, false);
-
-			var sessionState = store.session(app.stateStorageID);
-
-			if ( sessionState ){
-				app.setState(1, sessionState);
-			} else {
-				app.generateState();
-			}
-
-			renderAll();
-
-			globalHistory.disableUndo();
-			globalHistory.disableRedo();
-			$("div.main-overlay").hide();
-
-			app.palette.selectChip("a");
-
-			globalHistory.start();
-
-			globalHistory.record(9);
-
-			$(".xcheckbox").tinyToggle();
-			debug("pixelRatio",g_pixelRatio);
-
-			activateSpinnerCounters();
-
-		}
-
-	}
-
-	$("div.main-overlay-caption").click(function(e) {
-		if (e.which === 1) {
-			clearHistory();
-			setTimeout(function () {
-		        location.reload();
-		    }, 100);
-		}
-		return false;
-	});
 
 	/*
 	var appLoadingCheckTimer ;
@@ -249,7 +164,7 @@ $(document).ready ( function(){
 	    appLoadingCheckTimer = setTimeout(function(){
 	    	console.log(g_interfaceLoadCheckCount);
 	    	//if (g_interfaceLoadCheckCount < g_interfaceLoadCheckTotal) {
-				$("div.main-overlay-caption").text("Seems a problem. Reload Page.");
+				$("#mo-caption").text("Seems a problem. Reload Page.");
 			//}
 			clearTimeout(appLoadingCheckTimer);
 
@@ -260,7 +175,7 @@ $(document).ready ( function(){
 	// Window Resize
 	// ----------------------------------------------------------------------------------
 	window.addEventListener("resize", function(event){
-		//createLayout(3);
+		createLayout(3);
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -280,26 +195,26 @@ $(document).ready ( function(){
 
 	dhxLayout = new dhtmlXLayoutObject(dhxLayoutData);
 
-	var mainTabbar = dhxLayout.cells("a").attachTabbar({
+	var _tabbar = dhxLayout.cells("a").attachTabbar({
 		mode: "top",
 		arrows_mode: "auto",
 		tabs: [
-			{ id: "weave", text: "Weave", active: true },
-			{ id: "artwork", text: "Artowrk" },
-			{ id: "simulation", text: "Simulation" },
-			{ id: "three", text: "3D Weave" },
-			{ id: "model", text: "Model" }
+			{ id: "weave", text: "Weave", width:90, active: true },
+			{ id: "artwork", text: "Artowrk", width:90 },
+			{ id: "simulation", text: "Simulation", width:90 },
+			{ id: "three", text: "Weave 3D", width:90 },
+			{ id: "model", text: "Model", width:90 }
 
 		]
 	});
 
-	mainTabbar.enableAutoReSize();
+	_tabbar.enableAutoReSize();
 
-	var weaveTab = mainTabbar.tabs("weave");
-	var artworkTab = mainTabbar.tabs("artwork");
-	var simulationTab = mainTabbar.tabs("simulation");
-	var threeTab = mainTabbar.tabs("three");
-	var modelTab = mainTabbar.tabs("model");
+	var weaveTab = _tabbar.tabs("weave");
+	var artworkTab = _tabbar.tabs("artwork");
+	var simulationTab = _tabbar.tabs("simulation");
+	var threeTab = _tabbar.tabs("three");
+	var modelTab = _tabbar.tabs("model");
 
 	weaveTab.attachObject("weave-frame");
 	artworkTab.attachObject("artwork-frame");
@@ -309,33 +224,14 @@ $(document).ready ( function(){
 
 	dhxLayout.attachFooter("statusbar-frame");
 
-	layoutMenu = dhxLayout.attachMenu({
-		icons_path: "img/icons/",
-		xml: "xml/menu_main.xml",
-		onload: function() {
-			interfaceLoadCheck(1);
-		}
-	});
-	layoutMenu.attachEvent("onClick", layoutMenuClick);
-
 	dhxLayout.attachEvent("onResizeFinish", function(){
-
-		debug("ResizeFinish", "TRUE");
-
 	    createLayout(1);
-
 	});
 
-	mainTabbar.attachEvent("onSelect", function(id, lastId){
-
-		mainTabbar.setSizes();
-		app.tabs.active = id;
-	    globalStatusbar.switchTo(id);
-	    g(id).onTabSelect();
-	    app.saveConfigurations(1);
-
+	_tabbar.attachEvent("onSelect", function(tab, lastTab){
+		app.tabs.activate(tab);
+		app.config.save(17);
 	    return true;
-
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -391,7 +287,7 @@ $(document).ready ( function(){
 		var debugList = debugTab.find("ul.debug-list");
 		
 		var button = $("<div>", {class: "item-button debug-bold"});
-		var input = $('<input>', {class: "item-input", type: 'text', val: values });
+		var input = $("<input>", {class: "item-input", type: "text", val: values });
 
 		$("<li>")
 			.append($("<div>", {class: "item-title debug-bold"}).text(title))
@@ -419,7 +315,7 @@ $(document).ready ( function(){
 		var debugList = debugTab.find("ul.debug-list");
 		
 		var button = $("<div>", {class: "item-button debug-bold"});
-		var input = $('<input>', {class: "item-input", type: 'text', val: "" });
+		var input = $("<input>", {class: "item-input", type: "text", val: "" });
 
 		$("<li>")
 			.append($("<div>", {class: "item-title debug-bold"}).text(title))
@@ -451,15 +347,15 @@ $(document).ready ( function(){
 			var item = itemValue.parent();
 			var count = Number(item.data("count")) + 1;
 			item.data("count", count);
-			item.find(".item-value").addClass('debug-bold').text(value);
-			item.find(".item-count").addClass('debug-bold').text(count);
+			item.find(".item-value").addClass("debug-bold").text(value);
+			item.find(".item-count").addClass("debug-bold").text(count);
 
 			if ( isNumber ){
 
 				var sum = Number(item.data("sum")) + Number(value);
 				item.data("sum", sum);
 				var avg = Math.round(sum / count * 100)/100;
-				item.find(".item-avg").addClass('debug-bold').text(avg);
+				item.find(".item-avg").addClass("debug-bold").text(avg);
 
 				if ( count == 1 ){
 					item.find(".item-min, .item-max, item-avg").text(value).addClass("debug-bold");
@@ -476,7 +372,7 @@ $(document).ready ( function(){
 
 			if ( isNumber ){
 
-				$("<li data-sum="+value+" data-count='1'>")
+				$("<li data-sum="+value+" data-count=\"1\">")
 				.append($("<div>", {class: "item-title debug-bold"}).text(title))
 				.append($("<div>", {class: "item-count debug-bold"}).text(1))
 				.append($("<div>", {class: "item-avg debug-bold"}).text(value))
@@ -487,7 +383,7 @@ $(document).ready ( function(){
 
 			} else {
 
-				$("<li data-count='1'>")
+				$("<li data-count=\"1\">")
 				.append($("<div>", {class: "item-title debug-bold"}).text(title))
 				.append($("<div>", {class: "item-count debug-bold"}).text(1))
 				.append($("<div>", {class: "item-value debug-bold"}).text(value))
@@ -524,26 +420,78 @@ $(document).ready ( function(){
 
 	debugInput("number", "Test 02", "0", "tests", function(val){
 
-		console.log("hi");
+		//setLoadingbar(50, "imagesave", true, "Saving Weave Items");
+
 		// //dhtmlx.message.position = "bottom";
-		// //dhtmlx.message("Shafts Limits 256");
+		// //dhtmlx.message("Shafts Limits 96");
 		// globalThree.disposeScene();
+
+		// globalModel.fabric.texture.rotation += toRadians(5);
+		// globalModel.fabric.texture.needsUpdate = true;
+		// globalModel.render();
+
+		// debugInput("text", "globalModel.materials.floor.repeat", true, "live", function(val){
+
+		// 	var r = val.split(",");
+		// 	globalModel.materials.floor.val.map.repeat.set(r[0], r[1]);
+		// 	globalModel.render();
+
+		// });
+
+		// waiting().then( response => {
+
+		// 	console.log(response);
+
+		// });
+
+		// var a = decompress1D("2a2b3(4c4d8(9e1f))");
+		// console.log(a);
+		// var b = decompress1D_B("2a2b3(4c4d8(9e1f))");
+		// console.log(b);
+
+		setLoadingbar(0, "modelcreatescene", true, "Creating Scene");
+
+	});
+
+
+	async function waiting(){
+
+		let promise = new Promise((resolve, reject) => {
+			setTimeout(() => resolve("done!"), 2000)
+		});
+
+		let result = await promise; // wait till the promise resolves (*)
+		return result;
+
+	}
+
+	debugInput("number", "Save OrbitControls", "0", "tests", function(val){
+
+		globalThree.controls.saveState();
+		
+	});
+
+	debugInput("number", "Reset OrbitControls", "0", "tests", function(val){
+
+		globalThree.controls.reset();
+		globalThree.controls.update();
+		//globalThree.render();
 		
 	});
 
 	debugInput("number", "globalThree.fabric.rotation.x", "0", "tests", function(val){
 		globalThree.fabric.rotation.x = val/180*Math.PI;
-		globalThree.render();
+		//globalThree.render();
 	});
 
 	debugInput("number", "globalThree.fabric.rotation.y", "0", "tests", function(val){
 		globalThree.fabric.rotation.y = val/180*Math.PI;
-		globalThree.render();
+		//globalThree.render();
 	});
 
 	debugInput("number", "globalThree.fabric.rotation.z", "0", "tests", function(val){
 		globalThree.fabric.rotation.z = val/180*Math.PI;
-		globalThree.render();
+		//globalThree.render();
 	});	
 
 	debugOutput("Palette Hex String", "tests", function(input){
@@ -559,7 +507,7 @@ $(document).ready ( function(){
 	});
 
 	debugOutput("Remove Fabric", "tests", function(input){
-		globalThree.clearFabric();
+		globalThree.removeFabric();
 		input.val("Done");
 	});
 
@@ -571,63 +519,6 @@ $(document).ready ( function(){
 
 		input.val("Done");
 		
-	});	
-
-	debugOutput("confirmselected", "tests", function(input){
-
-		globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
-		globalThree.render();
-		
-	});	
-
-	debugOutput("addpass", "tests", function(input){
-
-		globalThree.composer.addPass( globalThree.outlinePass );
-		globalThree.render();
-		
-	});	
-
-	debugOutput("addBox", "tests", function(input){
-		globalThree.scene.add(globalThree.cube1);
-		globalThree.render();
-	});	
-
-	debugOutput("selectedBox", "tests", function(input){
-
-		globalThree.outlinePassSelected.push(globalThree.cube1);
-		globalThree.render();
-		
-	});	
-
-	debugOutput("selectedFabric", "tests", function(input){
-
-		console.log(globalThree.fabric.children[3]);
-
-		globalThree.outlinePassSelected.push(globalThree.fabric.children[3]);
-		globalThree.render();
-		
-	});
-
-	// ----------------------------------------------------------------------------------
-	// AutoWeave Window
-	// ----------------------------------------------------------------------------------
-	var autoWeaveWin = dhxLayout.dhxWins.createWindow({
-	    id:"autoWeaveWin",
-	    width:16 + 200,
-	    height: 41 + 400,
-	    center:true,
-	    move:true,
-	    resize:false,
-	    modal:false,
-	    caption: "Auto Weave",
-	    header:true
-	});
-
-	autoWeaveWin.button("minmax").hide();
-	autoWeaveWin.attachObject("auto-weave-frame");
-	autoWeaveWin.hide();
-	autoWeaveWin.button("close").attachEvent("onClick", function() {
-		autoWeaveWin.hide();
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -659,7 +550,7 @@ $(document).ready ( function(){
 		icons_path: "img/icons/",
 		xml: "xml/menu_artwork_colors.xml",
 		onload: function() {
-			interfaceLoadCheck(3);
+			app.ui.loaded(3);
 		}
 	});
 
@@ -669,33 +560,252 @@ $(document).ready ( function(){
 	});
 
 	// ----------------------------------------------------------------------------------
-	// Three Toolbar
+	// Weave Toolbar
 	// ----------------------------------------------------------------------------------
-	var modelToolbar = modelTab.attachToolbar({
+	var _toolbar = _tabbar.attachToolbar({
 		icons_path: "img/icons/",
-		xml: "xml/toolbar_model.xml",
+		xml: "xml/toolbar.xml",
 		onload: function() {
 
-			interfaceLoadCheck(4);
+			_toolbar.setItemText("toolbar-app-logo", "<div id=\"toolbar-logo\"><img src=\"img/icons/logo-36.png\" /><span> Weave Designer</span>");
 
-			modelToolbar.addButton("toolbar-model-scene", 0, "Scene", "walls-36.png", "walls-36-dis.png");
-			modelToolbar.addButton("toolbar-model-lights", 1, "Lights", "light-setup-36.png", "light-setup-36-dis.png");
-			modelToolbar.addButton("toolbar-model-model", 2, "Model", "models-3d-36.png", "models-3d-36-dis.png");
+			// weaveShiftPop.attachEvent("onHide", function(id) {
+			// 	globalSelection.clear_old(1);
+			// });
 
-			modelToolbar.addButton("toolbar-model-weave-texture", 3, "Weave Texture", "weave-texture-36.png", "weave-texture-36-dis.png");
-			modelToolbar.addButton("toolbar-model-image-texture", 4, "Image Texture", "image-texture-36.png", "image-texture-36-dis.png");
-
-			modelToolbar.addButtonTwoState("toolbar-model-autorotate", 5, "Auto Rotate", "model-autorotate.png", "model-autorotate.png");
-			modelToolbar.addButton("toolbar-model-reset-position", 6, "Reset Position", "reset-position-36.png", "reset-position-36.png");
-			
-			modelToolbar.addButton("toolbar-model-save-image", 7, "Save Image", "save-36.png", "save-36-dis.png");
+			// patternShiftPop.attachEvent("onHide", function(id) {
+			// 	globalSelection.clear_old(2);
+			// });
 
 			popForms.create({
-				toolbar: modelToolbar,
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-weave-graph-shift",
+				htmlId: "pop-weave-graph-shift",
+				css: "xform-60",
+				parent: "weave",
+				child: "graphShift",
+				onReady: function(){
+					$("#control9").clone().attr("id", "control9-shift-graph").appendTo("#pop-weave-graph-shift");
+					$("#pop-weave-graph-shift div").click(function(e) {
+						if (e.which === 1) {
+							var graph = globalWeave.params.graphShiftTarget;
+							var amt = $("#pop-weave-graph-shift input").val();
+							if ($(this).hasClass("c9-ml")) {
+								modify2D8(graph, "shiftx", -amt);
+							} else if ($(this).hasClass("c9-mr")) {
+								modify2D8(graph, "shiftx", amt);
+							} else if ($(this).hasClass("c9-tc")) {
+								modify2D8(graph, "shifty", amt);
+							} else if ($(this).hasClass("c9-bc")) {
+								modify2D8(graph, "shifty", -amt);
+							} else if ($(this).hasClass("c9-tl")) {
+								modify2D8(graph, "shiftx", -amt);
+								modify2D8(graph, "shifty", amt);
+							} else if ($(this).hasClass("c9-tr")) {
+								modify2D8(graph, "shiftx", amt);
+								modify2D8(graph, "shifty", amt);
+							} else if ($(this).hasClass("c9-bl")) {
+								modify2D8(graph, "shiftx", -amt);
+								modify2D8(graph, "shifty", -amt);
+							} else if ($(this).hasClass("c9-br")) {
+								modify2D8(graph, "shiftx", amt);
+								modify2D8(graph, "shifty", -amt);
+							}
+						}
+						return false;
+					});
+				}
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-weave-pattern-shift",
+				htmlId: "pop-weave-pattern-shift",
+				css: "xform-60",
+				onReady: function(){
+					$("#control9").clone().attr("id", "control9-shift-pattern").appendTo("#pop-weave-pattern-shift");
+					$("#pop-weave-pattern-shift div").click(function(e) {
+						if (e.which === 1) {
+							if ($(this).hasClass("c9-ml")) {
+								globalPattern.shift("left");
+							} else if ($(this).hasClass("c9-mr")) {
+								globalPattern.shift("right");
+							} else if ($(this).hasClass("c9-tc")) {
+								globalPattern.shift("up");
+							} else if ($(this).hasClass("c9-bc")) {
+								globalPattern.shift("down");
+							} else if ($(this).hasClass("c9-tl")) {
+								globalPattern.shift("up");
+								globalPattern.shift("left");
+							} else if ($(this).hasClass("c9-tr")) {
+								globalPattern.shift("up");
+								globalPattern.shift("right");
+							} else if ($(this).hasClass("c9-bl")) {
+								globalPattern.shift("down");
+								globalPattern.shift("left");
+							} else if ($(this).hasClass("c9-br")) {
+								globalPattern.shift("down");
+								globalPattern.shift("right");
+							}
+						}
+						return false;
+					});
+				}
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-weave-auto-pattern",
+				htmlId: "pop-weave-auto-pattern",
+				css: "xform-small popup",
+				parent: "weave",
+				child: "autoPattern",
+				onApply: function(){
+					var lockedColors = $("#weaveAutoPatternLockedColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
+					globalWeave.params.autoPatternLockedColors = lockedColors;
+					$("#weaveAutoPatternLockedColors").val(lockedColors);
+					autoPattern();
+					globalWeave.render2D8(1, "weave");
+				}
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-weave-auto-colorway",
+				htmlId: "pop-weave-auto-colorway",
+				css: "xform-small popup",
+				parent: "weave",
+				child: "autoColorway",
+				onApply: function(){
+					var lockedColors = $("#weaveAutoColorwayLockedColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
+					globalWeave.params.autoColorwayLockedColors = lockedColors;
+					$("#weaveAutoColorwayLockedColors").val(lockedColors);
+					autoColorway();
+					globalWeave.render2D8(1, "weave");
+				}
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-weave-view-settings",
+				htmlId: "pop-weave-view-settings",
+				css: "xform-small popup",
+				parent: "weave",
+				child: "viewSettings"
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-weave-locks",
+				htmlId: "pop-weave-locks",
+				css: "xform-small popup",
+				parent: "weave",
+				child: "locks"
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-weave-palette-menu",
+				htmlId: "pop-weave-palette",
+				css: "xform-small popup",
+				parent: "weave",
+				child: "palette",
+				onReady: function(){
+					$(document).on("click", "#weaveDefaultPalette", function(){
+						app.palette.set("default")
+					});
+					$(document).on("click", "#weaveRandomPalette", function(){
+						app.palette.set("random");
+					});
+					$(document).on("click", "#weaveSortPalette", function(){
+						app.palette.sortBy("hue");
+					});
+					$(document).on("click", "#weaveSetPaletteYarnNumber", function(){
+						showYarnCountSetModal("all");
+					});
+				}
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-artwork-view-settings",
+				htmlId: "pop-artwork-view-settings",
+				css: "xform-small popup",
+				parent: "artwork",
+				child: "viewSettings",
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-simulation-structure",
+				htmlId: "pop-simulation-structure",
+				css: "xform-small popup",
+				parent: "simulation",
+				child: "structure"
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-simulation-yarn",
+				htmlId: "pop-simulation-yarn",
+				css: "xform-small popup",
+				parent: "simulation",
+				child: "yarn"
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-simulation-behaviour",
+				htmlId: "pop-simulation-behaviour",
+				css: "xform-small popup",
+				parent: "simulation",
+				child: "behaviour"
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-three-scene",
+				htmlId: "pop-three-scene",
+				css: "xform-small popup",
+				parent: "three",
+				child: "scene"
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-three-structure",
+				htmlId: "pop-three-structure",
+				css: "xform-small popup",
+				parent: "three",
+				child: "structure"
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
+				toolbarButton: "toolbar-model-texture",
+				htmlId: "pop-model-texture",
+				css: "xform-small popup",
+				parent: "model",
+				child: "texture",
+				onReady: function(){
+					$(document).on("click", "#modelTextureWeaveButton", function(){
+						globalModel.createWeaveTexture();
+					});
+					$(document).on("click", "#modelTextureImageButton", function(){
+						globalModel.createImageTexture();
+					});
+				},
+				onApply: function(){
+					globalModel.applyCanvasTexture();
+				},
+			});
+
+			popForms.create({
+				toolbar: _toolbar,
 				toolbarButton: "toolbar-model-scene",
 				htmlId: "pop-model-scene",
-				css: "xform-small",
-				parent: globalModel.params,
+				css: "xform-small popup",
+				parent: "model",
 				child: "scene",
 				onApply: function(){
 					globalModel.setEnvironment();
@@ -703,25 +813,25 @@ $(document).ready ( function(){
 			});
 
 			popForms.create({
-				toolbar: modelToolbar,
+				toolbar: _toolbar,
 				toolbarButton: "toolbar-model-model",
 				htmlId: "pop-model-model",
-				css: "xform-small",
-				parent: globalModel.params,
+				css: "xform-small popup",
+				parent: "model",
 				child: "model",
-				onLoad: function(){
-					popForms.addOption("modelGltfId", 1, "Model 1");
-					popForms.addOption("modelGltfId", 2, "Model 2");
-					popForms.addOption("modelGltfId", 3, "Model 3");
-					popForms.addOption("modelGltfId", 4, "Model 4");
-					popForms.addOption("modelGltfId", 5, "Model 5");
-					popForms.addOption("modelGltfId", 6, "Model 6");
-					popForms.addOption("modelGltfId", 7, "Model 7");
-					popForms.addOption("modelGltfId", 8, "Model 8");
-					popForms.addOption("modelGltfId", 9, "Model 9");
-					popForms.addOption("modelGltfId", 10, "Model 10");
-					popForms.addOption("modelGltfId", 11, "Model 11");
-					popForms.addOption("modelGltfId", 12, "Model 12");
+				onReady: function(){
+					popForms.addOption("modelId", "table", "Table Cloth");
+					popForms.addOption("modelId", "shirt", "Shirt");
+					popForms.addOption("modelId", "shirt_tie", "Shirt & Tie");
+					popForms.addOption("modelId", "pillows", "Pillows");
+					popForms.addOption("modelId", "tshirt", "T-Shirt");
+					popForms.addOption("modelId", "bed", "Bed");
+					popForms.addOption("modelId", 7, "Model 7");
+					popForms.addOption("modelId", 8, "Model 8");
+					popForms.addOption("modelId", 9, "Model 9");
+					popForms.addOption("modelId", 10, "Model 10");
+					popForms.addOption("modelId", 11, "Model 11");
+					popForms.addOption("modelId", 12, "Model 12");
 				},
 				onApply: function(){
 					globalModel.setModel();
@@ -729,386 +839,45 @@ $(document).ready ( function(){
 			});
 
 			popForms.create({
-				toolbar: modelToolbar,
+				toolbar: _toolbar,
 				toolbarButton: "toolbar-model-lights",
 				htmlId: "pop-model-lights",
-				css: "xform-small",
-				parent: globalModel.params,
-				child: "lights",
-				onApply: function(){
-					globalModel.setLights();
-				}
+				css: "xform-small popup",
+				parent: "model",
+				child: "lights"
 			});
-
-		}
-
-	});
-
-	modelToolbar.attachEvent("onClick", function(id) {
-
-		if ( id == "toolbar-model-weave-texture" ){
-			globalModel.renderTexture();
-		} else if ( id == "toolbar-model-save-image" ){
-			if ( globalModel.sceneCreated ){
-				saveCanvasAsImage(g_modelCanvas, "model3d.png");
-			}
-		} else if ( id == "toolbar-model-reset-position" ){
-			globalModel.animateSceneTo([0,0,0], globalModel.params.cameraPos, globalModel.params.controlsTarget);
-		}
-
-	});
-
-	modelToolbar.attachEvent("onStateChange", function(id, state) {
-
-		if ( id == "toolbar-model-autorotate" ){
-			globalModel.autoRotate = state;
-		}
-		
-	});
-
-	// ----------------------------------------------------------------------------------
-	// Three Toolbar
-	// ----------------------------------------------------------------------------------
-	var threeToolbar = threeTab.attachToolbar({
-		icons_path: "img/icons/",
-		xml: "xml/toolbar_three.xml",
-		onload: function() {
-
-			threeToolbar.addButton("toolbar-three-scene", 0, "Scene", "walls-36.png", "walls-36-dis.png");
-			threeToolbar.addButton("toolbar-three-structure", 1, "Structure", "structure-36.png", "structure-36.png");
-			threeToolbar.addButton("toolbar-three-render", 2, "Render", "play-button-36.png", "play-button-36.png");
 			
-			threeToolbar.addButtonTwoState("toolbar-three-mouse-outline", 3, "Outline", "mouse-outline-36.png", "mouse-outline-36.png");
-			threeToolbar.addButtonTwoState("toolbar-three-mouse-highlight", 4, "Highlight", "mouse-highlight-36.png", "mouse-highlight-36.png");
-			threeToolbar.addButton("toolbar-three-reset-position", 5, "Reset Position", "reset-position-36.png", "reset-position-36.png");
-			threeToolbar.addButton("toolbar-three-change-view", 6, "Change View", "change-view-36.png", "change-view-36.png");
-
-			threeToolbar.addButton("toolbar-three-save-image", 7, "Save Image", "save-36.png", "save-36-dis.png");
-			threeToolbar.addButton("toolbar-three-export-gltf", 7, "Export GLTF", "export-36.png", "export-36.png");
-			
-			popForms.create({
-				toolbar: threeToolbar,
-				toolbarButton: "toolbar-three-scene",
-				htmlId: "pop-three-scene",
-				css: "xform-small",
-				parent: globalThree.params,
-				child: "scene",
-				onApply: function(){
-					if ( globalThree.sceneCreated ){
-						globalThree.setBgColor(globalThree.params.bgColor);
-						globalThree.swithCameraTo(globalThree.params.projection);
-						globalThree.axes.visible = globalThree.params.showAxes;
-						globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
-						globalThree.render();
-					} else {
-						globalThree.createScene();
-					}
-				},
-			});
-
-			popForms.create({
-				toolbar: threeToolbar,
-				toolbarButton: "toolbar-three-structure",
-				htmlId: "pop-three-structure",
-				css: "xform-small",
-				parent: globalThree.params,
-				child: "structure",
-				onApply: function(){
-					if ( globalThree.sceneCreated ){
-						globalThree.setBgColor(globalThree.params.bgColor);
-						globalThree.swithCameraTo(globalThree.params.projection);
-						globalThree.axes.visible = globalThree.params.showAxes;
-						globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
-						globalThree.render();
-					} else {
-						globalThree.createScene();
-					}
-				},
-			});
-
-			threeToolbar.attachEvent("onClick", function(id) {
-
-				if (id == "toolbar-three-render") {
-					
-					globalThree.buildFabric();
-
-				} else if (id == "toolbar-three-save-image"){
-
-					if ( globalThree.sceneCreated ){
-						saveCanvasAsImage(g_threeCanvas, "weave3d.png");
-					}
-
-				} else if ( id == "toolbar-three-reset-position" ){
-
-					globalThree.resetPosition();
-									
-				} else if ( id == "toolbar-three-change-view" ){
-					
-					globalThree.changeView();
-				
-				} else if ( id == "toolbar-three-export-gltf" ){
-
-					globalThree.resetPosition(function(){
-
-						globalThree.params.showAxes = false;
-						globalThree.axes.visible = false;
-						globalThree.render();
-
-						var options = {
-							trs: false,
-							onlyVisible: true,
-							truncateDrawRange: false,
-							binary: false,
-							forceIndices: false,
-							forcePowerOfTwoTextures: false
-						};
-					
-						var exporter = new THREE.GLTFExporter();
-						exporter.parse( globalThree.fabric, function ( gltf ) {
-							if ( gltf instanceof ArrayBuffer ) {
-								saveArrayBufferAsFile( gltf, 'scene.glb' );
-							} else {
-								var output = JSON.stringify( gltf, null, 2 );
-								saveStringAsFile( output, 'weave3d.gltf' );
-							}
-						}, options );
-
-					});
-					
-				}
-
-			});
-
-			threeToolbar.attachEvent("onStateChange", function(id, state) {
-
-				if ( id == "toolbar-three-mouse-highlight"){
-					globalThree.mouseOverHighlight = state;
-				} else if ( id == "toolbar-three-mouse-outline"){
-					globalThree.mouseOverOutline = state;
-				}
-				
-			});
+			app.ui.loaded(6);
 
 		}
 	});
 
-	
+	_toolbar.attachEvent("onStateChange", function(id, state) {
 
-	// ----------------------------------------------------------------------------------
-	// Artwork Toolbar
-	// ----------------------------------------------------------------------------------
-	var artworkToolbar = artworkTab.attachToolbar({
-		icons_path: "img/icons/",
-		xml: "xml/toolbar_artwork.xml",
-		onload: function() {
-
-			interfaceLoadCheck(5);
-
-		}
-	});
-
-	artworkToolbar.attachEvent("onClick", function(id) {
-		if (id == "toolbar-artwork-colors") {
-			artworkColorsWindow.show();
-			artworkColorsWindow.stick();
-			artworkColorsWindow.bringToTop();
-		} else if ( id == "toolbar-artwork-open"){
-			openFileDialog("artwork");
-		} else if (id == "toolbar-artwork-zoom-in") {
-			globalArtwork.setProps(1, "zoom", globalArtwork.zoom + 1);
-		} else if (id == "toolbar-artwork-zoom-out") {
-			globalArtwork.setProps(2, "zoom", globalArtwork.zoom - 1);
-		} else if (id == "toolbar-artwork-zoom-actual") {
-			globalArtwork.setProps(3, "zoom", 0);
-		}
-	});
-
-	artworkToolbar.attachEvent("onStateChange", function(id, state) {
-
-		if ( id == "toolbar-artwork-seamless-x"){
-
-			globalArtwork.setProps(4, "seamlessX", state);
-
-		} else if ( id == "toolbar-artwork-seamless-y"){
-
-			globalArtwork.setProps(5, "seamlessY", state);
-
-		}
-	
-	});
-
-	// ----------------------------------------------------------------------------------
-	// Weave Toolbar
-	// ----------------------------------------------------------------------------------
-	var weaveToolbar = weaveTab.attachToolbar({
-		icons_path: "img/icons/",
-		xml: "xml/toolbar_weave.xml",
-		onload: function() {
-
-			var weaveShiftPop = new dhtmlXPopup({
-				toolbar: weaveToolbar,
-				id: "toolbar-weave-shift"
-			});
-			weaveShiftPop.attachObject("weave-shift-pop");
-
-			$("div.weaveshiftpopbutton").click(function(e) {
-				if (e.which === 1) {
-
-					if ($(this).hasClass("spbil")) {
-
-						modify2D8("weave", "shiftx", -1);
-
-					} else if ($(this).hasClass("spbir")) {
-
-						modify2D8("weave", "shiftx", 1);
-
-					} else if ($(this).hasClass("spbiu")) {
-
-						modify2D8("weave", "shifty", 1);
-
-					} else if ($(this).hasClass("spbid")) {
-
-						modify2D8("weave", "shifty", -1);
-
-					}
-
-				}
-				return false;
-			});
-
-			weaveShiftPop.attachEvent("onHide", function(id) {
-				globalSelection.clear_old(1);
-			});
-
-			$("div.patternshiftpopbutton").click(function(e) {
-				if (e.which === 1) {
-
-					if ($(this).hasClass("spbil")) {
-						globalPattern.shift("left");
-					} else if ($(this).hasClass("spbir")) {
-						globalPattern.shift("right");
-					} else if ($(this).hasClass("spbiu")) {
-						globalPattern.shift("up");
-					} else if ($(this).hasClass("spbid")) {
-						globalPattern.shift("down");
-					}
-
-				}
-				return false;
-			});
-
-			var patternShiftPop = new dhtmlXPopup({
-				toolbar: weaveToolbar,
-				id: "toolbar-pattern-shift"
-			});
-
-			patternShiftPop.attachObject("pattern-shift-pop");
-
-			patternShiftPop.attachEvent("onHide", function(id) {
-				globalSelection.clear_old(2);
-			});
-
-			var autoColorwayPop = new dhtmlXPopup({
-				toolbar: weaveToolbar,
-				id: "toolbar-pattern-auto-colorway"
-			});
-			autoColorwayPop.attachObject("auto-colorway-parameters");
-
-			var autoPatternPop = new dhtmlXPopup({
-				toolbar: weaveToolbar,
-				id: "toolbar-pattern-auto-pattern"
-			});
-			autoPatternPop.attachObject("auto-pattern-parameters");
-
-			$("#auto-pattern-parameters .button-primary").click(function(e) {
-				if (e.which === 1) {
-					autoPattern();
-					globalWeave.render2D8(1, "weave");
-				}
-				return false;
-			});
-
-			$("#auto-pattern-parameters .button-close").click(function(e) {
-				if (e.which === 1) {
-					autoPatternPop.hide();
-				}
-				return false;
-			});
-
-
-			$("#auto-colorway-parameters .button-primary").click(function(e) {
-				if (e.which === 1) {
-					autoColorway();
-				}
-				return false;
-			});
-
-			$("#auto-colorway-parameters .button-close").click(function(e) {
-				if (e.which === 1) {
-					autoColorwayPop.hide();
-				}
-				return false;
-			});
-
-			$("#btnAutoWeave").click(function(e) {
-				if (e.which === 1) {
-					autoWeave();
-				}
-				return false;
-			});
-
-			interfaceLoadCheck(6);
-
-		}
-	});
-
-	weaveToolbar.attachEvent("onStateChange", function(id, state) {
-
-		if ( id == "toolbar-pattern-lock-warp"){
-
-			g_enableWarp = !state;
-
-		} else if ( id == "toolbar-pattern-lock-weft" ){
-
-			g_enableWeft = !state;
-
-		} else if ( id == "toolbar-weave-grid-show" ){
-
+		if ( id == "toolbar-weave-grid" ){
 			globalWeave.setProps(6, {showGrid: state});		
-
-		} else if ( id == "toolbar-weave-lock-shafts" ){
-
-			globalWeave.lockThreading(state);
-
-		} else if ( id == "toolbar-weave-lock-pegs" ){
-
-			g_LockLifting = state;
-			if(state){
-				g_LockLiftingArray = zipWeave(globalWeave.weave2D.rotate2D8("r")).split("x");
-			}
-
-		} else if ( id == "toolbar-weave-lock-threading-to-treadling" ){
-
-			g_LockThreadingToTreadling = state;
-
+		
+		} else if ( id == "toolbar-model-rotate" ){
+			globalModel.rotationDirection *= state ? -1 : 1;
+			globalModel.autoRotate = state;
 		}
 	
 	});
 
 	function setGraphTool(tool){
 	
-		if ( g_graphTool !== tool ){
+		if ( app.tool !== tool ){
 			globalWeave.render2D8(12, app.mouse.graph);
 			app.mouse.reset();
 			graphReserve.clear();
-			g_graphTool = tool;
-			setToolbarDropDown(weaveToolbar, "toolbar-weave-tool", "toolbar-weave-tool-"+tool);
+			app.tool = tool;
+			setToolbarDropDown(_toolbar, "toolbar-weave-tool", "toolbar-weave-tool-"+tool);
 		
 			if ( tool !== "line" ){
 				
 				g_graphLineStarted = false;
-				app.storage.lineX1 = false;
-				app.storage.liney1 = false;
+				app.memory.lineX1 = false;
+				app.memory.liney1 = false;
 			
 			}
 
@@ -1128,11 +897,93 @@ $(document).ready ( function(){
 		
 	}
 
-	weaveToolbar.attachEvent("onClick", function(id) {
+	_toolbar.attachEvent("onClick", function(id) {
 
-		// Open File
-		if (id == "toolbar-weave-open") {
+		// Weave Menu Project
+		if (id == "toolbar-weave-menu-project-new") {
+			app.wins.show("newProject");
+		} else if (id == "toolbar-weave-menu-project-library") {
+			showProjectLibraryModal();
+		} else if (id == "toolbar-weave-menu-project-save") {
+			//showProjectSaveModal();
+			app.saveFile(app.getState(5));
+		} else if (id == "toolbar-weave-menu-project-library-save"){
+			showProjectSaveToLibraryModal();
+		} else if (id == "toolbar-weave-menu-project-import-code") {
+			showProjectCodeImportModal();
+		} else if (id == "toolbar-weave-menu-project-open") {
+
+			openFile("text" , (projectCode, fileName) => {
+
+				if ( app.validateState(projectCode) ) {
+					app.wins.show("openProject", function(){
+						var parent = $("#project-partial-open-modal");
+						var primaryButton = parent.find(".xprimary");
+						$("#partial-open-project-file-name").val(fileName);
+						primaryButton.click(function(e){
+							if (e.which === 1) {
+								var options;
+								if ( ev("#partialImport") ){
+									options = {
+										palette: ev("#importPalette"),
+										warp: ev("#importWarpColorPattern"),
+										weft: ev("#importWeftColorPattern"),
+										weave: ev("#importWeave"),
+										threading: ev("#importThreading"),
+										treadling: ev("#importTreadling"),
+										pegplan: ev("#importPegplan"),
+										tieup: ev("#importTieup"),
+										artwork: ev("#importArtwork"),
+										config: ev("#importAppConfig"),
+									}
+								} else {
+									options = false;
+								}
+								app.setState(2, projectCode, options);
+								app.wins.hide("openProject");
+								return false;
+							}
+						});
+					});
+				} else {
+					app.wins.show("error");
+					app.wins.notify("error", "warning", "Project file is corrupt !");
+				}
+
+			});	
+
+		} else if (id == "toolbar-weave-menu-project-properties") {
+			showProjectPropertiesModal();
+		} else if (id == "toolbar-weave-menu-project-print") {
+			printProject();
+
+		// Weave Menu Weave
+		} else if (id == "toolbar-weave-menu-weave-open") {
 			openFileDialog("weave");
+		} else if (id == "toolbar-weave-menu-weave-save") {
+			//showWeaveSaveModal();			
+			var light32 = rgbaToColor32(255,255,255,255);
+			var dark32 = rgbaToColor32(0,0,255,255);
+			var colors32 = new Uint32Array([light32, dark32]);
+			weave2D8ImageSave(globalWeave.weave2D8, colors32);
+		} else if (id == "toolbar-weave-menu-weave-print") {
+			var printWeaveCode = JSON.stringify(zipWeave(globalWeave.weave2D));
+			$("#pd").val(printWeaveCode);
+			$("#ps").val(getWeaveShafts());
+			$("#pn").val(app.project.name);
+			$("#print_weave_form").submit();
+		} else if (id == "toolbar-weave-menu-weave-library-save") {
+			showWeaveSaveToLibraryModal();
+
+		// Weave Library
+		} else if (id == "toolbar-weave-library") {
+			app.wins.show("weaveLibrary", "system");
+		
+		// Edit
+		} else if (id == "toolbar-weave-edit-undo") {
+			globalHistory.gotoPrevStep();
+		} else if (id == "toolbar-weave-edit-redo") {
+			globalHistory.gotoNextStep();		
 
 		// Weave Zoom
 		} else if (id == "toolbar-weave-zoom-in") {
@@ -1167,17 +1018,17 @@ $(document).ready ( function(){
 			g_graphDrawState = 1;
 
 		// Weave Lifting Mode	
-		} else if ( id == "toolbar-lifting-mode-weave"){
+		} else if ( id == "toolbar-weave-lifting-mode-weave"){
 
-			setLiftingMode("weave");
+			switchLiftingMode("weave");
 			
-		} else if ( id == "toolbar-lifting-mode-pegplan"){
+		} else if ( id == "toolbar-weave-lifting-mode-pegplan"){
 
-			setLiftingMode("pegplan");
+			switchLiftingMode("pegplan");
 			
-		} else if ( id == "toolbar-lifting-mode-treadling"){
+		} else if ( id == "toolbar-weave-lifting-mode-treadling"){
 
-			setLiftingMode("treadling");
+			switchLiftingMode("treadling");
 
 		// Weave Draw Style	
 		} else if ( id == "toolbar-weave-draw-style-graph"){
@@ -1194,66 +1045,87 @@ $(document).ready ( function(){
 
 		} else if ( id == "toolbar-weave-autoweave"){
 
-			autoWeaveWin.show();
+			app.wins.show("autoWeave");
 		
-		}
+		// Toolbar Artwork
+		} else if (id == "toolbar-artwork-colors") {
+			artworkColorsWindow.show();
+			artworkColorsWindow.stick();
+			artworkColorsWindow.bringToTop();
+			app.wins.show("weaveLibrary", "system");
+		} else if ( id == "toolbar-artwork-menu-open"){
+			openFileDialog("artwork");
+		} else if (id == "toolbar-artwork-zoom-in") {
+			globalArtwork.setProps(1, "zoom", globalArtwork.zoom + 1);
+		} else if (id == "toolbar-artwork-zoom-out") {
+			globalArtwork.setProps(2, "zoom", globalArtwork.zoom - 1);
+		} else if (id == "toolbar-artwork-zoom-reset") {
+			globalArtwork.setProps(3, "zoom", 0);
 
-	});
-
-	// ----------------------------------------------------------------------------------
-	// Simulation Toolbar
-	// ----------------------------------------------------------------------------------
-	var simulationToolbar = simulationTab.attachToolbar({
-		xml: "xml/toolbar_simulation.xml",
-		icons_path: "img/icons/",
-		onload: function() {
-
-			simulationToolbar.addButton("toolbar-simulation-structure", 0, "Structure", "structure-36.png", "structure-36.png");
-			simulationToolbar.addButton("toolbar-simulation-yarn", 1, "Yarn", "yarn-36.png", "yarn-36.png");
-			simulationToolbar.addButton("toolbar-simulation-behaviour", 2, "Behaviour", "random-36.png", "random-36.png");
-			simulationToolbar.addButton("toolbar-simulation-render", 3, "Render", "simulation-render-36.png", "simulation-render-36.png");
-			simulationToolbar.addButton("toolbar-simulation-save", 4, "Save Image", "save-36.png", "save-36-dis.png");
-			simulationToolbar.addButton("toolbar-simulation-save-image", 5, "Save Image2", "save-36.png", "save-36-dis.png");
-
-			popForms.create({
-				toolbar: simulationToolbar,
-				toolbarButton: "toolbar-simulation-structure",
-				htmlId: "pop-simulation-structure",
-				css: "xform-small",
-				parent: globalSimulation.params,
-				child: "structure"
-			});
-
-			popForms.create({
-				toolbar: simulationToolbar,
-				toolbarButton: "toolbar-simulation-yarn",
-				htmlId: "pop-simulation-yarn",
-				css: "xform-small",
-				parent: globalSimulation.params,
-				child: "yarn"
-			});
-
-			popForms.create({
-				toolbar: simulationToolbar,
-				toolbarButton: "toolbar-simulation-behaviour",
-				htmlId: "pop-simulation-behaviour",
-				css: "xform-small",
-				parent: globalSimulation.params,
-				child: "behaviour"
-			});
-
-		},
-		onClick: function(id) {
-			if (id == "toolbar-simulation-save") {
-				showSimulationSaveModal();
-			} else if (id == "toolbar-simulation-render") {
-				globalSimulation.render(6);
-			} else if ( id == "toolbar-simulation-save-image" ){
-				if ( globalSimulation.created ){
-					saveCanvasAsImage(g_simulationCanvas, "simulation.png");
-				}
+		// Toolbar Simulation
+		} else if (id == "toolbar-simulation-menu-save") {
+			showSimulationSaveModal();
+		} else if (id == "toolbar-simulation-render") {
+			globalSimulation.render(6);
+		} else if ( id == "toolbar-simulation-menu-screenshot" ){
+			if ( globalSimulation.created ){
+				saveCanvasAsImage(g_simulationCanvas, "simulation-screenshot.png");
 			}
+
+		// Toolbar Three
+		} else if (id == "toolbar-three-render") {
+			globalThree.buildFabric();
+		} else if (id == "toolbar-three-menu-screenshot"){
+			if ( globalThree.status.scene ){
+				saveCanvasAsImage(g_threeCanvas, "weave3d-screenshot.png");
+			}
+		} else if ( id == "toolbar-three-reset-view" ){
+			globalThree.resetPosition();			
+		} else if ( id == "toolbar-three-change-view" ){
+			globalThree.changeView();
+		} else if ( id == "toolbar-three-menu-export-gltf" ){
+			globalThree.resetPosition(function(){
+				globalThree.params.showAxes = false;
+				globalThree.axes.visible = false;
+				//globalThree.render();
+				var options = {
+					trs: false,
+					onlyVisible: true,
+					truncateDrawRange: false,
+					binary: false,
+					forceIndices: false,
+					forcePowerOfTwoTextures: false
+				};
+				var exporter = new THREE.GLTFExporter();
+				exporter.parse( globalThree.fabric, function ( gltf ) {
+					if ( gltf instanceof ArrayBuffer ) {
+						saveArrayBufferAsFile( gltf, "scene.glb" );
+					} else {
+						var output = JSON.stringify( gltf, null, 2 );
+						saveStringAsFile( output, "weave3d.gltf" );
+					}
+				}, options );
+			});
+			
+		// Toolbar Model
+		} else if ( id == "toolbar-model-menu-screenshot" ){
+			if ( globalModel.sceneCreated ){
+				saveCanvasAsImage(g_modelCanvas, "model3d-screenshot.png");
+			}
+		} else if ( id == "toolbar-model-change-view" ){
+			globalModel.changeView();
+		} else if ( id == "toolbar-model-models" ){
+			app.wins.show("modelLibrary", "system");
+		} else if ( id == "toolbar-model-textures" ){
+			app.wins.show("materialLibrary", "system");
+		
+		// Toolbar Application
+		} else if (id == "toolbar-app-about") {
+			showModalWindow("About", "about-modal");
+		} else if (id == "toolbar-app-debug") {
+			debugWin.show();
 		}
+
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -1265,49 +1137,9 @@ $(document).ready ( function(){
 
 		globalSelection.clear_old(3);
 
-		if (id == "palette_generate_random") {
-
-			app.palette.setRandom();
-
-		} else if (id == "palette_set_default") {
-
-			app.palette.setDefault();
-
-		} else if ( id == "palette_sort_hue" ){
-
-			app.palette.sortBy("hue");
-
-		} else if (id == "weave_clear") {
+		if (id == "weave_clear") {
 
 			modify2D8("weave", "clear");
-
-		} else if (id == "weave_open") {
-
-			openFileDialog("weave");
-
-		} else if (id == "weave_library") {
-
-			showWeaveLibraryModal();
-
-		} else if (id == "weave_save") {
-
-			//showWeaveSaveModal();			
-			var light32 = rgbaToColor32(255,255,255,255);
-			var dark32 = rgbaToColor32(0,0,255,255);
-			var colors32 = new Uint32Array([light32, dark32]);
-			weave2D8ImageSave(globalWeave.weave2D8, colors32);
-			
-		} else if (id == "weave_print") {
-
-			var printWeaveCode = JSON.stringify(zipWeave(globalWeave.weave2D));
-			$("#pd").val(printWeaveCode);
-			$("#ps").val(getWeaveShafts());
-			$("#pn").val(g_projectName);
-			$("#print_weave_form").submit();
-
-		} else if (id == "weave_save_library") {
-
-			showWeaveSaveToLibraryModal();
 
 		} else if (id == "weave_zoom_in") {
 
@@ -1393,10 +1225,6 @@ $(document).ready ( function(){
 
 			modify2D8("weave", "shuffle_ends");
 
-		} else if (id == "artwork_open") {
-
-			openFileDialog("artwork");
-
 		} else if (id == "pattern_shift_left") {
 
 			globalPattern.shift("left");
@@ -1461,6 +1289,10 @@ $(document).ready ( function(){
 
 			showPatternTileModal();
 
+		} else if (id == "pattern_scale") {
+
+			showPatternScaleModal();
+
 		} else if (id == "pattern_tile_weft") {
 
 			modifyPattern("tile_weft");
@@ -1472,107 +1304,55 @@ $(document).ready ( function(){
 		} else if (id == "weave_tools_twill") {
 
 			showWeaveTwillModal();
-
-		} else if (id == "project_new") {
-
-			showProjectNewModal();
-
-		} else if (id == "project_library") {
-
-			showProjectLibraryModal();
-
-		} else if (id == "project_save") {
-
-			showProjectSaveModal();
-
-		} else if (id == "project_save_library"){
-
-			showProjectSaveToLibraryModal();
-
-		} else if (id == "project_import_code") {
-
-			showProjectCodeImportModal();
-
-		} else if (id == "project_open") {
-
-			openFileDialog("project");
-
-		} else if (id == "project_properties") {
-
-			showProjectPropertiesModal();
-
-		} else if (id == "project_print") {
-
-			printProject();
-
-		} else if (id == "yarn_count_set_all") {
-
-			showYarnCountSetModal("all");
-
+			
 		} else if (id == "simulation-save") {
 
 			showSimulationSaveModal();
 
-		} else if (id == "about") {
-
-			showModalWindow("About", "about-modal");
-
 		} else if (id == "menu_main_tieup_clear") {
 
 			newTieup = newArray2D(2, 2, 1);
-			globalWeave.setGraph2D8("tieup", newTieup);
+			globalWeave.setGraph(0, "tieup", newTieup);
 
 		} else if (id == "menu_main_threading_clear") {
 
 			newThreading = newArray2D(2, 2, 1);
-			globalWeave.setGraph2D8("threading", newThreading);
+			globalWeave.setGraph(0, "threading", newThreading);
 
 		} else if (id == "menu_main_treadling_clear") {
 
 			newTreadling = newArray2D(2, 2, 1);
-			globalWeave.setGraph2D8("lifting", newTreadling);
+			globalWeave.setGraph(0, "lifting", newTreadling);
 
 		} else if (id == "menu_main_treadling_flip_vertical") {
 
 			newTreadling = globalWeave.lifting2D8.flip2D8("y");
-			globalWeave.setGraph2D8("lifting", newTreadling);
+			globalWeave.setGraph(0, "lifting", newTreadling);
 
 		} else if (id == "menu_main_treadling_flip_horizontal") {
 
 			newTreadling = globalWeave.lifting2D8.flip2D8("x");
-			globalWeave.setGraph2D8("lifting", newTreadling);
+			globalWeave.setGraph(0, "lifting", newTreadling);
 
 		} else if (id == "menu_main_threading_flip_vertical") {
 
 			newThreading = globalWeave.threading2D8.flip2D8("y");
-			globalWeave.setGraph2D8("threading", newThreading);
+			globalWeave.setGraph(0, "threading", newThreading);
 
 		} else if (id == "menu_main_threading_flip_horizontal") {
 
 			newThreading = globalWeave.threading2D8.flip2D8("x");
-			globalWeave.setGraph2D8("threading", newThreading);
+			globalWeave.setGraph(0, "threading", newThreading);
 
 		} else if (id == "menu_main_threading_copy_to_treadling") {
 
 			newTreadling = globalWeave.threading2D8.rotate2D8("l").flip2D8("x");
-			globalWeave.setGraph2D8("lifting", newTreadling);
+			globalWeave.setGraph(0, "lifting", newTreadling);
 
 		} else if (id == "menu_main_treadling_copy_to_threading") {
 
 			newThreading = globalWeave.lifting2D8.rotate2D8("r").flip2D8("y");
-			globalWeave.setGraph2D8("threading", newThreading);
-
-		} else if ( id == "menu-main-debug-window"){
-
-			debugWin.show();
-
-		} else if (id == "menu-main-edit-undo") {
-
-			globalHistory.gotoPrevStep();
-
-		} else if (id == "menu-main-edit-redo") {
-
-			globalHistory.gotoNextStep();
+			globalWeave.setGraph(0, "threading", newThreading);
 
 		}
 
@@ -1626,12 +1406,12 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function showWeaveOpenModal(){
 		showModalWindow("Open Weave", "weave-open-modal");
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
-			var buttonIndex = $("#" + g_modalWinId + " .action-btn").index(this);
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
+			var buttonIndex = $("#" + app.wins.activeModalId + " .action-btn").index(this);
 			if (e.which === 1 && g_fileLoaded) {
 				g_fileLoaded = false;
 				if ( buttonIndex === 0 ){
-					globalWeave.lockThreading(false);
+					//globalWeave.lockThreading(false);
 					globalWeave.set(29, g_weaveArray_imported);
 				} else if ( buttonIndex == 1 ){
 					globalSelection.action = "copy";
@@ -1653,9 +1433,9 @@ $(document).ready ( function(){
 
 		showModalWindow("Artwork Color: "+artworkColorIndex, "artwork-weave-open-modal");
 		
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
-			var buttonIndex = $("#" + g_modalWinId + " .action-btn").index(this);
+			var buttonIndex = $("#" + app.wins.activeModalId + " .action-btn").index(this);
 
 			if (e.which === 1 && g_fileLoaded) {
 
@@ -1663,7 +1443,7 @@ $(document).ready ( function(){
 
 				if ( buttonIndex === 0 ){
 				
-					globalWeave.lockThreading(false);
+					//globalWeave.lockThreading(false);
 					
 					applyWeaveToArtworkColor(g_artworkWeaveArray_imported, artworkColorIndex, 0, 0);
 
@@ -1738,118 +1518,7 @@ $(document).ready ( function(){
 				}
 			}
 		}
-		globalWeave.setGraph2D8("weave", res2D8);
-	}
-
-	// ----------------------------------------------------------------------------------
-	// Show Weave Library
-	// ----------------------------------------------------------------------------------
-	function showWeaveLibraryModal() {
-
-		weaveLibraryWin.show();
-		renderWeaveLibraryData("system", globalWeaves.system);
-		/*
-		$.ajax({
-			url: "php/weave-library.php",
-			type: "POST",
-			data: {
-				tv: "<?php echo($timeVariable); ?>",
-				rv: "Boston"
-			},
-			cache: false,
-			success: function(d) {
-				if (d) {
-					$("#weave-library-system").html(d);
-				}
-			}
-		});
-		*/
-	}
-
-	var globalWeaves = {
-		selected : [],
-		system : [
-
-			[1, "Warp Float", "uu_uu"],
-			[2, "Weft Float", "dd_dd"],
-			[3, "Plain", "ud_du"],
-			[4, "Matt 2/2", "2u2d_2u2d_2d2u_2d2u"],
-
-			[5, "Twill 2/1 Z", "2ud_d2u_udu"],
-			[6, "Twill 2/1 S", "udu_d2u_2ud"],
-
-			[7, "Twill 1/2 Z", "2du_u2d_dud"],
-			[8, "Twill 1/2 S", "dud_u2d_2du"],
-
-			[9, "Twill 3/1 Z", "d3u_ud2u_2udu_3ud"],
-			[10, "Twill 3/1 S", "3ud_2udu_ud2u_d3u"],
-
-			[11, "Twill 1/3 Z", "u3d_du2d_2dud_3du"],
-			[12, "Twill 1/3 S", "3du_2dud_du2d_u3d"],
-
-			[13, "Twill 4/1 Z", "d4u_ud3u_2ud2u_3udu_4ud"],
-			[14, "Twill 4/1 S", "4ud_3udu_2ud2u_ud3u_d4u"],
-
-			[15, "Twill 1/4 Z", "u4d_du3d_2du2d_3dud_4du"],
-			[16, "Twill 1/4 S", "4du_3dud_2du2d_du3d_u4d"],
-
-			[17, "Twill 2/2 Z", "2u2d_d2ud_2d2u_u2du"],
-			[18, "Twill 2/2 S", "u2du_2d2u_d2ud_2u2d"],
-
-			[19, "Twill 3/3 Z", "3u3d_d3u2d_2d3ud_3d3u_u3d2u_2u3du"],
-			[20, "Twill 3/3 S", "2u3du_u3d2u_3d3u_2d3ud_d3u2d_3u3d"],
-			
-			[21, "Satin 4/1 Z", "ud3u_3udu_d4u_2ud2u_4ud"],
-			[22, "Satin 4/1 S", "d4u_3udu_ud3u_4ud_2ud2u"],
-			[23, "Sateen 1/4 Z", "u4d_3dud_du3d_4du_2du2d"],
-			[24, "Sateen 1/4 S", "2du2d_4du_du3d_3dud_u4d"],
-
-			[25, "Herringbone 8x4", "2u2d_d2ud_2d2u_u2du_d2ud_2u2d_u2du_2d2u"],
-			[26, "Diamond 8x8", "ud5ud_dud3udu_udududud_2udududu_3udud2u_2udududu_udududud_dud3udu"],
-
-			[27, "Diamond 10x10 Weft", "u9d_du7du_2du5dud_3du3du2d_4dudu3d_5du4d_4dudu3d_3du3du2d_2du5dud_du7du"],
-			[28, "Diamond 10x10 Warp", "d9u_ud7ud_2ud5udu_3ud3ud2u_4udud3u_5ud4u_4udud3u_3ud3ud2u_2ud5udu_ud7ud"],
-
-			[29, "Mockleno 6x6", "ududud_3d3u_ududud_dududu_3u3d_dududu"],
-			[30, "Mockleno 10x10", "dududududu_5u5d_dududududu_5u5d_dududududu_ududududud_5d5u_ududududud_5d5u_ududududud"],
-
-			[31, "Dobby 01", "11udu11d_10u2d2u10d_9u3d3u9d_8u4d4u8d_7u5d5u7d_2(6u6d)_5u7d7u5d_4u8d8u4d_3u9d9u3d_2u10d10u2d_u11d11ud_12d12u_12u12d_d11u11du_2d10u10d2u_3d9u9d3u_4d8u8d4u_5d7u7d5u_2(6d6u)_7d5u5d7u_8d4u4d8u_9d3u3d9u_10d2u2d10u_11dud11u"],
-			[32, "Dobby 02", "6udu11dud5u_5ududu9dudud4u_4udududu7dududud3u_3ududududu5dudududud2u_2udududududu3dudududududu_ududududududududududududud_dududududududududududududu_ududududududududududududud_dududududududududududududu_2dududududud3udududududud_3dudududud5ududududu2d_4dududud7udududu3d_5dudud9ududu4d_6dud11udu5d_5dudud9ududu4d_4dududud7udududu3d_3dudududud5ududududu2d_2dududududud3udududududud_dududududududududududududu_ududududududududududududud_dududududududududududududu_ududududududududududududud_2udududududu3dudududududu_3ududududu5dudududud2u_4udududu7dududud3u_5ududu9dudud4u"],
-
-			[33, "Spider 01", "dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududud17ududududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_8udududududududud9u_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud_dududu3dududududududu3dudududu_udududududududududududududududud"],
-			[34, "Spider 02", "8ududududu_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududud9u_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud_dududu3dududu2d_udududududududud"]
-		],
-		private : [],
-		shared : [],
-		public : [],
-		local : []
-	};
-
-	function renderWeaveLibraryData(libraryId, data = []){
-
-		var w2D8, wDataURL;
-
-		var libraryList = $("#weave-library-"+libraryId + " .weave-library-list");
-
-		libraryList.html("");
-
-		data.forEach(function(v, i) {
-
-			var id = v[0];
-			var name = v[1];
-			var code = v[2];
-			var index = i;
-			w2D8 = weaveTextToWeave2D8(code);
-			wDataURL = weave2D8ToDataURL(w2D8, 50, 50, globals.upColor32, 4, 4);
-
-			$("<li data-weave-library="+libraryId+" data-weave-index="+index+">")
-				.append($("<div>", {class: "img-thumb"}).css({"background-image": "url(\"" + wDataURL + "\")",}))
-				.append($("<div>", {class: "txt-id"}).text(id))
-				.append($("<div>", {class: "txt-title"}).text(name))
-				.append($("<div>", {class: "txt-info"}).text(w2D8.length + " \xD7 " + w2D8[0].length))
-				.appendTo(libraryList);
-		});
-
+		globalWeave.setGraph(0, "weave", res2D8);
 	}
 
 	var g_colorWeaveSelected = {
@@ -1858,159 +1527,92 @@ $(document).ready ( function(){
 		name : false
 	};
 
-	$("<div>", {id: "weave-library-system", class: "weave-library-tab"})
-	.append($("<ul>", { class: "weave-library-list"}))
-	.appendTo("#noshow");
+	$(document).on("click", ".library-list li", function(evt){
 
-	$("<div>", {id: "weave-library-private", class: "weave-library-tab"})
-	.append($("<ul>", { class: "weave-library-list"}))
-	.appendTo("#noshow");
-
-	$("<div>", {id: "weave-library-shared", class: "weave-library-tab"})
-	.append($("<ul>", { class: "weave-library-list"}))
-	.appendTo("#noshow");
-
-	$(document).on("click", ".weave-library-list li", function(evt){
-
-		$(this).siblings("li").removeClass("innerShadowBlue");
-		$(this).addClass("innerShadowBlue");
-
-		var weaveLibrary = $(this).attr("data-weave-library");
-		var weaveIndex = $(this).attr("data-weave-index");
-		globalWeaves.selected = globalWeaves[weaveLibrary][weaveIndex];
-		// g_colorWeaveSelected.weave = weaveTextToWeave2D8(globalSystemWeaves[weaveId]);
-		// applyWeave2D8ToArtworkColor(colorWeave2D8, artworkColorIndex, weaveXOffset = 0, weaveYOffset = 0)
+		$(this).attr("status", "selected").siblings("li").attr("status", "unselected");
+		var win = $(this).parent().attr("data-win");
+		var tab = $(this).parent().attr("data-tab");
+		var itemId = $(this).attr("data-item-id");
+		app.wins[win].selected = {tab: tab, id: itemId};
 
 	});
 
-	$(document).on("dblclick", ".weave-library-list li", function(evt){
+	$(document).on("dblclick", ".library-list li", function(evt){
 
-		if ( app.tabs.active == "weave" && artworkColorsWindow.isHidden() ){
-			var weaveLibrary = $(this).attr("data-weave-library");
-			var weaveIndex = $(this).attr("data-weave-index");
-			globalWeaves.selected = globalWeaves[weaveLibrary][weaveIndex];
-			var selectedWeave = weaveTextToWeave2D8(globalWeaves.selected[2]);
-			globalWeave.setGraph2D8("weave", selectedWeave);
+		var win = $(this).parent().attr("data-win");
+		var tab = $(this).parent().attr("data-tab");
+		var itemId = $(this).attr("data-item-id");
+		
+		if ( win == "weaveLibrary" && app.tabs.active == "weave" && artworkColorsWindow.isHidden() ){
+			app.wins[win].selected = {tab: tab, id: itemId};
+			var sObj = app.wins.getTabItemById("weaveLibrary", tab, itemId);
+			var txtWeave = sObj.weave;
+			var weave2D8 = weaveTextToWeave2D8(txtWeave);
+			globalWeave.setGraph(0, "weave", weave2D8);
+		
+		} else if ( win == "modelLibrary" && app.tabs.active == "model" ){
+
+			var item = app.wins.getTabItemById("modelLibrary", tab, itemId);
+			app.wins[win].selected = {tab: tab, item: item};
+			globalModel.setModel();
+		
 		}
 
 	});
-
-	var weaveLibraryWin = dhxWins.createWindow({
-	    id:"weaveLibraryWin",
-	    left:100,
-	    top:100,
-	    width:458 + 16,
-	    height:320 + 41,
-	    center:true,
-	    move:true,
-	    park:true,
-	    resize:false,
-	    modal: false,
-	    caption: "Weave Library",
-	    header:true
-	});
-
-	weaveLibraryWin.stick();
-	weaveLibraryWin.bringToTop();
-	weaveLibraryWin.button("minmax").hide();
-
-	var weaveLibraryTabbar = weaveLibraryWin.attachTabbar({
-		tabs: [
-			{ id: "a1", text: "System", active: true },
-			{ id: "a2", text: "Private" },
-			{ id: "a3", text: "Shared" }
-		]
-	});
-	weaveLibraryTabbar.setArrowsMode("auto");
-
-	weaveLibraryTabbar.tabs("a1").attachObject("weave-library-system");
-	weaveLibraryTabbar.tabs("a2").attachObject("weave-library-private");
-	weaveLibraryTabbar.tabs("a3").attachObject("weave-library-shared");
-
-	weaveLibraryWin.button("close").attachEvent("onClick", function() {
-		weaveLibraryWin.hide();
-	});
-	weaveLibraryWin.hide();
 
 	// ----------------------------------------------------------------------------------
 	// Modal Window
 	// ----------------------------------------------------------------------------------
 	var modalWindow;
 
-	function showModalWindow(modalTitle, modalObject, modalWidth, modalHeight) {
+	function showModalWindow(modalTitle, modalObject, modalWidth = 360, modalHeight = 270) {
 
-		g_modalWinId = modalObject;
-		modalWidth = modalWidth || 360;
-		modalHeight = modalHeight || 270;
-		
-		$("#" + modalObject + " .xmodal").css({width:modalWidth, height:modalHeight});
-		
-		if ( $("#" + modalObject + " .xmodal").hasClass("xsmall")){
+		// app.wins.activeModalId = modalObject;
 
-			$("#" + modalObject + " .xmodal-content").css({
-				width:modalWidth,
-				height:modalHeight-47,
-				"padding-left":0,
-				"padding-right":0,
-				"padding-top":0,
-				"padding-bottom":0
-			});
+		// var parent = $("#" + modalObject);
+				
+		// var modalWindow = dhxWins.createWindow({
+		//     id:"modalWindow",
+		//     left:100,
+		//     top:100,
+		//     width:modalWidth + 16,
+		//     height:modalHeight + 41,
+		//     center:true,
+		//     move:true,
+		//     park:false,
+		//     resize:false,
+		//     modal: false,
+		//     caption: modalTitle,
+		//     header:true
+		// });
 
-		} else if ( $("#" + modalObject + " .xmodal").hasClass("xlarge")){
-			
-			$("#" + modalObject + " .xmodal-content").css({
-				width:modalWidth-38,
-				height:modalHeight-40-47,
-				"padding-top":14,
-				"padding-right":19,
-				"padding-bottom":20,
-				"padding-left":19
-			});
+		// modalWindow.stick();
+		// modalWindow.bringToTop();
 
-		}
+		// modalWindow.button("minmax").hide();
+		// modalWindow.button("park").hide();
+		// modalWindow.attachObject(modalObject);
 
-		modalWindow = dhxWins.createWindow({
-		    id:"modalWindow",
-		    left:100,
-		    top:100,
-		    width:modalWidth + 16,
-		    height:modalHeight + 41,
-		    center:true,
-		    move:true,
-		    park:false,
-		    resize:false,
-		    modal: false,
-		    caption: modalTitle,
-		    header:true
-		});
+		// modalWindow.button("close").attachEvent("onClick", function() {
+		// 	hideModalWindow();
+		// });
 
-		modalWindow.stick();
-		modalWindow.bringToTop();
+		// parent.find(".xclose").off("click");
 
-		modalWindow.button("minmax").hide();
-		modalWindow.button("park").hide();
-		modalWindow.attachObject(modalObject);
+		// clearModalNotifications();
 
-		modalWindow.button("close").attachEvent("onClick", function() {
-			hideModalWindow();
-		});
-
-		$("#" + modalObject + " .action-btn").off("click");
-
-		clearModalNotifications();
+		// parent.find(".xclose").click(function() {
+		// 	hideModalWindow();
+		// 	return false;
+		// });
 
 	}
 
-	$(".xmodal .cancel-btn").click(function() {
-		hideModalWindow();
-		return false;
-	});
-
 	function hideModalWindow() {
-		$("#" + g_modalWinId + " .action-btn").off("click");
-		g_modalWinId = false;
-		modalWindow.detachObject();
-		modalWindow.close();
+		// $("#" + app.wins.activeModalId + " .xclose").off("click");
+		// app.wins.activeModalId = false;
+		// modalWindow.detachObject();
+		// modalWindow.close();
 	}
 
 	//showFloatingWindow();
@@ -2043,7 +1645,7 @@ $(document).ready ( function(){
 
 		showModalWindow("Import Project Code", "project-code-import-modal");
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			clearModalNotifications();
 
@@ -2085,7 +1687,7 @@ $(document).ready ( function(){
 		$("#pattern-code-warp").val(warpPattern);
 		$("#pattern-code-weft").val(weftPattern);
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			clearModalNotifications();
 
@@ -2128,6 +1730,10 @@ $(document).ready ( function(){
 		} else if ( target == "artwork" ){
 
 			$("#artwork-file-open").val("").trigger("click");
+
+		} else if ( target == "image" ){
+
+			$("#image-file-open").val("").trigger("click");
 			
 		} else if ( target == "project" ){
 
@@ -2143,14 +1749,12 @@ $(document).ready ( function(){
 
 	function showProjectPropertiesModal() {
 		showModalWindow("Project Properties", "project-properties-modal");
-		$("#project-properties-name").val(g_projectName);
-		$("#project-properties-notes").val(g_projectNotes);
+		$("#project-properties-name").val(app.project.name);
+		$("#project-properties-notes").val(app.project.notes);
 		$("#project-properties-modal .action-btn").click(function(e) {
-			var projectName = $("#project-properties-name").val();
 			if (e.which === 1) {
-				var projectNotes = $("#project-properties-notes").val();
-				setProjectName(projectName);
-				g_projectNotes = projectNotes;
+				app.project.setName($("#project-properties-name").val());
+				app.project.notes = $("#project-properties-notes").val();
 				$("#project-properties-notes").val(projectNotes);
 				store.session(app.stateStorageID, app.getState(1));
 				return false;
@@ -2164,47 +1768,24 @@ $(document).ready ( function(){
 	function showProjectNewModal() {
 		
 		showModalWindow("New Project", "project-new-modal");
-		notify("warning", "Starting a new project will reset Palette, Weave, Pattern and View Parameters.");
-
+		notify("warning", "Starting a new project will clear Weave, Threading, Lifting, Tieup and Patterns.");
 		var currentDate = getDate("short");
-
 		$("#project-new-name").val("Untitled Project");
 		$("#project-new-created-date").val(currentDate);
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .xprimary").click(function(e) {
 			var projectName = $("#project-new-name").val();
 			if (e.which === 1) {
-				//loadDefaultPalette(false);
 				globalPattern.set(3, "warp", "a", false);
 				globalPattern.set(4, "weft", "b", false);
-				globalWeave.setGraph2D8("weave", weaveTextToWeave2D8("UD_DU"), false);
-				// setSimulationParameters(2, 2, 0, 0);
-				setBackgroundColor("Z", false);
-				setProjectName(projectName, false);
-				g_projectNotes = "";
+				globalWeave.setGraph(0, "weave", weaveTextToWeave2D8("UD_DU"));
+				app.project.setName(projectName);
+				app.project.notes = "";
 				$("#project-properties-notes").val("");	
 				hideModalWindow();
 				return false;
 			}
 		});
-	}
 
-	function setProjectName(text, history = true){
-		var oldProjectName = g_projectName;
-		text = text.replace(/[^a-z0-9_-]+|\s+/gmi, " ");
-		text = text.replace(/ +(?= )/g,"");
-		text = text.trim();
-		if ( text === ""){
-			text = "Untitled Project";
-		}
-		g_projectName = text;
-		//dhxMain.setText(g_appName + " v" + g_appVersion + " - " + text);
-
-		if (history) {
-			if ( g_projectName !== oldProjectName){
-				globalHistory.record(1);
-			}
-		}
-		
 	}
 
 	// -------------------------------------------------------------
@@ -2217,11 +1798,11 @@ $(document).ready ( function(){
 		var nwei = $("#newWeaveEndsInput input");
 		var nwpi = $("#newWeavePicksInput input");
 		nwei.val(2);
-		nwei.attr("data-max", g_weaveLimitMax);
+		nwei.attr("data-max", app.limits.maxWeaveSize);
 		nwpi.val(2);
-		nwpi.attr("data-max", g_weaveLimitMax);
+		nwpi.attr("data-max", app.limits.maxWeaveSize);
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -2240,15 +1821,15 @@ $(document).ready ( function(){
 		var wthi = $("#weaveTileHorizontalInput input");
 		var wtvi = $("#weaveTileVerticalInput input");
 		wthi.val(1);
-		wthi.attr("data-max", Math.floor(g_weaveLimitMax/globalWeave.ends));
+		wthi.attr("data-max", Math.floor(app.limits.maxWeaveSize/globalWeave.ends));
 		wtvi.val(1);
-		wtvi.attr("data-max", Math.floor(g_weaveLimitMax/globalWeave.picks));
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		wtvi.attr("data-max", Math.floor(app.limits.maxWeaveSize/globalWeave.picks));
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 			if (e.which === 1) {
 				var newWeaveWidth = globalWeave.ends * wthi.val();				
 				var newWeaveHeight = globalWeave.picks * wtvi.val();
 				var newWeaveArray = arrayTileFill(globalWeave.weave2D8, newWeaveWidth, newWeaveHeight);
-				globalWeave.setGraph2D8("weave", newWeaveArray);
+				globalWeave.setGraph(0, "weave", newWeaveArray);
 				hideModalWindow();
 				return false;
 			}
@@ -2260,10 +1841,10 @@ $(document).ready ( function(){
 		var ptpi = $("#patternTileWarpInput input");
 		var ptti = $("#patternTileWeftInput input");
 		ptpi.val(1);
-		ptpi.attr("data-max", Math.floor(g_patternLimit/globalPattern.size("warp")));
+		ptpi.attr("data-max", Math.floor(app.limits.maxPatternSize/globalPattern.size("warp")));
 		ptti.val(1);
-		ptti.attr("data-max", Math.floor(g_patternLimit/globalPattern.size("weft")));
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		ptti.attr("data-max", Math.floor(app.limits.maxPatternSize/globalPattern.size("weft")));
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 			if (e.which === 1) {
 				if ( ptpi.val() > 1){
 					var newWarpPattern = globalPattern.warp.repeat(ptpi.val());
@@ -2282,9 +1863,7 @@ $(document).ready ( function(){
 		});
 	}
 
-	function setLiftingMode(mode, render = true){
-
-		console.log(["setLiftingMode", mode]);
+	function switchLiftingMode(mode, render = true){
 
 		var lastMode = globalWeave.liftingMode;
 		if (lastMode !== mode){
@@ -2292,19 +1871,27 @@ $(document).ready ( function(){
 			if ( mode == "pegplan" && lastMode == "treadling"){
 				globalWeave.convertTreadlingToPegplan(false);
 			} else if ( mode.in("pegplan", "treadling") && lastMode == "weave" ){
-				globalWeave.setPartsFromWeave();
+				globalWeave.setPartsFromWeave(1);
 			} else if ( mode == "treadling" && lastMode == "pegplan" ){
 				globalWeave.convertPegplanToTieupTreadling(false);
 			}
-			setToolbarDropDown(weaveToolbar, "toolbar-lifting-mode", "toolbar-lifting-mode-"+mode);
+			setToolbarDropDown(_toolbar, "toolbar-weave-lifting-mode", "toolbar-weave-lifting-mode-"+mode);
 
-			app.saveConfigurations(2);
+			app.config.save(2);
 
 			if ( render ){
 				globalHistory.record(2);
-				createWeaveLayout(15, render);
+				createWeaveLayout(1, render);
 			}
 		}
+
+	}
+
+	function setLiftingMode(mode, render){
+
+		globalWeave.liftingMode = mode;
+		createWeaveLayout(2, render);
+		app.config.save(2);
 
 	}
 
@@ -2319,18 +1906,18 @@ $(document).ready ( function(){
 		var sppi = $("#scaleWarpPatternInput input");
 		var sfpi = $("#scaleWeftPatternInput input");
 
-		var warpScaleMaxLimit = Math.floor( g_patternLimit / globalPattern.size("warp") * 100);
-		var weftScaleMaxLimit = Math.floor( g_patternLimit / globalPattern.size("weft") * 100);
+		var warpScaleMaxLimit = Math.floor( app.limits.maxPatternSize / globalPattern.size("warp") * 100);
+		var weftScaleMaxLimit = Math.floor( app.limits.maxPatternSize / globalPattern.size("weft") * 100);
 
-		sppi.attr("data-max", g_patternLimit);
+		sppi.attr("data-max", app.limits.maxPatternSize);
 		sppi.attr("data-min", 1);
-		sfpi.attr("data-max", g_patternLimit);
+		sfpi.attr("data-max", app.limits.maxPatternSize);
 		sfpi.attr("data-min", 1);
 
 		sppi.val(globalPattern.size("warp"));
 		sfpi.val(globalPattern.size("weft"));
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -2355,7 +1942,7 @@ $(document).ready ( function(){
 				});
 
 				globalPattern.set(7, "warp", newWarpPattern, false);
-				globalPattern.set(8, "weft", newWeftPattern, false);
+				globalPattern.set(8, "weft", newWeftPattern, true);
 
 				//validateSimulation(7);
 				hideModalWindow();
@@ -2371,12 +1958,10 @@ $(document).ready ( function(){
 	// Notification
 	// ----------------------------------------------------------------------------------
 	function notify(notifyType, notifyMsg) {
-
-		if ( !g_modalWinId ){
+		if ( !app.wins.activeModalId ){
 			showModalWindow("Error", "error-modal");
 		}
-
-		var targetObj = $("#"+g_modalWinId+" .xmodal-content");
+		var targetObj = $("#"+app.wins.activeModalId+" .xcontent");
 		targetObj.append("<div class=\"xalert " + notifyType + "\">" + notifyMsg + "</div>");
 		targetObj.scrollTop(targetObj[0].scrollHeight);
 	}
@@ -2477,50 +2062,12 @@ $(document).ready ( function(){
 
 	function showProjectSaveModal() {
 
-		// Handle vendor prefixes.
-		window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
-
-		if (window.requestFileSystem) {
-
-			showModalWindow("Save Project File", "project-save-file-modal");
-			
-			if( $("#project-save-file-name").val() === ""){
-				
-				$("#project-save-file-name").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_project.txt");
-			
-			}
-			
-			$("#project-save-file-modal .action-btn").click(function(e) {
-
-				if (e.which === 1) {
-
-					clearModalNotifications();
-
-					var projectFileName = $("#project-save-file-name").val();
-					
-
-					if (projectFileName.match(/^[a-zA-Z]+[0-9a-zA-Z._-]+$/i)) {
-
-						var file = new File([app.getState(5)], projectFileName, {type: "text/plain;charset=utf-8"});
-						saveAs(file);
-						hideModalWindow();
-
-					} else {
-
-						notify("error", "Invalid File Name !");
-						$("#project-save-file-name").select();
-
-					}
-
-				}
-				return false;
-			});
-
+		if ( window.requestFileSystem || window.webkitRequestFileSystem ) {
+			var file = new File([app.getState(5)], "project.txt", {type: "text/plain;charset=utf-8"});
+			saveAs(file);
 		} else {
-
 			showModalWindow("Downlaod Project", "project-code-save-modal");
 			$("#project-code-save-textarea").val(app.getState(4));
-
 		}
 
 	}
@@ -2532,7 +2079,7 @@ $(document).ready ( function(){
 		showModalWindow("Save Project File", "project-save-file-modal");
 
 		if( $("#project-save-file-name").val() === ""){
-			$("#project-save-file-name").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_project");
+			$("#project-save-file-name").val(app.project.name.replace(/\W+/g, "_").toLowerCase()+"_project");
 		}
 
 		$("#project-save-file-modal .action-btn").click(function(e) {
@@ -2571,7 +2118,7 @@ $(document).ready ( function(){
 		} else {
 
 			showModalWindow("Save Simulation as Image", "simulation-save-modal");
-			//$("#simulation-save-file-name-input").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_simulation.png");
+			//$("#simulation-save-file-name-input").val(app.project.name.replace(/\W+/g, "_").toLowerCase()+"_simulation.png");
 			$("#simulation-x-repeats-input").val(1);
 			$("#simulation-y-repeats-input").val(1);
 			$("#simulation-width-pixels-input").val(g_simulationWidth);
@@ -2579,7 +2126,7 @@ $(document).ready ( function(){
 			$("#simulation-width-ends-input").val(getWeaveColorEnds());
 			$("#simulation-height-picks-input").val(getWeaveColorPicks());
 
-			$("#" + g_modalWinId + " .action-btn").click(function(e) {
+			$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 				if (e.which === 1) {
 
@@ -2693,7 +2240,7 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function showWeaveSaveModal() {
 		showModalWindow("Save Weave File", "weave-save-file-modal");
-		$("#weave-save-file-name-input").val(g_projectName.replace(/\W+/g, "_").toLowerCase()+"_weave");
+		$("#weave-save-file-name-input").val(app.project.name.replace(/\W+/g, "_").toLowerCase()+"_weave");
 		$("#weave-save-file-size").val(globalWeave.ends + " x " + globalWeave.picks);
 		$("#weave-save-file-shafts").val(getWeaveShafts());
 		$("#weave-save-file-modal .action-btn").click(function(e) {
@@ -2717,152 +2264,9 @@ $(document).ready ( function(){
 		});
 	}
 
-	// Checkbox Events --------------------------------
-	layoutMenu.attachEvent("onCheckboxClick", function(id, state, zoneId, cas) {
-		if (id == "simulation-live-update") {
-			if (!state) {
-				//validateSimulation(8, false, true);
-			}
-		} else if ( id == "weave-auto-trim"){
-
-			globalWeave.autoTrim = !state;
-			if (globalWeave.autoTrim) {
-				globalWeave.setGraph2D8("weave", globalWeave.weave2D8);
-			}
-
-		} else if ( id == "view-seamless-weave"){
-
-			globalWeave.seamlessWeave = !state;
-			globalWeave.render2D8(1, "weave");
-			app.saveConfigurations(3);
-
-		} else if ( id == "view-seamless-threading"){
-
-			globalWeave.seamlessThreading = !state;
-			globalWeave.render2D8(1, "threading");
-			app.saveConfigurations(4);
-
-		} else if ( id == "view-seamless-lifting"){
-
-			globalWeave.seamlessLifting = !state;
-			globalWeave.render2D8(1, "lifting");
-			app.saveConfigurations(5);
-
-		} else if ( id == "view-seamless-warp"){
-
-			globalPattern.seamlessWarp = !state;
-			globalPattern.render8(1, "warp");
-			app.saveConfigurations(6);
-
-		} else if ( id == "view-seamless-weft"){
-
-			globalPattern.seamlessWeft = !state;
-			globalPattern.render8(1, "weft");
-			app.saveConfigurations(7);
-
-		}
-
-		return true;
-	});
-
-	// Radio Button Events ----------------------------
-	layoutMenu.attachEvent("onRadioClick", function(group, idChecked, idClicked,
-		zoneId, cas) {
-
-		if (group == "simulation-repeat") {
-
-			if (idClicked == "simulation-repeat-single") {
-
-				simulationToolbar.disableItem("toolbar-simulation-reset-position");
-				g_simulationRepeat = "single";
-
-
-			} else if (idClicked == "simulation-repeat-seamless") {
-
-				simulationToolbar.enableItem("toolbar-simulation-reset-position");
-				g_simulationRepeat = "seamless";
-
-			}
-
-			if (idChecked !== idClicked) {
-				updateSimulationSeamlessRepeat();
-			}
-
-		} else if (group == "weave-style") {
-
-			if (idClicked == "weave-style-black-and-white") {
-
-				g_weaveStyle = "bw";
-
-			} else if (idClicked == "weave-style-colored") {
-
-				g_weaveStyle = "colored";
-
-			}
-
-			if (idChecked !== idClicked) {
-				createWeaveLayout(8);
-			}
-
-		} else if (group == "weave-repeat-opasity") {
-
-			if (idClicked == "weave-repeat-opasity-25") {
-				g_repeatOpasity = 0.25;
-			} else if (idClicked == "weave-repeat-opasity-50") {
-				g_repeatOpasity = 0.50;
-			} else if (idClicked == "weave-repeat-opasity-75") {
-				g_repeatOpasity = 0.75;
-			} else if (idClicked == "weave-repeat-opasity-100") {
-				g_repeatOpasity = 1;
-			}
-			if (idChecked !== idClicked) {
-				globalWeave.render2D8(2);
-				globalPattern.render8(11);
-			}
-
-		}
-
-		return true;
-	});
-
-	// ----------------------------------------------------------------------------------
-	// Resize Weave Group
-	// ----------------------------------------------------------------------------------
-	function resetPatternStyles() {
-		$("#warp-pattern > div").css({
-			"width": g_pointW - g_patternElementPadding * 2,
-			"height": g_patternElementSize - g_patternElementPadding * 2,
-			"border": g_patternElementPadding + "px solid #FFF",
-			"margin-right": g_gridThickness
-		});
-
-		$("#warp-pattern > div:last-child").css({
-			"margin-right": "0px"
-		});
-
-		$("#weft-pattern > div").css({
-			"width": g_patternElementSize - g_patternElementPadding * 2,
-			"height": g_pointW - g_patternElementPadding * 2,
-			"border": g_patternElementPadding + "px solid #FFF",
-			"margin-bottom": g_gridThickness
-		});
-
-		$("#weft-pattern > div:last-child").css({
-			"margin-bottom": "0px"
-		});
-
-	}
-
 	// ----------------------------------------------------------------------------------
 	// Creat Warp & Weft Color Patterns
 	// ----------------------------------------------------------------------------------
-
-	$("#bgcolor-container").click(function() {
-		if (app.palette.selected !== "BL") {
-			setBackgroundColor(app.palette.selected, true);
-		}
-	});
-
 	function randomColors(count) {
 		var hue, saturation, luminosity, hueStep;
 		var colors = [];
@@ -2882,14 +2286,14 @@ $(document).ready ( function(){
 		context: true,
 		xml: "xml/menu_palette.xml",
 		onload: function() {
-			interfaceLoadCheck(8);
+			app.ui.loaded(8);
 		}
 	});
 
 	paletteContextMenu.attachEvent("onBeforeContextMenu", function(zoneId, ev) {
 
 		var element = $("#palette-chip-"+app.palette.rightClicked);
-		var isInPattern = element.find(".warpArrow").is(":visible") || element.find(".weftArrow").is(":visible");
+		var isInPattern = element.find(".arrow-warp").is(":visible") || element.find(".arrow-weft").is(":visible");
 
 		if ( isInPattern ) {
 
@@ -2995,72 +2399,13 @@ $(document).ready ( function(){
 		context: true,
 		xml: "xml/menu_pattern.xml",
 		onload: function() {
-			interfaceLoadCheck(9);
+			app.ui.loaded(9);
 		}
 	});
 
-	patternContextMenu.addContextZone("warp-container");
-	patternContextMenu.addContextZone("weft-container");
 	patternContextMenu.attachEvent("onClick", patternContextMenuClick);
-	patternContextMenu.attachEvent("onHide", function(id) {
-		if ( id === null){
-			patternHighlight.clear();
-		}
-	});
 
 	patternContextMenu.attachEvent("onBeforeContextMenu", function(zoneId, ev) {
-
-		var patternSize, patternSizeLimit, eIndex, insidePattern, element;
-
-		element = g_patternElementUnderRightClick;
-		eIndex = element.index();
-
-		if (zoneId == "warp-pattern") {
-
-			patternSize = globalPattern.size("warp");
-			patternSizeLimit = g_patternLimit;
-
-			patternContextMenu.hideItem("pattern_context_insert_above");
-			patternContextMenu.hideItem("pattern_context_insert_below");
-			patternContextMenu.showItem("pattern_context_insert_left");
-			patternContextMenu.showItem("pattern_context_insert_right");
-
-			insidePattern = eIndex < patternSize ? true : false;
-
-		} else if (zoneId == "weft-pattern") {
-
-			patternSize = globalPattern.size("weft");
-			patternSizeLimit = g_patternLimit;
-
-			patternContextMenu.showItem("pattern_context_insert_above");
-			patternContextMenu.showItem("pattern_context_insert_below");
-			patternContextMenu.hideItem("pattern_context_insert_left");
-			patternContextMenu.hideItem("pattern_context_insert_right");
-
-			insidePattern = eIndex > patternSizeLimit - patternSize - 1 ? true : false;
-
-		}
-
-		if (patternSize < patternSizeLimit) {
-
-			patternContextMenu.setItemEnabled("pattern_context_insert");
-
-		} else {
-
-			patternContextMenu.setItemDisabled("pattern_context_insert");
-
-		}
-
-		if (insidePattern) {
-
-			return true;
-
-		} else {
-
-			resetPatternStyles();
-			return false;
-
-		}
 
 	});
 
@@ -3069,14 +2414,7 @@ $(document).ready ( function(){
 		var element, parent, parentId, elementIndex, lastElement, colorCode,
 			stripeFirstIndex, stripeLastIndex, yarnSet;
 
-		element = g_patternElementUnderRightClick;
-		parent = element.parent();
-		parentId = parent.attr("id");
-		elementIndex = patternRightClick.threadIndex;
-		colorCode = patternRightClick.colorCode;
-		yarnSet = patternRightClick.yarnSet;
-		threadNum = elementIndex+1;
-		threadi = elementIndex;
+		console.log(id);
 
 		if (id == "pattern_context_delete_single") {
 
@@ -3116,11 +2454,7 @@ $(document).ready ( function(){
 
 		} else if (id == "pattern_context_stripe_resize") {
 
-			showPatternStripeResizeModal(yarnSet, elementIndex);
-
-		} else if (id == "pattern_context_fill_stripe") {
-
-			fillStripe(yarnSet, elementIndex, app.palette.selected);
+			//showPatternStripeResizeModal(yarnSet, elementIndex);
 
 		} else if ( id == "pattern_context_fill"){
 
@@ -3130,26 +2464,29 @@ $(document).ready ( function(){
 
 			patternSelection.startfor("repeat");
 
-		} else if (id == "pattern_context_select_color") {
-
-			app.palette.selectChip(colorCode);
-
-		} else if (id == "pattern_context_stripe_delete") {
-
-			var stripePos = getStripeData(globalPattern[yarnSet], elementIndex);
-			globalPattern.delete(yarnSet, stripePos[0], stripePos[1]);
-
+		} else if ( id == "pattern-code" ){
+			app.wins.show("patternCode");
+		} else if ( id == "pattern-tile" ){
+			app.wins.show("patternTile");
+		} else if ( id == "pattern-scale" ){
+			app.wins.show("patternScale");
+		} else if ( id == "stripe-resize" ){
+			app.wins.show("stripeResize");
+		} else if ( id == "clear-warp"){
+			globalPattern.clear("warp");
+		} else if ( id == "clear-weft"){
+			globalPattern.clear("weft");
+		} else if ( id == "clear-warp-weft"){
+			globalPattern.clear();
+		} else if ( id == "copy-warp-to-weft"){
+			globalPattern.set(29, "weft", globalPattern.warp);
+		} else if ( id == "copy-weft-to-warp"){
+			globalPattern.set(29, "warp", globalPattern.weft);
+		} else if (id == "copy-swap") {
+			var temp = globalPattern.warp;
+			globalPattern.set(31, "warp", globalPattern.weft);
+			globalPattern.set(32, "weft", temp);
 		}
-
-	}
-
-	function fillStripe(yarnSet, memberElementIndex, targetColorCode){
-
-		var stripeData = getStripeData(globalPattern[yarnSet], memberElementIndex);
-		var stripeSize = stripeData[2];
-		var stripeArray = filledArray(app.palette.selected, stripeSize);
-		var newPattern = paste1D_old(stripeArray, globalPattern[yarnSet], stripeData[0]);
-		globalPattern.set(21, yarnSet, newPattern);
 
 	}
 
@@ -3163,14 +2500,14 @@ $(document).ready ( function(){
 		var lasti = stripe[1];
 		var stripeSize = stripe[2];
 		var stripeColor = stripe[3];
-		var maxVal = stripeSize + g_patternLimit - globalPattern.size(yarnSet);
+		var maxVal = stripeSize + app.limits.maxPatternSize - globalPattern.size(yarnSet);
 
 		showModalWindow("Resize Stripe", "stripe-resize-modal", 180, 120);
 		var stripeSizeInput = $("#stripeSizeInput input");
 		stripeSizeInput.val(stripeSize);
 		stripeSizeInput.attr("data-max", maxVal);
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			var newStripeSize = Number(stripeSizeInput.val());
 
@@ -3199,7 +2536,7 @@ $(document).ready ( function(){
 	function showYarnCountSetModal(paletteElements) {
 		showModalWindow("Set Yarn Count", "yarn-count-set-modal", 180, 120);
 		var yarnCountInput = $("#yarnCountInput input");
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 			var newYarnNumber= Number(yarnCountInput.val());
 			if (e.which === 1) {
 				var yarnNumberArray = [newYarnNumber].repeat(52);
@@ -3224,7 +2561,7 @@ $(document).ready ( function(){
 		repeatNumInput.val(1);
 		repeatNumInput.attr("data-max", maxTiles);
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -3297,9 +2634,9 @@ $(document).ready ( function(){
 	function showWeaveTwillModal() {
     
 		showModalWindow("Make Twill", "make-twill-modal", 180, 215);
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
-			var buttonIndex = $("#" + g_modalWinId + " .action-btn").index(this);
+			var buttonIndex = $("#" + app.wins.activeModalId + " .action-btn").index(this);
 
 			if (e.which === 1) {
 
@@ -3309,7 +2646,7 @@ $(document).ready ( function(){
 					var twillDirection = $("#twillDireciton").val();
 					var moveNum = $("#satinMoveNumber").val();
 					var twillWeave = makeTwill(end8, twillDirection, moveNum);
-					globalWeave.setGraph2D8("weave", twillWeave);
+					globalWeave.setGraph(0, "weave", twillWeave);
 
 				}
 
@@ -3377,7 +2714,7 @@ $(document).ready ( function(){
 		context: true,
 		xml: "xml/menu_selection.xml",
 		onload: function() {
-			interfaceLoadCheck(10);
+			app.ui.loaded(10);
 		}
 	});
 
@@ -3425,7 +2762,7 @@ $(document).ready ( function(){
 
 		} else if (id == "selection_context_crop") {
 
-			globalWeave.setGraph2D8("weave", globalSelection.selected);
+			globalWeave.setGraph(0, "weave", globalSelection.selected);
 			globalSelection.clear();
 
 		} else if (id == "selection_context_cancel") {
@@ -3453,7 +2790,7 @@ $(document).ready ( function(){
 		context: true,
 		xml: "xml/menu_weave.xml",
 		onload: function() {
-			interfaceLoadCheck(11);
+			app.ui.loaded(11);
 		}
 	});
 
@@ -3466,7 +2803,7 @@ $(document).ready ( function(){
 
 	weaveContextMenu.attachEvent("onContextMenu", function(zoneId, ev) {
 
-		if ( g_graphTool == "zoom" || g_graphTool == "brush" ){
+		if ( app.tool == "zoom" || app.tool == "brush" ){
 
 			//weaveContextMenu.hideContextMenu();
 
@@ -3474,25 +2811,25 @@ $(document).ready ( function(){
 
 			var weaveArray = globalWeave.weave2D;
 
-			if (weaveArray.length == g_weaveLimitMax) {
+			if (weaveArray.length == app.limits.maxWeaveSize) {
 				weaveContextMenu.setItemDisabled("weave_context_insert_end");
 			} else {
 				weaveContextMenu.setItemEnabled("weave_context_insert_end");
 			}
 
-			if (weaveArray[0].length == g_weaveLimitMax) {
+			if (weaveArray[0].length == app.limits.maxWeaveSize) {
 				weaveContextMenu.setItemDisabled("weave_context_insert_pick");
 			} else {
 				weaveContextMenu.setItemEnabled("weave_context_insert_pick");
 			}
 
-			if (weaveArray.length == g_weaveLimitMax && weaveArray[0].length == g_weaveLimitMax) {
+			if (weaveArray.length == app.limits.maxWeaveSize && weaveArray[0].length == app.limits.maxWeaveSize) {
 				weaveContextMenu.setItemDisabled("weave_context_insert");
 			} else {
 				weaveContextMenu.setItemEnabled("weave_context_insert");
 			}
 
-			if (weaveArray.length == g_weaveLimitMin) {
+			if (weaveArray.length == app.limits.minWeaveSize) {
 				weaveContextMenu.setItemDisabled("weave_context_delete_ends");
 				weaveContextMenu.setItemDisabled("weave_context_flip_horizontal");
 			} else {
@@ -3500,7 +2837,7 @@ $(document).ready ( function(){
 				weaveContextMenu.setItemEnabled("weave_context_flip_horizontal");
 			}
 
-			if (weaveArray[0].length == g_weaveLimitMin) {
+			if (weaveArray[0].length == app.limits.minWeaveSize) {
 				weaveContextMenu.setItemDisabled("weave_context_delete_picks");
 				weaveContextMenu.setItemDisabled("weave_context_flip_vertical");
 			} else {
@@ -3508,13 +2845,13 @@ $(document).ready ( function(){
 				weaveContextMenu.setItemEnabled("weave_context_flip_vertical");
 			}
 
-			if (weaveArray.length == g_weaveLimitMin && weaveArray[0].length == g_weaveLimitMin) {
+			if (weaveArray.length == app.limits.minWeaveSize && weaveArray[0].length == app.limits.minWeaveSize) {
 				weaveContextMenu.setItemDisabled("weave_context_delete");
 				weaveContextMenu.setItemDisabled("weave_context_crop");
 				weaveContextMenu.setItemDisabled("weave_context_fill");
 				weaveContextMenu.setItemDisabled("weave_context_copy");
 				weaveContextMenu.setItemDisabled("weave_context_flip");
-				weaveContextMenu.setItemDisabled("weave_context_shift");
+				weaveContextMenu.setItemDisabled("weave-context-shift");
 				weaveContextMenu.setItemDisabled("weave_context_clear");
 				weaveContextMenu.setItemDisabled("weave_context_inverse");
 			} else {
@@ -3523,7 +2860,7 @@ $(document).ready ( function(){
 				weaveContextMenu.setItemEnabled("weave_context_fill");
 				weaveContextMenu.setItemEnabled("weave_context_copy");
 				weaveContextMenu.setItemEnabled("weave_context_flip");
-				weaveContextMenu.setItemEnabled("weave_context_shift");
+				weaveContextMenu.setItemEnabled("weave-context-shift");
 				weaveContextMenu.setItemEnabled("weave_context_clear");
 				weaveContextMenu.setItemEnabled("weave_context_inverse");
 			}
@@ -3573,7 +2910,7 @@ $(document).ready ( function(){
 
 		} else if (id == "weave_context_clear") {
 
-			globalSelection.startfor("clear");
+			//globalSelection.startfor("clear");
 
 		} else if (id == "weave_context_copy") {
 
@@ -3607,9 +2944,10 @@ $(document).ready ( function(){
 
 			globalSelection.startfor("flip_vertical");
 
-		} else if (id == "weave_context_shift") {
+		} else if (id == "weave-context-shift") {
 
-			globalSelection.startfor("shift");
+			globalWeave.params.graphShiftTarget = "Weave";
+			globalWeave.params.graphShift.pop.show();
 
 		} else if (id == "weave_context_reposition") {
 
@@ -3621,6 +2959,18 @@ $(document).ready ( function(){
 
 		}
 
+	});
+
+	weaveContextMenu.attachEvent("onCheckboxClick", function(id, state, zoneId, cas) {
+
+		if ( id == "weave-context-auto-trim"){
+			globalWeave.autoTrim = !state;
+			if (globalWeave.autoTrim) {
+				globalWeave.setGraph(0, "weave", globalWeave.weave2D8);
+			}
+		}
+
+		return true;
 	});
 
 	// ----------------------------------------------------------------------------------
@@ -3668,39 +3018,25 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	function activateSpinnerCounters(){
 
-		$(".spinner-counter").spinner("delay", 1).spinner("changed", function(e, newVal, oldVal) {
+		$(".spinner-counter").spinner("delay", 200).spinner("changed", function(e, newVal, oldVal) {
 
-			console.log("changed");
+			var domId = $(this).parent().attr("id");
+			activeApply(domId);
 
 		}).spinner("changing", function(e, newVal, oldVal) {
-			if (this.attributes["data-min"] !== undefined){
-				var dmin = this.attributes["data-min"].value;
-				this.value = newVal <= dmin ? dmin : newVal;
+			var o = Number(oldVal);
+			var n = Number(newVal);
+			var i = $(this);
+			var min = i.attr("data-min");
+			var max = i.attr("data-max");
+			if ( min !== undefined && n < min ){
+				this.value = min;
 			}
-			if (this.attributes["data-max"] !== undefined){
-				var dmax = this.attributes["data-max"].value;
-				this.value = newVal >= dmax ? dmax : newVal;
-			}
-		});
-
-		$(".static-spinner-counter")
-		//.spinner("delay", 5) //delay in ms
-		.spinner("changed", function(e, newVal, oldVal) {
-			//trigger lazed, depend on delay option.
-			//validateSimulation(22);
-
-		})
-		.spinner("changing", function(e, newVal, oldVal) {
-			//trigger immediately
-			var dmin = this.attributes["data-min"].value;
-			var dmax = this.attributes["data-max"].value;
-
-			if (newVal >= dmax) {
-				this.value = dmax;
-			} else if (newVal <= dmin) {
-				this.value = dmin;
+			if ( max !== undefined && n > max ){
+				this.value = max;
 			}
 		});
+
 	}
 
 	// --------------------------------------------------
@@ -3731,10 +3067,87 @@ $(document).ready ( function(){
 		loadFile(this.files, "weave");
 	});
 
+	$("#image-file-open").on("change", function(){
+		loadFile(this.files, "modelImage");
+	});
+
+
+	function openFile(type, callback){
+		var readAs, accept, validFileTypesInfo;
+		if ( type == "artwork" ){
+			accept = "image/gif|image/png|image/bmp";
+			validFileTypesInfo = "png/bmp/gif";
+			readAs = "dataurl";
+		} else if ( type == "image" ){
+			accept = "image/gif|image/png|image/bmp|image/jpg|image/jpeg";
+			validFileTypesInfo = "png/bmp/gif/jpg/jpeg";
+			readAs = "dataurl";
+		} else if ( type == "text" ){
+			accept = /text.*/;
+			validFileTypesInfo = "txt";
+			readAs = "text";
+		}
+		$("#file-open").off("change");
+		$("#file-open").on("change", function(){
+			var files = this.files;
+			if ( files && files[0] ){
+				var file = files[0];
+				var ext = file.name.split(".").pop().toUpperCase();
+				clearModalNotifications();
+				if (file.type.match(accept)){
+					var reader = new FileReader();
+					reader.onload = function() {
+						if ( readAs == "dataurl" ){
+							var image = new Image();
+							image.src = reader.result;
+							image.onload = function() {
+								if (typeof callback === "function") { callback(image, file.name); }
+							};
+						} else if ( readAs == "text" ){
+							if (typeof callback === "function") { callback(reader.result, file.name); }
+						}
+					};
+					if ( readAs == "dataurl"){
+						reader.readAsDataURL(file);
+					} else if ( readAs == "text"){
+						reader.readAsText(file);
+					}
+					reader.onerror = function() {
+						notify("error", "Unknown error!");
+					};
+				} else {
+					notify("error", "Invalid "+type+" file : "+file.name); 
+					notify("error", "\""+ext+"\" File type not supported!");
+					notify("notice", "Select a "+validFileTypesInfo+" file.");
+				}
+			} else {
+				notify("error", "Error Loading File...!"); 
+			}
+		});		
+		$("#file-open").attr("accept", accept).val("").trigger("click");
+	}
+
 	function loadFile(files, type, readAs = "dataurl"){
 		g_fileLoaded = false;
-		var validFileTypes = readAs == "dataurl" ? "image/gif|image/png|image/bmp" : /text.*/ ;
-		var validFileTypesInfo = readAs == "dataurl" ? "png/bmp/gif" : "txt" ; 
+		var validFileTypes, validFileTypesInfo;
+
+		if ( type.in("weave", "artwork") ){
+
+			validFileTypes = "image/gif|image/png|image/bmp";
+			validFileTypesInfo = "png/bmp/gif"; 
+
+		} else if ( type == "modelImage" ){
+
+			validFileTypes = "image/gif|image/png|image/bmp|image/jpg|image/jpeg";
+			validFileTypesInfo = "png/bmp/gif/jpg/jpeg";
+
+		} else if ( type == "project" ){
+
+			validFileTypes = /text.*/;
+			validFileTypesInfo = "txt";
+
+		}
+
 		if ( files && files[0] ){
 			var file = files[0];
 			var ext = file.name.split(".").pop().toUpperCase();
@@ -3759,22 +3172,11 @@ $(document).ready ( function(){
 
 							} else if (type =="artworkColorWeave"){
 
+							} else if (type =="modelImage"){
+
 							}
+
 						};
-
-					} else if ( readAs == "text" ){
-
-						if ( type == "project" ){
-								
-							var textFileContents = reader.result;
-							if ( app.validateState(textFileContents) ) {
-								g_fileLoadedName = file.name;
-								showPartialImportProjectModal(textFileContents);
-							} else {
-								notify("error", "Project file is corrupt !");
-							}
-
-						}
 
 					}
 
@@ -3798,59 +3200,10 @@ $(document).ready ( function(){
 		}
 	}
 
-	// -------------------------------------------------------------
-	// Partial Import Project Code ---------------------------------
-	// -------------------------------------------------------------
-	function showPartialImportProjectModal(code){
-		showModalWindow("Open Project", "project-partial-open-modal");
-		$("#partial-open-project-file-name").val(g_fileLoadedName);
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
-			if (e.which === 1) {
+	$(document).on("change", ".xcheckbox", function () {
 
-				var importAppSettings = $("#partialImportAppSettingsCheckbox").prop("checked");
-				var importPalette = $("#partialImportPaletteCheckbox").prop("checked");
-				var importWarpPattern = $("#partialImportWarpColorPatternCheckbox").prop("checked");
-				var importWeftPattern = $("#partialImportWeftColorPatternCheckbox").prop("checked");
-				var importWeave = $("#partialImportWeaveCheckbox").prop("checked");
-				var importThreading = $("#partialImportThreadingCheckbox").prop("checked");
-				var importLifting = $("#partialImportLiftingCheckbox").prop("checked");
-				var importTieup = $("#partialImportTieupCheckbox").prop("checked");
-				var importArtwork = $("#partialImportArtworkCheckbox").prop("checked");
-				
-				app.setState(2, code, importAppSettings, importPalette, importWeave, importThreading, importLifting, importTieup, importWarpPattern, importWeftPattern, importArtwork);
-				$("#project-partial-open-modal .action-btn").off("click");
-				hideModalWindow();
-				return false;
-			}
-		});
-	}
-
-	$(document).on("change", ".xcheck", function () {
-
-		var cbid = $(this).attr("id");
+		var id = $(this).attr("id");
 		var state = $(this).is(":checked");
-
-		if ( cbid == "partialImportWeaveCheckbox" ){
-
-			if ( state ){
-
-				$("#partialImportTieupCheckbox").prop("checked", true);
-				$("#partialImportThreadingCheckbox").prop("checked", true);
-				$("#partialImportTreadlingCheckbox").prop("checked", true);
-				$("#partialImportPegplanCheckbox").prop("checked", true);
-
-			} else {
-
-				$("#partialImportTieupCheckbox").prop("checked", false);
-				$("#partialImportThreadingCheckbox").prop("checked", false);
-				$("#partialImportTreadlingCheckbox").prop("checked", false);
-				$("#partialImportPegplanCheckbox").prop("checked", false);
-
-			}
-
-			//$(this).attr("checked", returnVal)
-
-		}
     
     });
 
@@ -3863,18 +3216,6 @@ $(document).ready ( function(){
 
 	function getWeaveColorPicks() {
 		return [globalWeave.picks, globalPattern.size("weft")].lcm();
-	}
-
-	// -------------------------------------------------------------
-	// Set Simulation BackgroundColor ------------------------------
-	// -------------------------------------------------------------
-	function setBackgroundColor(code, renderSimulation = true) {
-		var bgColorValue = app.palette.colors[code].hex;
-		g_backgroundColor = code;
-		$("#bgcolor-container").css("background-color", bgColorValue);
-		if (renderSimulation) {
-			//validateSimulation(23);
-		}
 	}
 
 	function IsJsonString(str) {
@@ -3978,6 +3319,8 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	var globalHistory = {
 
+		needsUpdate: true,
+
 		recording : true,
 
 		stepi : -1,
@@ -3995,7 +3338,7 @@ $(document).ready ( function(){
 
 			if ( this.recording ) {
 
-				console.log(["globalHistory.record", instanceId]);
+				//console.log(["-----globalHistory.record", instanceId]);
 
 				debugTime("recordAppState");
 				var code = app.getState(6);
@@ -4031,8 +3374,8 @@ $(document).ready ( function(){
 					this.disableUndo();
 				}
 
-				store.session(app.stateStorageID, code);
-				// app.saveConfigurations(8);
+				this.storeSessionState();
+				// app.config.save(8);
 			}
 
 		},
@@ -4042,12 +3385,16 @@ $(document).ready ( function(){
 			if ( this.stepi < this.steps.length-1 ) {
 				this.stop();
 				this.stepi += 1;
-				app.setState(3, this.steps[this.stepi].code, false);
+
+				var code = this.steps[this.stepi].code;
+
+				app.setState(3, code);
 				this.start();
 				this.enableUndo();
 				if ( this.stepi == this.steps.length-1 ) {
 					this.disableRedo();
 				}
+				this.storeSessionState();
 			}
 
 		},
@@ -4058,29 +3405,36 @@ $(document).ready ( function(){
 
 				this.stop();
 				this.stepi -= 1;
-				app.setState(4, this.steps[this.stepi].code, false);
+
+				var code = this.steps[this.stepi].code;
+
+				app.setState(4, code);
 				this.enableRedo();
 				this.start();
 
 				if ( this.stepi == 0 ) {
 					this.disableUndo();
 				}
+				this.storeSessionState();
 
 			}
 
 		},
 
 		enableUndo : function(){
-			layoutMenu.setItemEnabled("menu-main-edit-undo");
+			_toolbar.enableItem("toolbar-weave-edit-undo");
 		},
 		disableUndo : function(){
-			layoutMenu.setItemDisabled("menu-main-edit-undo");
+			_toolbar.disableItem("toolbar-weave-edit-undo");
 		},
 		enableRedo : function(){
-			layoutMenu.setItemEnabled("menu-main-edit-redo");
+			_toolbar.enableItem("toolbar-weave-edit-redo");
 		},
 		disableRedo : function(){
-			layoutMenu.setItemDisabled("menu-main-edit-redo");
+			_toolbar.disableItem("toolbar-weave-edit-redo");
+		},
+		storeSessionState: function(){
+			store.session(app.stateStorageID, this.steps[this.stepi].code);
 		}
 
 	};
@@ -4180,26 +3534,26 @@ $(document).ready ( function(){
 	function autoWeave() {
 
 		var totalRandom = false;
-		var balanceWeave = $("div#autoWeaveBalanceWeave input:checkbox").prop("checked");
+		var balanceWeave = ev("#auto-weave-balance");
 
-		var shafts = Number($("#autoWeaveShafts input").val());
-		var weaveW = Number($("#autoWeaveWidth input").val());
-		var weaveH = Number($("#autoWeaveHeight input").val());
+		var shafts = ev("#auto-weave-shafts input");
+		var weaveW = ev("#auto-weave-width input");
+		var weaveH = ev("#auto-weave-height input");
 
-		var threadingRigidity = Number($("#autoWeaveThreadingRigidity input").val());
-		var treadlingRigidity = Number($("#autoWeaveTreadlingRigidity input").val());
+		var threadingRigidity = ev("#auto-weave-threading-rigidity input");
+		var treadlingRigidity = ev("#auto-weave-treadling-rigidity input");
 
-		var mirrorThreading = $("div#autoWeaveMirrorThreading input:checkbox").prop("checked");
-		var mirrorTreadling = $("div#autoWeaveMirrorTreadling input:checkbox").prop("checked");
+		var mirrorThreading = ev("#auto-weave-mirror-threading");
+		var mirrorTreadling = ev("#auto-weave-mirror-treadling");
 
-		var maxWarpFloatReq = Number($("#autoWeaveMaxWarpFloat input").val());
-		var maxWeftFloatReq = Number($("#autoWeaveMaxWeftFloat input").val());
+		var maxWarpFloatReq = ev("#auto-weave-max-warp-float input");
+		var maxWeftFloatReq = ev("#auto-weave-max-weft-float input");
 
-		var minPlainArea = Number($("#autoWeaveMinPlainArea input").val());
+		var minPlainArea = ev("#auto-weave-min-tabby-percentage input");
 
-		var generateThreading = $("#autoWeaveGenerateThreading input:checkbox").prop("checked");
-		var generateTreadling = $("#autoWeaveGenerateTreadling input:checkbox").prop("checked");
-		var generateTieup = $("#autoWeaveGenerateTieup input:checkbox").prop("checked");
+		var generateThreading = ev("#auto-weave-generate-threading");
+		var generateTreadling = ev("#auto-weave-generate-treadling");
+		var generateTieup = ev("#auto-weave-generate-tieup");
 
 		if ( totalRandom ){
 
@@ -4266,7 +3620,7 @@ $(document).ready ( function(){
 
 			if ( globalWeave.liftingMode == "weave" ){
 
-				globalWeave.setGraph2D8("weave", gen_weave);
+				globalWeave.setGraph(0, "weave", gen_weave);
 
 			} else if ( globalWeave.liftingMode == "pegplan" ){
 
@@ -4275,21 +3629,20 @@ $(document).ready ( function(){
 				for (var x = 0; x < shafts; x++) {
 					tieup[x][x] = 1;
 				}
-				globalWeave.setGraph2D8("tieup", tieup, 0, 0, false, false);
-				globalWeave.setGraph2D8("threading", gen_threading, 0, 0, false, false);
-				globalWeave.setGraph2D8("lifting", liftplan, 0, 0, false, true);
+				globalWeave.setGraph(0, "tieup", tieup, {render: false, propagate: false});
+				globalWeave.setGraph(0, "threading", gen_threading, {render: false, propagate: false});
+				globalWeave.setGraph(0, "lifting", liftplan, {render: false, propagate: true});
 				globalWeave.render2D8(55);
 
 			} else if ( globalWeave.liftingMode == "treadling" ){
 
-				globalWeave.setGraph2D8("tieup", gen_tieup, 0, 0, false, false);
-				globalWeave.setGraph2D8("threading", gen_threading, 0, 0, false, false);
-				globalWeave.setGraph2D8("lifting", gen_treadling, 0, 0, false, true);
+				globalWeave.setGraph(0, "tieup", gen_tieup, {render: false, propagate: false});
+				globalWeave.setGraph(0, "threading", gen_threading, {render: false, propagate: false});
+				globalWeave.setGraph(0, "lifting", gen_treadling, {render: false, propagate: true});
 				globalWeave.render2D8(55);
 
 			}
 
-			
 		}
 
 	}
@@ -4299,15 +3652,14 @@ $(document).ready ( function(){
 
 		var autoPatternWarpArray, autoPatternWeftArray;
 
-		var apSizeLimit = Number($("#autoPatternSize input").val());
-		var apColorLimit = Number($("#autoPatternColors input").val());
-		var apEven = $("#autoEvenPattern").prop("checked");
-		var apStyle = $("#autoPatternStyle").val();
-		var apType = $("#autoPatternType").val();
+		var apSizeLimit = globalWeave.params.autoPatternSize;
+		var apColorLimit = globalWeave.params.autoPatternColors;
+		var apEven = globalWeave.params.autoPatternEven;
+		var apStyle = globalWeave.params.autoPatternStyle;
+		var apType = globalWeave.params.autoPatternType;
 
-		var apLockColors = $("#autoPatternLockColors").prop("checked");
-		var apLockedColors = $("#autoPatternLockedColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
-		$("#autoPatternLockedColors").val(apLockedColors);
+		var apLockColors = globalWeave.params.autoPatternLockColors;
+		var apLockedColors = globalWeave.params.autoPatternLockedColors;
 
 		var apStyleCode = 0;
 
@@ -4354,17 +3706,15 @@ $(document).ready ( function(){
 			warpPattern = autoPatternColors.random(1);
 		}
 
-		if (g_enableWarp) {
+		if (!globalWeave.params.lockWarp) {
 			globalPattern.set(22, "warp", warpPattern, false, 0, false, false);
 		}
 
-		if (g_enableWeft) {
+		if (!globalWeave.params.lockWeft) {
 			globalPattern.set(22, "weft", weftPattern, false, 0, false, false);
 		}
 
 		globalPattern.render8(3);
-		globalPattern.updateStatusbar();
-		app.palette.updateChipArrows();
 		globalHistory.record(4);
 
 	}
@@ -4641,12 +3991,10 @@ $(document).ready ( function(){
 	var autoColorPrevColors = "";
 	function autoColorway(){
 
-		var linkColors = $("#autoColorLinkColors").prop("checked");
-		var shareColors = $("#autoColorShareColors").prop("checked");
-
-		var acLockColors = $("#autoColorLockColors").prop("checked");
-		var acLockedColors = $("#autoColorLockedColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
-		$("#autoColorLockedColors").val(acLockedColors);
+		var shareColors = globalWeave.params.autoColorwayShareColors;
+		var linkColors = globalWeave.params.autoColorwayLinkColors;
+		var acLockColors = globalWeave.params.autoColorwayLockColors;
+		var acLockedColors = globalWeave.params.autoColorwayLockedColors;
 
 		var warpPattern = globalPattern.warp;
 		var weftPattern = globalPattern.weft;
@@ -4692,54 +4040,34 @@ $(document).ready ( function(){
 
 			} else {
 
-				newWarpPattern = warpPattern.replaceElements(warpColors, newFabricColors);
-				newWeftPattern = weftPattern.replaceElements(weftColors, newFabricColors);
+				newWarpPattern = warpPattern.replaceElements(warpColors, newFabricColors.shuffle());
+				newWeftPattern = weftPattern.replaceElements(weftColors, newFabricColors.shuffle());
 
 			}
 
-			if (g_enableWarp) {
-				globalPattern.set(39, "warp", newWarpPattern, false);
-			}
-
-			if (g_enableWeft){
-				globalPattern.set(40, "weft", newWeftPattern, false);
-			}
 
 		} else {
 
-			if (g_enableWarp) {
+			var newWarpColors = loc.shuffle().concat(str.shuffle(), bal.shuffle()).slice(0, warpColorCount);
+			newWarpPattern = warpPattern.replaceElements(warpColors, newWarpColors);
 
-				var newWarpColors = loc.shuffle().concat(str.shuffle(), bal.shuffle()).slice(0, warpColorCount);
-				newWarpPattern = warpPattern.replaceElements(warpColors, newWarpColors);
-				globalPattern.set(41, "warp", newWarpPattern, false);
-			}
-
-			if (g_enableWeft) {
-				var newWeftColors = loc.shuffle().concat(str.shuffle(), bal.shuffle()).slice(0, weftColorCount);
-				newWeftPattern = weftPattern.replaceElements(weftColors, newWeftColors);
-				globalPattern.set(42, "weft", newWeftPattern, false);
-
-			}
+			var newWeftColors = loc.shuffle().concat(str.shuffle(), bal.shuffle()).slice(0, weftColorCount);
+			newWeftPattern = weftPattern.replaceElements(weftColors, newWeftColors);
 
 		}
 
-		if (g_enableWarp || g_enableWeft) {
-			globalPattern.render8(4);
-			globalWeave.render2D8(4, "weave");
-			//validateSimulation(26);
+		if (!globalWeave.params.lockWarp) {
+			globalPattern.set(22, "warp", newWarpPattern, false, 0, false, false);
 		}
+
+		if (!globalWeave.params.lockWeft) {
+			globalPattern.set(22, "weft", newWeftPattern, false, 0, false, false);
+		}
+
+		globalPattern.render8(3);
+		globalHistory.record(4);
 
 	}
-
-    $("#autoColorShareColors").click(function(){
-        if( $(this).is(":checked") ) {
-        	$("#autoColorLinkColors").prop("checked",true);
-            $("#autoColorLinkColors").prop("disabled",false);
-        } else {
-        	$("#autoColorLinkColors").prop("checked",false);
-            $("autoColorLinkColors").prop("disabled",true);
-        }
-    });
 
 	// -------------------------------------------------------------
 	// Inverse Weave Array -------------------------------------------
@@ -4857,11 +4185,11 @@ $(document).ready ( function(){
 		var rwar = $("input[name=\"resizeWeaveAnchorRadio\"]");
 		
 		rwei.val(globalWeave.ends);
-		rwei.attr("data-max", g_weaveLimitMax);
+		rwei.attr("data-max", app.limits.maxWeaveSize);
 		rwpi.val(globalWeave.picks);
-		rwpi.attr("data-max", g_weaveLimitMax);
+		rwpi.attr("data-max", app.limits.maxWeaveSize);
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -4940,11 +4268,11 @@ $(document).ready ( function(){
 		var iweri = $("#insertWeaveEndsRightInput input");
 		var iweli = $("#insertWeaveEndsLeftInput input");
 		iweri.val(0);
-		iweri.attr("data-max", g_weaveLimitMax - globalWeave.ends);
+		iweri.attr("data-max", app.limits.maxWeaveSize - globalWeave.ends);
 		iweli.val(0);
-		iweli.attr("data-max", g_weaveLimitMax - globalWeave.ends);
+		iweli.attr("data-max", app.limits.maxWeaveSize - globalWeave.ends);
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -4967,11 +4295,11 @@ $(document).ready ( function(){
 	}
 
 	$("#insertWeaveEndsRightInput").spinner("changed", function(e, newVal, oldVal) {
-		$("#insertWeaveEndsLeftInput input").attr("data-max", g_weaveLimitMax - globalWeave.ends - newVal);
+		$("#insertWeaveEndsLeftInput input").attr("data-max", app.limits.maxWeaveSize - globalWeave.ends - newVal);
 	});
 
 	$("#insertWeaveEndsLeftInput").spinner("changed", function(e, newVal, oldVal) {
-		$("#insertWeaveEndsRightInput input").attr("data-max", g_weaveLimitMax - globalWeave.ends - newVal);
+		$("#insertWeaveEndsRightInput input").attr("data-max", app.limits.maxWeaveSize - globalWeave.ends - newVal);
 	});
 
 	// -------------------------------------------------------------
@@ -4985,11 +4313,11 @@ $(document).ready ( function(){
 		var iwpai = $("#insertWeavePicksAboveInput input");
 		var iwpbi = $("#insertWeavePicksBelowInput input");
 		iwpai.val(0);
-		iwpai.attr("data-max", g_weaveLimitMax - globalWeave.picks);
+		iwpai.attr("data-max", app.limits.maxWeaveSize - globalWeave.picks);
 		iwpbi.val(0);
-		iwpbi.attr("data-max", g_weaveLimitMax - globalWeave.picks);
+		iwpbi.attr("data-max", app.limits.maxWeaveSize - globalWeave.picks);
 
-		$("#" + g_modalWinId + " .action-btn").click(function(e) {
+		$("#" + app.wins.activeModalId + " .action-btn").click(function(e) {
 
 			if (e.which === 1) {
 
@@ -5019,11 +4347,11 @@ $(document).ready ( function(){
 	}
 
 	$("#insertWeavePicksAboveInput").spinner("changed", function(e, newVal, oldVal) {
-		$("#insertWeavePicksBelowInput input").attr("data-max", g_weaveLimitMax - globalWeave.picks - newVal);
+		$("#insertWeavePicksBelowInput input").attr("data-max", app.limits.maxWeaveSize - globalWeave.picks - newVal);
 	});
 
 	$("#insertWeavePicksBelowInput").spinner("changed", function(e, newVal, oldVal) {
-		$("#insertWeavePicksAboveInput input").attr("data-max", g_weaveLimitMax - globalWeave.picks - newVal);
+		$("#insertWeavePicksAboveInput input").attr("data-max", app.limits.maxWeaveSize - globalWeave.picks - newVal);
 	});
 
 	// -------------------------------------------------------------
@@ -5034,45 +4362,32 @@ $(document).ready ( function(){
 		var res;
 		var validPaste = true;
 
-		if ( graph == "weave"){
+		if ( globalSelection.graph == graph && globalSelection.confirmed && globalSelection.selected !== undefined && globalSelection.selected[0] !== undefined){
 
-			if ( globalSelection.graph == graph && globalSelection.confirmed && globalSelection.selected !== undefined && globalSelection.selected[0] !== undefined){
-
-				var selection2D8 = globalSelection.selected;
-				var modifiedSelection = selection2D8.transform2D8(0, command, val);
-
-				if ( selection2D8.length == modifiedSelection.length && selection2D8[0].length == modifiedSelection[0].length ){
-
-					var canvas2D8 = globalWeave.getGraph2D8(graph);
-					globalSelection.selected = modifiedSelection;
-					var xOverflow = globalWeave.seamless && ["weave", "threading"].includes(graph) ? "loop" : "extend";
-					var yOverflow = globalWeave.seamless && ["weave", "lifting"].includes(graph) ? "loop" : "extend";
-					res = paste2D8(modifiedSelection, canvas2D8, globalSelection.startCol-1, globalSelection.startRow-1, xOverflow, yOverflow, 0);
-
-				} else {
-
-					validPaste = false;
-
-				}
-
+			var selection2D8 = globalSelection.selected;
+			var modifiedSelection = selection2D8.transform2D8(0, command, val);
+			if ( selection2D8.length == modifiedSelection.length && selection2D8[0].length == modifiedSelection[0].length ){
+				var canvas2D8 = globalWeave.getGraph2D8(graph);
+				globalSelection.selected = modifiedSelection;
+				var xOverflow = globalWeave.params.seamlessWeave && graph.in("weave", "threading") ? "loop" : "extend";
+				var yOverflow = globalWeave.params.seamlessWeave && graph.in("weave", "lifting") ? "loop" : "extend";
+				res = paste2D8(modifiedSelection, canvas2D8, globalSelection.startCol-1, globalSelection.startRow-1, xOverflow, yOverflow, 0);
 			} else {
-
-				if ( Array.isArray(globalWeave.weave2D8) && globalWeave.weave2D8.isValid2D8() ){
-
-					res = globalWeave.weave2D8.transform2D8(0, command, val);
-
-				} else {
-
-					validPaste = false;
-
-				}
-
+				validPaste = false;
 			}
 
-			if ( validPaste ){
-				globalWeave.setGraph2D8("weave", res);
+		} else {
+
+			if ( globalWeave[graph+"2D8"].is2D8() ){
+				res = globalWeave[graph+"2D8"].transform2D8(0, command, val);
+			} else {
+				validPaste = false;
 			}
 
+		}
+
+		if ( validPaste ){
+			globalWeave.setGraph(12, graph, res);
 		}
 
 	}
@@ -5222,7 +4537,7 @@ $(document).ready ( function(){
 	function dataURLToImageData(dataurl){	
 		var w = dataurl.width;
 		var h = dataurl.height;
-		var x = getCtx(0, "temp-canvas", "g_tempCanvas", w, h, false);
+		var x = getCtx(0, "noshow", "g_tempCanvas", w, h, false);
 		//x.clearRect(0, 0, w, h)
 		x.fillStyle = "#FFFFFF";
 		x.fillRect(0, 0, w, h);
@@ -5277,7 +4592,7 @@ $(document).ready ( function(){
 		var ih = arr2D8[0].length;
 
 		var x, y;
-		g_tempContext = getCtx(4, "temp-canvas", "g_tempCanvas", iw, ih, false);
+		g_tempContext = getCtx(4, "noshow", "g_tempCanvas", iw, ih, false);
 		var imagedata = g_tempContext.createImageData(iw, ih);
 	    var pixels = new Uint32Array(imagedata.data.buffer);
 
@@ -5401,7 +4716,7 @@ $(document).ready ( function(){
 					if ( endY >= ih && endX >= iw ){
 						debugTimeEnd("setArray2D8FromDataURL");
 						setLoadingbar("hide", "imageload", showLoadingbar);
-						globalWeave.setGraph2D8("weave", array2D8);
+						globalWeave.setGraph(0, "weave", array2D8);
 						return false;
 					}
 
@@ -5508,11 +4823,11 @@ $(document).ready ( function(){
 		var imageW = dataurl.width;
 		var imageH = dataurl.height;
 
-		if ( imageW > g_weaveLimitMax || imageH > g_weaveLimitMax ){
+		if ( imageW > app.limits.maxWeaveSize || imageH > app.limits.maxWeaveSize ){
 			success = false;
 			error = "imageSizeMaxLimit";
 		} else  {
-			var ctx = getCtx(14, "temp-canvas", "g_tempCanvas", imageW, imageH, false);
+			var ctx = getCtx(14, "noshow", "g_tempCanvas", imageW, imageH, false);
 			ctx.drawImage(dataurl, 0, 0);
 			var image = ctx.getImageData(0, 0, imageW, imageH);
 			array = newArray2D8(8, imageW, imageH);
@@ -5565,7 +4880,7 @@ $(document).ready ( function(){
 			if ( error == "imageSizeMaxLimit" ){
 				notify("error", "Error Procesing Image File"); 
 				notify("error", "Inalid Dimensions : "+imageW+" &times; "+imageH+" Pixels");
-				notify("notice", "Maximum Dimensions Allowed : " + g_weaveLimitMax + " &times; " + g_weaveLimitMax + " Pixels");
+				notify("notice", "Maximum Dimensions Allowed : " + app.limits.maxWeaveSize + " &times; " + app.limits.maxWeaveSize + " Pixels");
 			} else if ( error == "imageColorsMaxLimit" ){
 				notify("error", "Invalid Weave Image File.");
 				notify("notice", "Select a Weave Image with 1 or 2 colors.");
@@ -5578,7 +4893,7 @@ $(document).ready ( function(){
 		var x, y, r, g, b, a, i, v, colors = [], weave = [];
 		var imgW = dataurl.width;
 		var imgH = dataurl.height;
-		var imgCtx = getCtx(2, "temp-canvas", "g_tempCanvas", imgW, imgH, false);
+		var imgCtx = getCtx(2, "noshow", "g_tempCanvas", imgW, imgH, false);
 		imgCtx.drawImage(dataurl, 0, 0);
 		var states = [1, 1];
 		var imgData = imgCtx.getImageData(0, 0, imgW, imgH);
@@ -5626,7 +4941,7 @@ $(document).ready ( function(){
 		var w = weaveArray.flip2D8("y");
 		var canvasW = w.length;
 		var canvasH = w[0].length;
-		g_tempContext = getCtx(4, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
+		g_tempContext = getCtx(4, "noshow", "g_tempCanvas", canvasW, canvasH, false);
 		drawRect(g_tempContext, 0, 0, canvasW, canvasH, "#FFFFFF", false);
 		
 		for (x = 0; x < canvasW; x++) {
@@ -5670,7 +4985,7 @@ $(document).ready ( function(){
 	}
 
 	function weave2D8ToDataURL(weave2D8, canvasW, canvasH, color32, pixelW = 1, pixelH = 1){
-		g_tempContext = getCtx(6, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
+		g_tempContext = getCtx(6, "noshow", "g_tempCanvas", canvasW, canvasH, false);
 		drawWeave2D8ToCanvas(g_tempContext, weave2D8, canvasW, canvasH, color32, pixelW, pixelH);
 		return g_tempCanvas.toDataURL();
 	}
@@ -5718,7 +5033,7 @@ $(document).ready ( function(){
 		var arr8Data = arr8.subarray(2);
 		var dataW = arr8Data.length;
 
-		g_tempContext = getCtx(4, "temp-canvas", "g_tempCanvas", w, h, false);
+		g_tempContext = getCtx(4, "noshow", "g_tempCanvas", w, h, false);
 
 		var light32 = rgbaToColor32(255,255,255,255);
 		var dark32 = rgbaToColor32(0,0,255,255);
@@ -5755,7 +5070,7 @@ $(document).ready ( function(){
 		var canvasW = imageW;
 		var canvasH = imageH;
 
-		g_tempContext = getCtx(5, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
+		g_tempContext = getCtx(5, "noshow", "g_tempCanvas", canvasW, canvasH, false);
 
 		var simulationPattern = g_tempContext.createPattern(g_simulationCanvas, "repeat");
 		g_tempContext.rect(0,0,canvasW,canvasH);
@@ -5796,7 +5111,7 @@ $(document).ready ( function(){
 		var canvasW = imageW;
 		var canvasH = imageH;
 
-		g_tempContext = getCtx(6, "temp-canvas", "g_tempCanvas", canvasW, canvasH, false);
+		g_tempContext = getCtx(6, "noshow", "g_tempCanvas", canvasW, canvasH, false);
 
 		window.pica().resize(g_simulationCanvas, g_tempCanvas, {
 			quality: 3,
@@ -5990,29 +5305,6 @@ $(document).ready ( function(){
 			}
 
 		} else {
-
-			var simulationLiveUpdate = layoutMenu.getCheckboxState("simulation-live-update");
-			if (simulationLiveUpdate || forceSimulate) {
-
-				$.doTimeout("simulate", 333, function(){
-
-					var simulationType = g_simulationDrawMethod;
-
-					if( simulationType == "quick"){
-						drawQuickSimulation();
-					} else if ( simulationType == "unicount" ){
-						drawUniCountSimulation();
-					} else if ( simulationType == "multicount" ){
-						drawMultiCountSimulation();
-					}
-
-				});
-
-			} else {
-
-				simulationAlert("update");
-
-			}
 
 		}
 
@@ -6211,26 +5503,26 @@ $(document).ready ( function(){
 	// --------------------------------------------------
 	// Graph Mouse Interaxtions -------------------------
 	// --------------------------------------------------
-	$("#weave-container, #threading-container, #lifting-container, #tieup-container, #warp-container, #weft-container, #artwork-container").on("mouseover", function(evt) {
+	$("#weave-container, #threading-container, #lifting-container, #tieup-container, #warp-container, #weft-container").on("mouseover", function(evt) {
 
 		var graph = getGraphId($(this).attr("id"));
 		if ( graph.in("warp","weft") ){
 			graph = "pattern";
 		}
 
-		globalStatusbar.switchTo(graph);
+		//globalStatusbar.switchTo(graph);
 
 		$("#weave-container, #threading-container, #lifting-container, #tieup-container, #warp-container, #weft-container").css({
-			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor
+			"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex
 		});
 
 		if ( graph !== "artwork" ){
 			$(this).css({
-				"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColorFocus,
-				"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColorFocus,
-				"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColorFocus
+				"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.focusShadowHex,
+				"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.focusShadowHex,
+				"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.focusShadowHex
 			});
 		}
 
@@ -6238,12 +5530,12 @@ $(document).ready ( function(){
 
 	$("#warp-container, #weft-container").on("mousedown", function(evt) {
 
-		var threadNum, seamless, pasteMethod;
+		var seamless, pasteMethod;
 		var yarnSet = $(this).attr("id").split("-")[0];
 
 		var mouse = getMouse(evt, $(this)[0], {
-			columnLimit : globalWeave.seamless ? globalPattern.warp.length : 0,
-			rowLimit : globalWeave.seamless ? globalPattern.weft.length : 0,
+			columnLimit : globalWeave.params.seamlessWeave ? globalPattern.warp.length : 0,
+			rowLimit : globalWeave.params.seamlessWeave ? globalPattern.weft.length : 0,
 			offsetx : globalWeave.scrollX,
 			offsety : globalWeave.scrollY,
 			graphPointW : yarnSet == "warp" ? g_pointPlusGrid : g_patternElementSize,
@@ -6254,41 +5546,65 @@ $(document).ready ( function(){
 		var rowNum = mouse.row;
 		var endNum = mouse.end;
 		var pickNum = mouse.pick;
+		var threadNum = yarnSet == "warp" ? endNum : pickNum;
+		var posNum = yarnSet == "warp" ? colNum : rowNum;
 
-		var code = app.palette.selected;
+		if (typeof evt.which == "undefined") {
+
+		} else if (evt.which == 1) {
+
+			var code = app.palette.selected;
+
+			if ( app.tool == "fill" ){
+
+				globalPattern.fillStripe(yarnSet, threadNum, code);
+				app.memory.fillStripeYarnSet = yarnSet;
+
+			} else {
+
+				app.memory.patternPainting = true;
+				app.memory.patternDrawCopy = globalPattern[yarnSet];
+				app.memory.patternDrawSet = yarnSet;
+
+				app.mouse.graph = yarnSet;
+				app.mouse.isDown = true;
+
+				if (yarnSet == "warp"){
+					app.mouse.colNum = colNum;
+					app.mouse.endNum = endNum;
+					app.memory.patternPaintingStartNum = colNum;
+					seamless = globalWeave.params.seamlessWarp;
+
+				} else {
+					app.mouse.rowNum = rowNum;
+					app.mouse.pickNum = pickNum;
+					app.memory.patternPaintingStartNum = rowNum;
+					seamless = globalWeave.params.seamlessWeft;
+				}
+
+				if ( seamless ){
+					pasteMethod = "loop";
+				} else if ( !seamless && code =="0" ){
+					pasteMethod = "trim";
+				} else if ( !seamless && code !=="0" ){
+					pasteMethod = "extend";
+				}
+
+				globalPattern.set(44, yarnSet, code, true, threadNum, pasteMethod, false);
+
+			}			
+
+		} else if (evt.which == 2) {
+
+		} else if (evt.which == 3) {
+
+			globalPattern.rightClick.yarnSet = yarnSet;
+			globalPattern.rightClick.threadNum = posNum;
+			globalPattern.rightClick.code = globalPattern[yarnSet][posNum-1];
+			patternContextMenu.showContextMenu(evt.clientX, evt.clientY);
+
+		}
 		
-		app.storage.patternPainting = true;
-		app.storage.patternDrawCopy = globalPattern[yarnSet];
-		app.storage.patternDrawSet = yarnSet;
-
-		app.mouse.graph = yarnSet;
-		app.mouse.isDown = true;
-
-		if (yarnSet == "warp"){
-			app.mouse.colNum = colNum;
-			app.mouse.endNum = endNum;
-			threadNum = endNum;
-			app.storage.patternPaintingStartNum = colNum;
-			seamless = globalPattern.seamlessWarp;
-
-		} else {
-			app.mouse.rowNum = rowNum;
-			app.mouse.pickNum = pickNum;
-			threadNum = pickNum;
-			app.storage.patternPaintingStartNum = rowNum;
-			seamless = globalPattern.seamlessWeft;
-		}
-
-		if ( seamless ){
-			pasteMethod = "loop";
-		} else if ( !seamless && code =="0" ){
-			pasteMethod = "trim";
-		} else if ( !seamless && code !=="0" ){
-			pasteMethod = "extend";
-		}
-
-		globalPattern.set(44, yarnSet, code, true, threadNum, pasteMethod, false);
-
 	});
 
 	/*
@@ -6316,13 +5632,13 @@ $(document).ready ( function(){
 
 		} else if ( graph == "threading" ){
 
-			mc.rowLimit = globalWeave.seamless ? globalWeave.weave2D[0].length : 0;
+			mc.rowLimit = globalWeave.params.seamlessWeave ? globalWeave.weave2D[0].length : 0;
 			mc.offsetx = globalWeave.scrollX;
 			mc.offsety = globalTieup.scrollY;
 
 		} else if ( graph == "lifting" ){
 
-			mc.columnLimit = globalWeave.seamless ? globalWeave.weave2D.length : 0;
+			mc.columnLimit = globalWeave.params.seamlessWeave ? globalWeave.weave2D.length : 0;
 			mc.offsetx = globalTieup.scrollX;
 			mc.offsety = globalWeave.scrollY;
 
@@ -6336,7 +5652,7 @@ $(document).ready ( function(){
 
 		} else if (evt.which == 1) {
 
-			globalWeave.setGraph2D8(graph, "toggle", colNum, rowNum);
+			globalWeave.setGraph(13, graph, "toggle", {col: colNum, row: rowNum});
 
 		} else if (evt.which == 2) {
 
@@ -6351,7 +5667,7 @@ $(document).ready ( function(){
 	// --------------------------------------------------
 	$("#weave-container").on("mousedown", function(evt) {
 
-		debug("g_graphTool", g_graphTool);
+		debug("app.tool", app.tool);
 
 		var modWeave, popped, x, modTotalWeave, canvas2D8, xOverflow, yOverflow, res;
 
@@ -6362,8 +5678,8 @@ $(document).ready ( function(){
 			origin : "bl",
 			graphPointW : g_pointPlusGrid,
 			graphPointH : g_pointPlusGrid,
-			columnLimit : globalWeave.seamless ? globalWeave.ends : 0,
-			rowLimit : globalWeave.seamless ? globalWeave.picks : 0,
+			columnLimit : globalWeave.params.seamlessWeave ? globalWeave.ends : 0,
+			rowLimit : globalWeave.params.seamlessWeave ? globalWeave.picks : 0,
 			offsetx : globalWeave.scrollX,
 			offsety : globalWeave.scrollY
 		});
@@ -6392,11 +5708,11 @@ $(document).ready ( function(){
 		// Right Mouse Key
 		} else if (evt.which == 3) {
 
-			if ( g_graphTool == "pointer" ){
+			if ( app.tool == "pointer" ){
 				weaveContextMenu.showContextMenu(evt.clientX, evt.clientY);
 			}
 
-			if ( g_graphTool == "selection" && globalSelection.confirmed ){
+			if ( app.tool == "selection" && globalSelection.confirmed ){
 				selectionContextMenu.showContextMenu(evt.clientX, evt.clientY);
 			}
 
@@ -6404,34 +5720,34 @@ $(document).ready ( function(){
 
 			if ( step == 0 ){
 
-				if ( g_graphTool == "zoom" ){
+				if ( app.tool == "zoom" ){
 					globalWeave.zoomAt(-1, mouse.x + globalWeave.scrollX, mouse.y + globalWeave.scrollY);
-				} else if ( g_graphTool == "brush" ){
+				} else if ( app.tool == "brush" ){
 
 					globalWeave.setGraphPoint2D8("weave", colNum, rowNum, 0, true, false);
 					graphReserve.clear("weave");
 					graphReserve.add(colNum, rowNum, 0);
-					app.storage.weavePainting = true;
+					app.memory.weavePainting = true;
 
-				} else if ( g_graphTool == "line" ){
+				} else if ( app.tool == "line" ){
 					if ( !g_graphLineStarted ){
 
 						g_graphLineStarted = true;
-						app.storage.lineState = 0;
-						app.storage.lineX0 = colNum;
-						app.storage.lineY0 = rowNum;
-						app.storage.lineX1 = colNum;
-						app.storage.lineY1 = rowNum;
+						app.memory.lineState = 0;
+						app.memory.lineX0 = colNum;
+						app.memory.lineY0 = rowNum;
+						app.memory.lineX1 = colNum;
+						app.memory.lineY1 = rowNum;
 
-						app.storage.lineMouseCurrentCol = colNum;
-						app.storage.lineMouseCurrentRow = rowNum;
+						app.memory.lineMouseCurrentCol = colNum;
+						app.memory.lineMouseCurrentRow = rowNum;
 
-						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
+						graphLine2D8("weave", app.memory.lineX0, app.memory.lineY0, app.memory.lineX1, app.memory.lineY1, app.memory.lineState, true, false);
 
 					} else {
 
-						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, false, true);
-						globalWeave.setGraph2D8("weave");
+						graphLine2D8("weave", app.memory.lineX0, app.memory.lineY0, app.memory.lineX1, app.memory.lineY1, app.memory.lineState, false, true);
+						globalWeave.setGraph(0, "weave");
 						g_graphLineStarted = false;
 						
 					}
@@ -6447,24 +5763,29 @@ $(document).ready ( function(){
 				globalSelection.clear_old(9);
 				app.mouse.graph = "weave";
 
-				if ( g_graphTool == "pointer" ){
+				if ( app.tool == "pointer" ){
 
-					globalWeave.setGraph2D8("weave", "toggle", colNum, rowNum);
+					if ( globalWeave.params.lockTreadling && globalWeave.params.lockThreading){
+						var shaftNum = globalWeave.threading1D[endNum-1];
+						var treadleNum = globalWeave.treadling1D[pickNum-1];
+						console.log([shaftNum, treadleNum]);
+						globalWeave.setGraph(6, "tieup", "toggle", {col: treadleNum, row: shaftNum});
+					}
 
-				} else if ( g_graphTool == "zoom" ){
+				} else if ( app.tool == "zoom" ){
 
 					globalWeave.zoomAt(1, mouse.x + globalWeave.scrollX, mouse.y + globalWeave.scrollY);
 
-				} else if ( g_graphTool == "hand" ){
+				} else if ( app.tool == "hand" ){
 
-					app.storage.hand = true;
-					app.storage.handTarget = "weave";
-					app.storage.handsx = mouse.cx;
-					app.storage.handsy = mouse.cy;
-					app.storage.handscrollx = globalWeave.scrollX;
-					app.storage.handscrolly = globalWeave.scrollY;
+					app.memory.hand = true;
+					app.memory.handTarget = "weave";
+					app.memory.handsx = mouse.cx;
+					app.memory.handsy = mouse.cy;
+					app.memory.handscrollx = globalWeave.scrollX;
+					app.memory.handscrolly = globalWeave.scrollY;
 
-				} else if ( g_graphTool == "selection" ){
+				} else if ( app.tool == "selection" ){
 
 					if ( !globalSelection.started && !globalSelection.confirmed ){
 
@@ -6481,10 +5802,10 @@ $(document).ready ( function(){
 					} else if ( globalSelection.started && globalSelection.confirmed && globalSelection.paste_action == "paste"){
 
 						canvas2D8 = globalWeave.getGraph2D8("weave");
-						xOverflow = globalWeave.seamless && ["weave", "threading"].includes("weave") ? "loop" : "extend";
-						yOverflow = globalWeave.seamless && ["weave", "lifting"].includes("weave") ? "loop" : "extend";
+						xOverflow = globalWeave.params.seamlessWeave && ["weave", "threading"].includes("weave") ? "loop" : "extend";
+						yOverflow = globalWeave.params.seamlessWeave && ["weave", "lifting"].includes("weave") ? "loop" : "extend";
 						res = paste2D8(globalSelection.selected, canvas2D8, mouse.col-1, mouse.row-1, xOverflow, yOverflow, 0);
-						globalWeave.setGraph2D8("weave", res);
+						globalWeave.setGraph(0, "weave", res);
 
 					} else if ( globalSelection.started && globalSelection.confirmed && globalSelection.paste_action == "fill" && globalSelection.paste_action_step == 0){
 
@@ -6515,10 +5836,10 @@ $(document).ready ( function(){
 						var pasteTile = arrayTileFill(globalSelection.selected, pasteW, pasteH);
 
 						canvas2D8 = globalWeave.getGraph2D8("weave");
-						xOverflow = globalWeave.seamless && ["weave", "threading"].includes("weave") ? "loop" : "extend";
-						yOverflow = globalWeave.seamless && ["weave", "lifting"].includes("weave") ? "loop" : "extend";
+						xOverflow = globalWeave.params.seamlessWeave && ["weave", "threading"].includes("weave") ? "loop" : "extend";
+						yOverflow = globalWeave.params.seamlessWeave && ["weave", "lifting"].includes("weave") ? "loop" : "extend";
 						res = paste2D8(pasteTile, canvas2D8, paste_sc-1, paste_sr-1, xOverflow, yOverflow, 0);
-						globalWeave.setGraph2D8("weave", res);
+						globalWeave.setGraph(0, "weave", res);
 
 						globalSelection.paste_action_step = 0;
 						globalSelection.pasteStartCol = mouse.col;
@@ -6528,14 +5849,14 @@ $(document).ready ( function(){
 
 					}
 
-				} else if ( g_graphTool == "brush" ){
+				} else if ( app.tool == "brush" ){
 
 					globalWeave.setGraphPoint2D8("weave", colNum, rowNum, 1, true, false);
 					graphReserve.clear("weave");
 					graphReserve.add(colNum, rowNum, 1);
-					app.storage.weavePainting = true;
+					app.memory.weavePainting = true;
 
-				} else if ( g_graphTool == "fill" ){
+				} else if ( app.tool == "fill" ){
 
 					if ( g_graphDrawState == "T"){
 						g_graphFillState = globalWeave.getGraph("weave", endNum, pickNum) == [1] ? 0 : 1;
@@ -6545,27 +5866,27 @@ $(document).ready ( function(){
 					
 					weaveFloodFillSmart(endNum, pickNum, g_graphFillState);
 
-				} else if ( g_graphTool == "line" ){
+				} else if ( app.tool == "line" ){
 
 					if ( !g_graphLineStarted ){
 
 						g_graphLineStarted = true;
-						app.storage.lineState = 1;
-						app.storage.lineX0 = colNum;
-						app.storage.lineY0 = rowNum;
-						app.storage.lineX1 = colNum;
-						app.storage.lineY1 = rowNum;
+						app.memory.lineState = 1;
+						app.memory.lineX0 = colNum;
+						app.memory.lineY0 = rowNum;
+						app.memory.lineX1 = colNum;
+						app.memory.lineY1 = rowNum;
 
-						app.storage.lineMouseCurrentCol = colNum;
-						app.storage.lineMouseCurrentRow = rowNum;
+						app.memory.lineMouseCurrentCol = colNum;
+						app.memory.lineMouseCurrentRow = rowNum;
 
-						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
+						graphLine2D8("weave", app.memory.lineX0, app.memory.lineY0, app.memory.lineX1, app.memory.lineY1, app.memory.lineState, true, false);
 
 
 					} else {
 
-						graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, false, true);
-						globalWeave.setGraph2D8("weave");
+						graphLine2D8("weave", app.memory.lineX0, app.memory.lineY0, app.memory.lineX1, app.memory.lineY1, app.memory.lineState, false, true);
+						globalWeave.setGraph(0, "weave");
 						g_graphLineStarted = false;
 
 					}
@@ -6733,8 +6054,8 @@ $(document).ready ( function(){
 			origin : "bl",
 			graphPointW : g_pointPlusGrid,
 			graphPointH : g_pointPlusGrid,
-			columnLimit : globalWeave.seamless ? globalWeave.ends : 0,
-			rowLimit : globalWeave.seamless ? globalWeave.picks : 0,
+			columnLimit : globalWeave.params.seamlessWeave ? globalWeave.ends : 0,
+			rowLimit : globalWeave.params.seamlessWeave ? globalWeave.picks : 0,
 			offsetx : globalWeave.scrollX,
 			offsety : globalWeave.scrollY
 		});
@@ -6758,7 +6079,7 @@ $(document).ready ( function(){
 
 			if ( step == 0){
 
-				if ( g_graphTool == "line" && g_graphLineStarted){
+				if ( app.tool == "line" && g_graphLineStarted){
 					weaveHighlight.show.line(startColNum, startRowNum, lastColNum, lastRowNum, app.colors.rgba_str.blue2);
 				}
 
@@ -6820,8 +6141,8 @@ $(document).ready ( function(){
 				g_weaveStateUnderMouse = currentWeaveState;
 				globalStatusbar.set("weaveIntersection", endNum, pickNum);
 
-				// console.log([app.mouse.isDown, g_graphTool, currentWeaveState, g_graphBrushState]);
-				if (app.mouse.isDown && g_graphTool == "brush" && currentWeaveState !== g_graphBrushState) {
+				// console.log([app.mouse.isDown, app.tool, currentWeaveState, g_graphBrushState]);
+				if (app.mouse.isDown && app.tool == "brush" && currentWeaveState !== g_graphBrushState) {
 					debugTime("setWeavePointer");
 
 					graphLine2D8("weave", colNum, rowNum, app.mouse.colNum, app.mouse.rowNum, g_graphBrushState); 
@@ -6922,38 +6243,21 @@ $(document).ready ( function(){
 		return res;
 	}
 
-	function createLayout(instanceId, render = true) {
+	function createLayout(instanceId, options) {
 
-		console.log(["createLayout", instanceId]);
+		var render = getObjProp(options, "render", true);
 
-		var activeTabId = mainTabbar.getActiveTab();
-
-		var activeFrame = $("#"+activeTabId+"-frame");
-		var activeFrameW = activeFrame.width();
-		var activeFrameH = activeFrame.height();
-
-		globalWeave.frameW = activeFrameW;
-		globalWeave.frameH = activeFrameH;
-
-		globalArtwork.frameW = activeFrameW;
-		globalArtwork.frameH = activeFrameH;
-
-		globalSimulation.frameW = activeFrameW;
-		globalSimulation.frameH = activeFrameH;
-		
-		globalThree.frameW = activeFrameW;
-		globalThree.frameH = activeFrameH;
-
-		globalModel.frameW = activeFrameW;
-		globalModel.frameH = activeFrameH;
-
-		createWeaveLayout(1, render);
-		createArtworkLayout(1, render);
-		createSimulationLayout(1, render);
-
-		globalThree.setInterface(1, render);
-		globalModel.setInterface(1, render);
-
+		//console.log(["createLayout", instanceId]);
+		var tab = _tabbar.getActiveTab();
+		var frame = $("#"+tab+"-frame");
+		app.frameW = frame.width();
+		app.frameH = frame.height();
+		app.weave.interface.needsUpdate = true;
+		app.artwork.interface.needsUpdate = true;
+		app.simulation.interface.needsUpdate = true;
+		app.three.interface.needsUpdate = true;
+		app.model.interface.needsUpdate = true;
+		app[tab].interface.fix(1, render);
 
 	}
 
@@ -6963,7 +6267,7 @@ $(document).ready ( function(){
 
 		$("<div>", {id: "palette-chip-0", "class": "palette-chip"})
 			.append("<span>&times;</span>")
-			.append("<div class=\"colorBox transparent\"></div>")
+			.append("<div class=\"color-box transparent\"></div>")
 			.appendTo(container);
 		app.palette.setChip(0, "#FFFFFF", false, false, false, 0, false, false);
 
@@ -6971,9 +6275,9 @@ $(document).ready ( function(){
 			app.palette.colors[code] = {};
 			$("<div>", {id: "palette-chip-"+code, "class": "palette-chip"})
 			.append("<span>" + code + "</span>")
-			.append("<div class=\"colorBox\"></div>")
-			.append("<div class=\"warpArrow\"></div>")
-			.append("<div class=\"weftArrow\"></div>")
+			.append("<div class=\"color-box\"></div>")
+			.append("<div class=\"arrow-warp\"></div>")
+			.append("<div class=\"arrow-weft\"></div>")
 			.appendTo(container);
 			app.palette.setChip(code, false, false, false, false, 0, false, false);
 		});
@@ -6982,17 +6286,17 @@ $(document).ready ( function(){
 
 	function createArtworkLayout(instanceId = 0, render = true) {
 
-		//console.log(["createArtworkLayout", instanceId]);
+		console.log(["createArtworkLayout", instanceId]);
 		//logTime("createArtworkLayout("+instanceId+")");
 
-		var artworkBoxL = g_scrollbarW;
-		var artworkBoxB = g_scrollbarW;
+		var artworkBoxL = app.ui.scrollbarW;
+		var artworkBoxB = app.ui.scrollbarW;
 
-		var artworkFrameW = globalArtwork.frameW;
-		var artworkFrameH = globalArtwork.frameH;
+		var artworkFrameW = app.frameW;
+		var artworkFrameH = app.frameH;
 
-		var artworkBoxW = artworkFrameW - g_scrollbarW;
-		var artworkBoxH = artworkFrameH - g_scrollbarW;
+		var artworkBoxW = artworkFrameW - app.ui.scrollbarW;
+		var artworkBoxH = artworkFrameH - app.ui.scrollbarW;
 
 		globalArtwork.viewW = artworkBoxW;
 		globalArtwork.viewH = artworkBoxH;
@@ -7038,14 +6342,14 @@ $(document).ready ( function(){
 		//console.log(["createArtworkLayout", instanceId]);
 		//logTime("createArtworkLayout("+instanceId+")");
 
-		var mainBoxL = g_scrollbarW;
-		var mainBoxB = g_scrollbarW;
+		var mainBoxL = app.ui.scrollbarW;
+		var mainBoxB = app.ui.scrollbarW;
 
-		var mainFrameW = globalSimulation.frameW;
-		var mainFrameH = globalSimulation.frameH;
+		var mainFrameW = app.frameW;
+		var mainFrameH = app.frameH;
 
-		var mainBoxW = mainFrameW - g_scrollbarW;
-		var mainBoxH = mainFrameH - g_scrollbarW;
+		var mainBoxW = mainFrameW - app.ui.scrollbarW;
+		var mainBoxH = mainFrameH - app.ui.scrollbarW;
 
 		// console.log([mainBoxW, mainBoxH, mainFrameW, mainFrameH]);
 
@@ -7088,62 +6392,31 @@ $(document).ready ( function(){
 
 	}
 
-	function createThreeLayout(instanceId = 0, render = true) {
-
-		//console.log(["createArtworkLayout", instanceId]);
-		//logTime("createArtworkLayout("+instanceId+")");
-
-		var threeBoxL = 0;
-		var threeBoxB = 0;
-
-		var threeFrameW = globalThree.frameW;
-		var threeFrameH = globalThree.frameH;
-
-		var threeBoxW = threeFrameW - threeBoxL;
-		var threeBoxH = threeFrameH - threeBoxB;
-
-		$("#three-container").css({
-			"width":  threeBoxW,
-			"height": threeBoxH,
-			"left": threeBoxL,
-			"bottom": threeBoxB,
-		});
-
-		if ( render ){
-			globalThree.buildFabric();
-		}
-
-		globalPositions.update("three");
-
-		//logTimeEnd("createArtworkLayout("+instanceId+")");
-
-	}
-
 	function createWeaveLayout(instanceId = 0, render = true) {
 
-		// console.log(["createWeaveLayout", instanceId]);
+		console.log(["createWeaveLayout", instanceId]);
 		
 		//logTime("createWeaveLayout("+instanceId+")");
 
-		var interBoxSpace = g_boxShadow + g_boxSpace + g_boxShadow;
-		var wallBoxSpace = g_boxShadow + g_boxSpace;
+		var interBoxSpace = app.ui.shadow + app.ui.space + app.ui.shadow;
+		var wallBoxSpace = app.ui.shadow;
 
-		var weftBoxL = g_scrollbarW + wallBoxSpace;
+		var weaveFrameW = app.frameW;
+		var weaveFrameH = app.frameH;
+
+		var paletteBoxW = weaveFrameW - app.ui.shadow * 2;
+		var paletteBoxH = app.palette.chipH;
+
+		var weftBoxL =  app.ui.scrollbarW + app.ui.shadow;
 		var liftingBoxL = weftBoxL + g_patternElementSize + interBoxSpace;
 		var weaveBoxL = liftingBoxL + g_tieupW + interBoxSpace;
 
-		var warpBoxB = g_scrollbarW + wallBoxSpace;
+		var warpBoxB = app.ui.scrollbarW + wallBoxSpace;
 		var threadingBoxB = warpBoxB + g_patternElementSize + interBoxSpace;
 		var weaveBoxB = threadingBoxB + g_tieupW + interBoxSpace;
 
-		var weaveFrameW = globalWeave.frameW;
-		var weaveFrameH = globalWeave.frameH;
-
-		var paletteBoxW = weaveFrameW;
-		var paletteBoxH = 46;
-
-		var weaveBoxW = weaveFrameW - (g_scrollbarW + g_patternElementSize + g_tieupW + interBoxSpace * 2 + wallBoxSpace * 2);
-		var weaveBoxH = weaveFrameH - (g_scrollbarW + g_patternElementSize + g_tieupW + paletteBoxH - 1  + interBoxSpace * 2 + wallBoxSpace * 2) ;
+		var weaveBoxW = weaveFrameW - (app.ui.scrollbarW + g_patternElementSize + g_tieupW + interBoxSpace * 2 + wallBoxSpace * 2);
+		var weaveBoxH = weaveFrameH - (app.ui.scrollbarW + g_patternElementSize + g_tieupW + paletteBoxH + interBoxSpace * 3 + wallBoxSpace * 2 - app.ui.space) ;
 
 		if ( globalWeave.liftingMode == "weave"){
 
@@ -7186,9 +6459,9 @@ $(document).ready ( function(){
 				"height": liftingBoxH,
 				"bottom": weaveBoxB,
 				"left": liftingBoxL,
-				"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-				"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-				"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+				"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+				"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+				"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
 			});
 
 			$("#threading-container").css({
@@ -7196,42 +6469,36 @@ $(document).ready ( function(){
 				"height": threadingBoxH,
 				"bottom": threadingBoxB,
 				"left": weaveBoxL,
-				"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-				"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-				"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+				"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+				"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+				"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
 			});
 
 			$("#tieup-scrollbar-x").css({
-				"width":  tieupBoxW + g_boxShadow * 2,
+				"width":  tieupBoxW + app.ui.shadow * 2 - 2,
 				"bottom": 0,
-				"left": liftingBoxL - g_boxShadow
+				"left": liftingBoxL - app.ui.shadow + 1
 			});
 
 			$("#tieup-scrollbar-y").css({
-				"height": tieupBoxH + g_boxShadow * 2,
-				"bottom": threadingBoxB - g_boxShadow,
+				"height": tieupBoxH + app.ui.shadow * 2 - 2,
+				"bottom": threadingBoxB - app.ui.shadow + 1,
 				"left": 0
 			});
 
-			if ( globalWeave.liftingMode == "treadling"){
+			$("#tieup-container").show();
+			g_tieupContext = getCtx(20, "tieup-container", "g_tieupCanvas", tieupBoxW, tieupBoxH);
+			g_tieupContext.clearRect(0, 0, tieupBoxW, tieupBoxH);
 
-				$("#tieup-container").show();
-				g_tieupContext = getCtx(20, "tieup-container", "g_tieupCanvas", tieupBoxW, tieupBoxH);
-				g_tieupContext.clearRect(0, 0, tieupBoxW, tieupBoxH);
-
-				$("#tieup-container").css({
-					"width":  tieupBoxW,
-					"height": tieupBoxH,
-					"bottom": threadingBoxB,
-					"left": liftingBoxL,
-					"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-					"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-					"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-				});
-			} else {
-
-				$("#tieup-container").hide();
-			}
+			$("#tieup-container").css({
+				"width":  tieupBoxW,
+				"height": tieupBoxH,
+				"bottom": threadingBoxB,
+				"left": liftingBoxL,
+				"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+				"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+				"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			});
 
 		}
 
@@ -7254,14 +6521,14 @@ $(document).ready ( function(){
 		$("#weave-scrollbar-y").show();
 
 		$("#weave-scrollbar-x").css({
-			"width":  weaveBoxW + g_boxShadow * 2 + 1,
+			"width":  weaveBoxW + app.ui.shadow * 2 - 2,
 			"bottom": 0,
-			"left": weaveBoxL - g_boxShadow
+			"left": weaveBoxL - app.ui.shadow + 1
 		});
 
 		$("#weave-scrollbar-y").css({
-			"height": weaveBoxH + g_boxShadow * 2 - 1,
-			"bottom": weaveBoxB - g_boxShadow,
+			"height": weaveBoxH + app.ui.shadow * 2 - app.ui.space * 2,
+			"bottom": weaveBoxB - app.ui.shadow + 1,
 			"left": 0
 		});
 		
@@ -7270,9 +6537,9 @@ $(document).ready ( function(){
 			"height": weaveBoxH,
 			"bottom": weaveBoxB,
 			"left": weaveBoxL,
-			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
+			"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
 		});
 
 		$("#warp-container").css({
@@ -7280,9 +6547,9 @@ $(document).ready ( function(){
 			"height": g_patternElementSize,
 			"bottom": warpBoxB,
 			"left": weaveBoxL,
-			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor
+			"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex
 		});
 
 		$("#weft-container").css({
@@ -7290,27 +6557,25 @@ $(document).ready ( function(){
 			"height": weaveBoxH,
 			"bottom": weaveBoxB,
 			"left": weftBoxL,
-			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor
-		});
-
-		$("#bgcolor-container").css({
-			"width": g_patternElementSize,
-			"height": g_patternElementSize,
-			"box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-webkit-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"-moz-box-shadow": "0px 0px 0px "+g_boxShadow+"px "+boxShadowColor,
-			"left": weftBoxL,
-			"bottom": warpBoxB
+			"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex,
+			"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+app.ui.shadowHex
 		});
 
 		$("#palette-container").css({
 			"width": paletteBoxW,
 			"height": paletteBoxH,
-			"left": 0,
-			"top": 0
+			"left": app.ui.shadow,
+			"top": app.ui.shadow,
+			"box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+"#FFF",
+			"-webkit-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+"#FFF",
+			"-moz-box-shadow": "0px 0px 0px "+app.ui.shadow+"px "+"#FFF",
 		});
+
+		var chipWidth = Math.floor(paletteBoxW / 53);
+		var chipRemainder = paletteBoxW - chipWidth * 53;
+		$('.palette-chip').css({"width": chipWidth});
+		$('.palette-chip:lt(' + chipRemainder + ')').css({"width": chipWidth + 1});
 
 		if ( render ){
 
@@ -7335,7 +6600,9 @@ $(document).ready ( function(){
 
 	}
 
-	function renderAll(){
+	function renderAll(instanceId){
+
+		console.log(["renderAll", instanceId]);
 
 		if ( app.tabs.active == "weave"){
 
@@ -7368,13 +6635,13 @@ $(document).ready ( function(){
 		if ( objType == "weave" ){
 
 			var weaveWidth = obj.length;
-			if ( weaveWidth > g_weaveLimitMax ) errors.push("Can't insert end. Maximum limit of weave size is " + g_weaveLimitMax + " Ends.");
-			if ( weaveWidth < g_weaveLimitMin ) errors.push("Can't delete end. Minimum limit of weave size reached.");
+			if ( weaveWidth > app.limits.maxWeaveSize ) errors.push("Can't insert end. Maximum limit of weave size is " + app.limits.maxWeaveSize + " Ends.");
+			if ( weaveWidth < app.limits.minWeaveSize ) errors.push("Can't delete end. Minimum limit of weave size reached.");
 
 			if ( typeof obj[0] !== "undefined"  ){
 				var weaveHeight = obj[0].length;
-				if ( weaveHeight > g_weaveLimitMax ) errors.push("Can't insert pick. Maximum limit of weave size is " + g_weaveLimitMax + " Picks.");
-				if ( weaveHeight < g_weaveLimitMin ) errors.push("Can't delete pick. Minimum limit of weave size reached.");
+				if ( weaveHeight > app.limits.maxWeaveSize ) errors.push("Can't insert pick. Maximum limit of weave size is " + app.limits.maxWeaveSize + " Picks.");
+				if ( weaveHeight < app.limits.minWeaveSize ) errors.push("Can't delete pick. Minimum limit of weave size reached.");
 			}
 
 		} else if ( objType == "project"){
@@ -7384,7 +6651,7 @@ $(document).ready ( function(){
 		} else if ( objType == "pattern"){
 
 			var patternSize = obj.length;
-			if ( patternSize > g_patternLimit ) errors.push("Maximum limit of pattern size is " + g_patternLimit+ " threads.");
+			if ( patternSize > app.limits.maxPatternSize ) errors.push("Maximum limit of pattern size is " + app.limits.maxPatternSize+ " threads.");
 
 		} else if ( objType == "simulation" ){
 
@@ -7397,8 +6664,8 @@ $(document).ready ( function(){
 			var weavePicks = weaveArray[0].length;
 			var warpRepeatSize = [weaveEnds, warpPatternSize].lcm();
 			var weftRepeatSize = [weavePicks, weftPatternSize].lcm();
-			if ( warpRepeatSize > g_repeatLimit ) errors.push("Warp Color Weave Repeat Exceeding Limit of " + g_repeatLimit + " Ends.");
-			if ( weftRepeatSize > g_repeatLimit ) errors.push("Weft Color Weave Repeat Exceeding Limit of " + g_repeatLimit + " Picks.");
+			if ( warpRepeatSize > app.limits.maxRepeatSize ) errors.push("Warp Color Weave Repeat Exceeding Limit of " + app.limits.maxRepeatSize + " Ends.");
+			if ( weftRepeatSize > app.limits.maxRepeatSize ) errors.push("Weft Color Weave Repeat Exceeding Limit of " + app.limits.maxRepeatSize + " Picks.");
 			if ( warpPatternArray.indexOf("BL") !== -1 ) errors.push("Warp Pattern contains empty threads.");
 			if ( weftPatternArray.indexOf("BL") !== -1 ) errors.push("Weft Pattern contains empty threads.");
 			if ( warpPatternSize === 0 ) errors.push("Warp Pattern is empty."); 
@@ -7421,8 +6688,6 @@ $(document).ready ( function(){
 	// ----------------------------------------------------------------------------------
 	// Initial
 	// ----------------------------------------------------------------------------------
-	$("#autoPatternSize input").attr("data-max", g_patternLimit);
-	$("#autoPatternSize input").val(120);
 
 	// ----------------------------------------------------------------------------------
 	// Remove Javascript Code ID
@@ -7442,7 +6707,7 @@ $(document).ready ( function(){
 		throw new Error("Error");
 	}*/
 
-	function getWeaveProps(weave, shfatLimit = 256){
+	function getWeaveProps(weave, shfatLimit = app.limits.maxShafts){
 
 		var shafts, pegplan2D8, threading1D, threading2D8, tieup2D8, treadling1D, treadling2D8;
 
@@ -7717,15 +6982,19 @@ $(document).ready ( function(){
 	var popForms = {
 
 		init : function(obj, target){
+			if ( obj == undefined && target == undefined ){
+				return;
+			}
 			obj[target].forEach(function(v){
 				var type = v[0];
-				var initValule = v[5];
-				if ( type.in("check", "number", "text") ){
+				var initValule = v[4];
+				if ( type.in("check", "text") ){
 					this[v[3]] = initValule || false;
-				} else if ( type == "number"){
-					this[v[3]] = initValule || false;
+				} else if ( type == "number" ){
+					this[v[3]] = initValule;
+				} else if ( type == "text" ){
+					this[v[3]] = initValule;
 				} else if ( type == "select" ){
-
 					if ( Array.isArray(initValule) ){
 						this[v[3]] = initValule[0][0] || false;
 					} else {
@@ -7736,22 +7005,30 @@ $(document).ready ( function(){
 		},
 
 		update : function(obj, target){
+			if ( obj == undefined && target == undefined ){
+				return;
+			}
 			var type, item, value;
 			obj[target].forEach(function(v,i){
 				type = v[0];
 				item = $("#"+v[2]);
 				value = this[v[3]];
 				if ( type == "check" ){
-					item.tinyToggle(value ? "check" : "uncheck");
+					item.prop("checked", value);
 				} else if ( type == "number"){
 					item.find("input").val(value);
 				} else if ( type == "select"){
-					item.find('option[value="' + value + '"]').prop("selected", true);
+					item.find("option[value=\"" + value + "\"]").prop("selected", true);
+				} else if ( type == "text"){
+					item.find("input").val(value);
 				}
 			}, obj);
 		},
 
 		apply : function(obj, target){
+			if ( obj == undefined && target == undefined ){
+				return;
+			}
 			var type, item;
 			obj[target].forEach(function(v){
 				type = v[0];
@@ -7762,39 +7039,76 @@ $(document).ready ( function(){
 					this[v[3]] = item.numVal();
 				} else if ( type == "select"){
 					this[v[3]] = item.val();
+				} else if ( type == "text"){
+					this[v[3]] = item.val();
 				}
 			}, obj);
 		},
 
 		create : function(options){
+
 			var _this = this;
+
 			$("<div>", {id: options.htmlId, class: options.css}).appendTo("#noshow");
-			options.parent[options.child].forEach(function(item){
-				popForms.addItem(this.htmlId, ...item);
-			}, options);
-			var pop = new dhtmlXPopup({
-				toolbar: options.toolbar,
-				id: options.toolbarButton
-			});
-			if (typeof options.onLoad === "function") {
-		    	options.onLoad();
-		    }
+
+			if ( options.parent && options.child ){
+				var params = g(options.parent).params;
+				params[options.child].forEach(function(item){
+					popForms.addItem(this.htmlId, options.parent, options.child, ...item);
+				}, options);
+				_this.init(params, options.child);
+			}
+
+			if ( options.toolbar && options.toolbarButton ){
+				var pop = new dhtmlXPopup({
+					toolbar: options.toolbar,
+					id: options.toolbarButton
+				});
+			} else if ( options.htmlButton ){
+				var pop = new dhtmlXPopup({
+					mode: getObjProp(options, "position", false)
+				});
+				$(document).on("click", options.htmlButton, function(evt){
+					var popupVisible = $(this).attr("popup-visible") == 1;
+					$(options.htmlButton).attr("popup-visible", 0);
+					if ( popupVisible ){
+						pop.hide();
+					} else {
+						var x = $(this).offset().left;
+						var y = $(this).offset().top;
+						var w = $(this).width();
+						var h = $(this).height();
+						pop.show(x,y,w,h);
+						$(this).attr("popup-visible", 1);
+					}
+				});
+			}
+
 			pop.attachObject(options.htmlId);
-			this.init(options.parent, options.child);
+			
+			if (typeof options.onReady === "function") {
+		    	options.onReady();
+		    }
+			pop.attachEvent("beforeShow", function(id) {
+				if (typeof options.beforeShow === "function") {
+			    	options.beforeShow();
+			    }
+			});
 			pop.attachEvent("onShow", function(id) {
-				_this.update(options.parent, options.child);
+
+				_this.update(params, options.child);
 				if (typeof options.onShow === "function") {
 			    	options.onShow();
 			    }
 			});
-			$("#"+options.htmlId+" .button-primary").click(function(e) {
-				_this.apply(options.parent, options.child);
+			$("#"+options.htmlId+" .xcontrol .button-primary").click(function(e) {
+				_this.apply(params, options.child);
 				if (typeof options.onApply === "function") {
 			    	options.onApply();
 			    }
 				return false;
 			});
-			$("#"+options.htmlId+" .button-close").click(function(e) {
+			$("#"+options.htmlId+" .xcontrol .button-close").click(function(e) {
 				if (e.which === 1) {
 					pop.hide();
 					if (typeof options.onHide === "function") {
@@ -7803,107 +7117,160 @@ $(document).ready ( function(){
 				}
 				return false;
 			});
+
+			return pop;
 		},
 
-		addItem : function(parentElement, type, title, id, varName, cssSize = null, values = null, min = null, max = null, step = 0, precision = 0){
+		addItem : function(formId, parent, child, type, title, domId, varName, values = null, options = false ){
 
 			var inputClass, titleClass;
 
-			if ( cssSize == "1/3" ){
+			var defaultConfig = type == "check" ? "1/3" : "2/5";
+
+			var config = getObjProp(options, "config", defaultConfig);
+			var min = getObjProp(options, "min");
+			var max = getObjProp(options, "max");
+			var step = getObjProp(options, "step");
+			var precision = getObjProp(options, "precision");
+			var hide = getObjProp(options, "hide", false);
+			var active = getObjProp(options, "active", false);
+			var css = getObjProp(options, "css", false);
+
+			css = css ? " "+css : false;
+
+			if ( config == "1/3" ){
 
 				inputClass = "xcol xcol13";
 				titleClass = "xcol xcol23";
 
-			} else if ( cssSize == "2/3" ){
+			} else if ( config == "2/3" ){
 
 				inputClass = "xcol xcol23";
 				titleClass = "xcol xcol13";
 
-			} else if ( cssSize == "1/2" ){
+			} else if ( config == "1/2" ){
 
 				inputClass = "xcol xcol12";
 				titleClass = "xcol xcol12";
 
-			} else if ( cssSize == "1/1" ){
+			} else if ( config == "1/1" ){
 
 				inputClass = "xcol xcol11";
 				titleClass = "xcol xcol11";
 
-			} else if ( cssSize == "2/5" ){
+			} else if ( config == "2/5" ){
 
 				inputClass = "xcol xcol25";
 				titleClass = "xcol xcol35";
 
-			} else if ( cssSize == "3/5" ){
+			} else if ( config == "3/5" ){
 
 				inputClass = "xcol xcol35";
 				titleClass = "xcol xcol25";
 
 			}
 			
-			var html = '';
+			var html = "";
 
-			if ( type == "control" ){
+			if ( type == "header" ){
 
-				html += '<div class="xcontrol">';
-					html += '<div class="xcol xcol34">';
-						html += '<a class="xbutton xleft button-primary">'+title+'</a>';
-					html += '</div>';
-					html += '<div class="xcol xcol14">';
-						html += '<a class="xbutton xright button-close">&#10006;</a>';
-					html += '</div>';
-				html += '</div>';
+				html += "<div class=\"xHeader\">"+title+"</div>";
+
+			} else if ( type == "control" ){
+
+				html += "<div class=\"xcontrol\">";
+					html += "<div class=\"xcol xcol34\">";
+						html += "<a class=\"xbutton xleft button-primary\">"+title+"</a>";
+					html += "</div>";
+					html += "<div class=\"xcol xcol14\">";
+						html += "<a class=\"xbutton xright button-close\">&#10006;</a>";
+					html += "</div>";
+				html += "</div>";
+
+			} else if ( type == "separator" ){
+
+				html += "<div class=\"xSeparator\"></div>";
+
+			} else if ( type == "html" ){
+
+				html += "<div id=\""+domId+"\"></div>";
 
 			} else {
 
-				html += '<div class="xrow">';
-					html += '<div class="'+titleClass+'">';
-						html += '<div class="xtitle w100p">'+title+'</div>';
-					html += '</div>';
-					html += '<div class="'+inputClass+'">';
+				html += "<div class=\"xrow\">";
+
+					if( title ){
+						html += "<div class=\""+titleClass+"\">";
+							html += "<div class=\"xtitle\">"+title+"</div>";
+						html += "</div>";
+						html += "<div class=\""+inputClass+"\">";
+					}
 
 					if ( type == "number"){
 
-						html+= spinnerHTML(id, "spinner-counter xcounter", values, min, max, step, precision);
+						html+= spinnerHTML(domId, "spinner-counter xcounter", values, min, max, step, precision);
 
 					} else if ( type == "select"){
 
-						html += '<select class="xselect" id="'+id+'">';
+						html += "<select class=\"xselect\" id=\""+domId+"\">";
 							if ( Array.isArray(values) ){
 								for (var value of values) {
-								  html += '<option value="'+value[0]+'">'+value[1]+'</option>';
+								  html += "<option value=\""+value[0]+"\">"+value[1]+"</option>";
 								}
 							}
-						html += '</select>';
+						html += "</select>";
 
 					} else if ( type == "check" ){
-
-						var checkedTag = values ? ' checked="checked" ' : '';
-						html += '<div class="xcheckbox-container">';
-							html += '<input id = "'+id+'" class="xcheckbox tiny-toggle" data-tt-type="toggle" data-tt-size="big" type="checkbox" '+checkedTag+' />';
-						html += '</div>';
-
+						
+						var checkedTag = values ? " checked=\"checked\" " : "";
+						html += "<label>";
+							html += "<input id =\""+domId+"\" type=\"checkbox\" class=\"xcheckbox toggle color-primary is-square has-animation\" "+checkedTag+"/>";
+						html += "</label>";
 
 					} else if ( type == "text" ){
 
-						html += '<input class="xtext" id = "'+id+'" type="text" />';
+						html += "<input class=\"xtext\" id=\""+domId+"\" type=\"text\" />";
+
+					} else if ( type == "button" ){
+
+						html += "<div class=\"xbutton button-primary"+css+"\" id=\""+domId+"\">"+values+"</div>";
 
 					}
 
-					html += '</div>';
-				html += '</div>';
+					html += "</div>";
+				html += "</div>";
 
 			}
 
-			$("#"+parentElement).append(html);
+			$("#"+formId).append(html);
+
+			if ( hide ){
+				$("#"+domId).closest(".xrow").hide();
+			}
+
+			if ( active ){
+
+				this.active[domId] = {
+					parent: parent,
+					child: child
+				};
+
+				$("#"+domId).on("change", function() { 
+				    activeApply(domId);
+					return false;
+				});
+
+			}
 
 		},
 
 		addOption: function(selectID, optionValue, optionText){
-			$("#"+selectID).append($('<option>', { value : optionValue }).text(optionText));
+			$("#"+selectID).append($("<option>", { value : optionValue }).text(optionText));
 		},
 
-	}
+		active:{}
+
+	};
 
 	// ----------------------------------------------------------------------------------
 	// Model Object & Methods
@@ -7920,11 +7287,13 @@ $(document).ready ( function(){
 		camera : undefined,
 		controls : undefined,
 		model : undefined,
+		modelMeshes: [],
 		gltfLoader : undefined,
+		raycaster: new THREE.Raycaster(),
+
 		lights : {},
 
-		modelUVMapWmm : undefined,
-		modelUVMapHmm : undefined,
+		maxAnisotropy: 16,
 
 		fabric: {
 			status : false,
@@ -7934,22 +7303,27 @@ $(document).ready ( function(){
 			yRepeats: 0,
 			textureWmm: 0,
 			textureHmm: 0,
-			needUpdate: true
+			textureRotationDeg: 0,
+			needsUpdate: true
 		},
 
+		// Model
 		params : {
 
-			roomW : 60,
-			roomL : 60,
-			roomH : 30,
-			roomR : 33.85,
+			animationQue: 0,
+
+			roomW : 60, // 600cm
+			roomH : 27,
 
 			roomMeshId: undefined,
 			featureWallMeshId: undefined,
+			modelUVMapWmm : undefined,
+			modelUVMapHmm : undefined,
+			spotLightTarget : [0, 0, 0],
 
 			prevState: {
 
-				gltfId: undefined,
+				modelId: undefined,
 				roomShape: undefined,
 				wallTexture: undefined,
 				envAmbiance: undefined,
@@ -7957,416 +7331,358 @@ $(document).ready ( function(){
 
 			},
 
-			modelPos: undefined,
-			cameraPos: undefined,
-			controlsTarget: undefined,
+			viewPresets:{
+
+				current: "initScene",
+				initScene:[],
+				initModel:[],
+				user:[],
+
+				update: function(preset){
+					var _this = globalModel;
+					var cameraPos = _this.camera.position;
+					var controlsTarget = _this.controls.target;
+					this[preset] = [false, [cameraPos.x, cameraPos.y, cameraPos.z], [controlsTarget.x, controlsTarget.y, controlsTarget.z]];
+					if ( _this.model ){
+						var modelRot = _this.model.rotation;
+						this[preset][0] = [modelRot.x, normalizeToNearestRotation(modelRot.y), modelRot.z];
+					}
+					this.current = "user";
+				}
+
+			},
 
 			scene: [
 
-				["select", "Room", "modelRoomShape", "roomShape", "1/2", [["square", "Square"], ["round", "Round"], ["open", "Open"]]],
-				["select", "Walls", "modelWallTexture", "wallTexture", "1/2", [["plain", "Plain"], ["rough", "Rough"], ["bricks", "Bricks"], ["pattern", "Pattern"]]],
-				["select", "Ambiance", "modelEnvAmbiance", "envAmbiance", "1/2", [["light", "Light"], ["dark", "Dark"]]],
-				["check", "Feature Wall", "modelFeatureWall", "featureWall", "2/5", 0],
+				["select", "Room", "modelRoomShape", "roomShape", [["square", "Square"], ["round", "Round"], ["open", "Open"]], { config:"1/2" }],
+				["select", "Walls", "modelWallTexture", "wallTexture", [["plain", "Plain"], ["rough", "Rough"], ["bricks", "Bricks"], ["vintage", "Vintage"], ["modern", "Modern"]], { config:"1/2" }],
+				["select", "Ambiance", "modelEnvAmbiance", "envAmbiance", [["bright", "Bright"], ["dark", "Dark"]], { config:"1/2" }],
+				["check", "Feature Wall", "modelFeatureWall", "featureWall", 0],
+				["select", "Feature Wall Texture", "modelFeatureWallTexture", "featureWallTexture", [["plain", "Plain"], ["rough", "Rough"], ["bricks", "Bricks"], ["vintage", "Vintage"], ["modern", "Modern"]], { config:"1/2" }],
+				["select", "Background", "modelBGColor", "bgColor", [["grey", "Grey"], ["white", "White"], ["black", "Black"], ["transparent", "Transparent"]], { config:"1/2", active: true }],
 				["control", "Apply"]
 			],
 
 			lights: [
 				
-				["check", "Ambient", "modelAmbientLight", "ambientLight", "2/5", 0],
-				["check", "Directional", "modelDirectionalLight", "directionalLight", "2/5", 1],
-				["check", "Hemisphere", "modelHemisphereLight", "hemisphereLight", "2/5", 0],
-				["check", "Point", "modelPointLight", "pointLight", "2/5", 1],
-				["check", "Spot", "modelSpotLight", "spotLight", "2/5", 1],
-				["check", "Feature Spot", "modelFeatureSpotLight", "featureSpotLight", "2/5", 1],
-				["control", "Apply"]
-
+				["select", "Temperature", "modelLightTemperature", "lightTemperature", [["neutral", "Neutral"], ["cool", "Cool"], ["warm", "Warm"]], { config:"1/2", active:true }],
+				["check", "Ambient", "modelAmbientLight", "ambientLight", 1, { active:true }],
+				["check", "Directional", "modelDirectionalLight", "directionalLight", 1, { active:true }],
+				["check", "Point", "modelPointLight", "pointLight", 1, { active:true }],
+				["check", "Spot", "modelSpotLight", "spotLight", 1, { active:true }],
+				["check", "Feature Spot", "modelFeatureSpotLight", "featureSpotLight", 1, { active:true }],
+				["number", "Lights Intensity", "modelLightsIntensity", "lightsIntensity", 1, { min:0.1, max:2, step:0.1, precision: 1, active:true }]
 			],
 
 			model: [
-				["select", "Model", "modelGltfId", "gltfId", "2/3", 1],
-				["select", "Button Color", "modelButtonColor", "buttonColor", "1/2", [["white", "White"], ["black", "Black"]]],
-				["select", "Collar Color", "modelCollarColor", "collarColor", "1/2", [["pattern", "Pattern"], ["white", "White"], ["black", "Black"]]],
+				["select", false, "modelId", "modelId", 1, { config:"1/1" }],
+				["select", "Buttons", "modelButton", "modelButton", [["whiteTransparent", "White"], ["blackTransparent", "Black"]], { config:"1/2" }],
+				["select", "Thread", "modelThread", "modelThread", [["white", "White"], ["black", "Black"]], { config:"1/2" }],
+				["select", "Collar", "modelCollar", "modelCollar", [["woven", "Fabric"], ["whiteFabric", "White"], ["blackFabric", "Black"]], { config:"1/2" }],
+				["select", "Cuffs", "modelCuffs", "modelCuffs", [["woven", "Fabric"], ["whiteFabric", "White"], ["blackFabric", "Black"]], { config:"1/2" }],
 				["control", "Apply"]
 			],
+
+			texture: [
+				
+				["button", false, "modelTextureWeaveButton", null, "Weave Texture", { config:"1/1", css:"button-icon icon-texture-weave" }],
+				["button", false, "modelTextureImageButton", null, "Image Texture", { config:"1/1", css:"button-icon icon-texture-image" }],
+				["separator"],
+				["number", "Texture Width", "modelTextureWidth", "textureWidth", 100, { precision:2 }],
+				["number", "Texture Height", "modelTextureHeight", "textureHeight", 100, { precision:2 }],
+				["number", "Offset X", "modelTextureOffsetX", "textureOffsetX", 0],
+				["number", "Offset Y", "modelTextureOffsetY", "textureOffsetY", 0],
+				["select", "Dimension Units", "modelTextureDimensionUnits", "textureDimensionUnits", [["mm", "mm"], ["cm", "cm"], ["inch", "Inch"]]],
+				["number", "Rotation (deg)", "modelTextureRotationDeg", "textureRotationDeg", 0, { min:0, max:360, step:5 }],
+				["control", "Apply"]
+
+			],
+
+			texture2: [
+				
+				
+
+			]
 				
 		},
 
-		materials : {},
-		textures : {},
+		images: {
 
-		sceneCreated : false,
-		
+			url: "model/textures/",
 
-		frameW : 0,
-		frameH : 0,
+			canvas_bump: {
+				file: "canvas_bump.png",
+				wmm: 25.4,
+				hmm: 25.4,
+				ends: 60,
+				picks: 50,
+				val: undefined
+			},
 
-		fps : [],
-
-		mouseAnimate : false,
-		forceAnimate : false,
-		autoRotate : false,
-		allowAutoRotate : true,
-		rotationSpeed : 0.01,
-		rotationDirection : 1,
-
-		prevX : 0,
-		prevY : 0,
-
-		setInterface : function(instanceId = 0, render = true){
-
-			console.log(["globalModel.setInterface", instanceId]);
-			//logTime("globalModel.setInterface("+instanceId+")");
-
-			var modelBoxL = 0;
-			var modelBoxB = 0;
-
-			var modelBoxW = this.frameW - modelBoxL;
-			var modelBoxH = this.frameH - modelBoxB;
-
-			$("#model-container").css({
-				"width":  modelBoxW,
-				"height": modelBoxH,
-				"left": modelBoxL,
-				"bottom": modelBoxB,
-			});
-
-			globalPositions.update("model");
-
-			if ( app.tabs.active == "model" && render ){
-				globalModel.createScene(function(){
-					globalModel.renderer.setSize(globalModel.frameW, globalModel.frameH);
-					globalModel.camera.aspect = globalModel.frameW / globalModel.frameH;
-					globalModel.camera.updateProjectionMatrix();
-					globalModel.render();
-				});
-			}
-
-			//logTimeEnd("globalModel.setInterface("+instanceId+")");
-
-		},
-
-		onTabSelect : function(){
-
-			globalModel.setInterface(3);
-
-		},
-
-		setLights : function(){
-
-			if ( !this.lights.ambient && this.params.ambientLight ){
-				this.lights.ambient =  new THREE.AmbientLight( 0xffffff, 0.5 );
-				this.scene.add( this.lights.ambient );
-			} else if ( this.lights.ambient ){
-				this.lights.ambient.visible = this.params.ambientLight ;
-			}
-
-			if ( !this.lights.point1 && this.params.pointLight ){
-				this.lights.point1 = new THREE.PointLight( 0xffffff, 10, 50, 1);
-				this.lights.point1.position.set( 0, this.params.roomH-0.05, 0 );
-				this.scene.add( this.lights.point1 );
-				this.lights.point2 = new THREE.PointLight( 0xffffff, 10, 50, 1);
-				this.lights.point2.position.set( this.params.roomW/3, this.params.roomH-0.05, this.params.roomL/3 );
-				this.scene.add( this.lights.point2 );
-				this.lights.point3 = new THREE.PointLight( 0xffffff, 10, 50, 1);
-				this.lights.point3.position.set( this.params.roomW/3, this.params.roomH-0.05, -this.params.roomL/3 );
-				this.scene.add( this.lights.point3 );
-				this.lights.point4 = new THREE.PointLight( 0xffffff, 10, 50, 1);
-				this.lights.point4.position.set( -this.params.roomW/3, this.params.roomH-0.05, this.params.roomL/3 );
-				this.scene.add( this.lights.point4 );
-				this.lights.point5 = new THREE.PointLight( 0xffffff, 10, 50, 1);
-				this.lights.point5.position.set( -this.params.roomW/3, this.params.roomH-0.05, -this.params.roomL/3 );
-				this.scene.add( this.lights.point5 );
-			} else if ( this.lights.point1 ){
-				this.lights.point1.visible = this.params.pointLight;
-				this.lights.point2.visible = this.params.pointLight;
-				this.lights.point3.visible = this.params.pointLight;
-				this.lights.point4.visible = this.params.pointLight;
-				this.lights.point5.visible = this.params.pointLight;
-			}
-
-			if ( !this.lights.spot && this.params.spotLight ){
-				// SpotLight( color, intensity, distance, angle, penumbra, decay )
-			    this.lights.spot = new THREE.SpotLight(0xffffff, 200, 50, 0.3, 1, 1);
-				this.lights.spot.position.set( 16, 24, 16 );
-				this.lights.spot.castShadow = true;
-				this.lights.spot.target = new THREE.Object3D( 0, 0, 0 );
-				this.lights.spot.target.position.set(0, 0, 0);
-			    this.lights.spot.shadow.bias = -0.0001;
-			    this.lights.spot.radius = 10;
-			    this.scene.add( this.lights.spot.target );
-				this.scene.add( this.lights.spot );
-				this.lights.spot.shadow.mapSize.width = 512;
-				this.lights.spot.shadow.mapSize.height = 512;
-				this.lights.spot.shadow.camera.near = 0.5;
-				this.lights.spot.shadow.camera.far = 85;
-				//var spotLightHelper = new THREE.SpotLightHelper( this.lights.spot );
-				//this.scene.add( spotLightHelper );
-				//Create a helper for the shadow camera (optional)
-				//var spotLightCameraHelper = new THREE.CameraHelper( this.lights.spot.shadow.camera );
-				//this.scene.add( spotLightCameraHelper );
-			} else if ( this.lights.spot ){
-				this.lights.spot.visible = this.params.spotLight;
-			}
-
-			if ( !this.lights.featureSpot && this.params.featureSpotLight ){
-				// SpotLight( color, intensity, distance, angle, penumbra, decay )
-			    this.lights.featureSpot = new THREE.SpotLight(0xffffff, 100, 500, 1, 1, 1);
-				this.lights.featureSpot.position.set( 0, 24, -7.5 );
-				this.lights.featureSpot.castShadow = true;
-				this.lights.featureSpot.target = new THREE.Object3D( 0, 0, 0 );
-				this.lights.featureSpot.target.position.set(0, 0, -20);
-			    this.lights.featureSpot.shadow.bias = -0.0001;
-			    this.lights.featureSpot.radius = 10;
-			    this.scene.add( this.lights.featureSpot.target );
-				this.scene.add( this.lights.featureSpot );
-				this.lights.featureSpot.shadow.mapSize.width = 512;
-				this.lights.featureSpot.shadow.mapSize.height = 512;
-				this.lights.featureSpot.shadow.camera.near = 0.5;
-				this.lights.featureSpot.shadow.camera.far = 85;
-			} else if ( this.lights.featureSpot ){
-				this.lights.featureSpot.visible = this.params.featureSpotLight;
-			}
-
-			if ( !this.lights.directional && this.params.directionalLight ){
-				this.lights.directional = new THREE.DirectionalLight( 0xffef99, 0.5 );
-				this.lights.directional.position.set(0, this.params.roomH/2, this.params.roomL/4);
-				this.scene.add( this.lights.directional );
-			} else if ( this.lights.directional ){
-				this.lights.directional.visible = this.params.directionalLight;
-			}
-
-			if ( !this.lights.hemisphere && this.params.hemisphereLight ){
-				this.lights.hemisphere = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
-				this.lights.hemisphere.color.setHSL( 0.1, 1, 0.7 );
-				this.lights.hemisphere.groundColor.setHSL( 0.6, 1, 0.7 );
-				this.lights.hemisphere.position.set( 0, this.params.roomH, 0 );
-				this.scene.add( this.lights.hemisphere );
-			} else if ( this.lights.hemisphere ){
-				this.lights.hemisphere.visible = this.params.hemisphereLight;
-			}
-
-			this.render();
-		
-		},
-
-		createScene : function(callback = false){
-
-			if ( !this.sceneCreated ){
-
-				setLoadingbar(0, "modelcreatescene", true, "Creating Scene");
-
-				$.doTimeout("createModelScene", 100, function(){
-
-					globalModel.renderer = new THREE.WebGLRenderer({
-						antialias: true,
-						alpha: true,
-						preserveDrawingBuffer: true 
+			get: function(id, callback){
+				var _images = this;
+				if ( _images[id].val == undefined ){
+					var url = _images.url + _images[id].file;
+					_images.load(url, function(img){
+						_images[id].val = img;
+						callback();
 					});
+				} else {
+					callback();
+				}
+			},
 
-					globalModel.renderer.setPixelRatio(g_pixelRatio);
-				    globalModel.renderer.setSize(globalModel.frameW, globalModel.frameH);
-				    globalModel.renderer.setClearColor(0x000000, 0);
+			load: function(url, callback ){
+				var img = new Image();
+				img.onload = function() { if (typeof callback === "function" ) {  callback(img); } };
+				img.onerror = function() { "loadImage.error: "+url};
+				img.src = url;
+			}
 
-				    globalModel.renderer.shadowMap.enabled = true;
-					globalModel.renderer.shadowMapSoft = true;
-					globalModel.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-					globalModel.renderer.shadowMap.bias = 0.0001;
+		},
 
-				    globalModel.renderer.gammaInput = true;
-					globalModel.renderer.gammaOutput = true;
-		    		globalModel.renderer.gammaFactor = 2.2;
 
-		    		globalModel.renderer.physicallyCorrectLights = true;
+		weaveTextures: {
 
-				    var container = document.getElementById("model-container");
-				    container.innerHTML = "";
-				    container.appendChild(globalModel.renderer.domElement);
-				    globalModel.renderer.domElement.id = "g_modelCanvas";
+		},
 
-				    addStyleClassToElement("g_modelCanvas", "graph-canvas");
+		imageTextures: {
 
-				    // scene
-				    globalModel.scene = new THREE.Scene();
-				    
-				    // camera
-				    globalModel.camera = new THREE.PerspectiveCamera(45, globalModel.frameW / globalModel.frameH, 0.5, 400);
-				    globalModel.scene.add( globalModel.camera ); //required, since camera has a child light
+		},
 
-				    // controls
-				    globalModel.controls = new THREE.OrbitControls( globalModel.camera, globalModel.renderer.domElement );
-				    globalModel.controls.minDistance = 0.5;
-				    globalModel.controls.maxDistance = 400;
-				    //globalModel.controls.minPolarAngle = 0;
-				    //globalModel.controls.maxPolarAngle = Math.PI/1.8;
-				    globalModel.controls.enablePan = false;
-				    globalModel.controls.mouseButtons = {
-						LEFT: THREE.MOUSE.PAN,
-						MIDDLE: THREE.MOUSE.DOLLY,
-						RIGHT: THREE.MOUSE.ROTATE
-					}
+		textures: {
 
-					globalModel.gltfLoader = new THREE.GLTFLoader();
+			needsUpdate: true,
+			pending: 0,
+			folder: "model/textures/",
 
-					globalModel.createMaterials();
-					globalModel.setEnvironment();
-				    
-				    // axes
-				    //globalModel.scene.add( new THREE.AxesHelper( 2 ) );
+			url: {
 
-				    //globalModel.scene.add(new THREE.CameraHelper(globalModel.camera));
-					//globalModel.scene.add( new THREE.SpotLightHelper( globalModel.lights.spot ) );
+				checker: "checker.png",
 
-					var cameraPos = [0, globalModel.params.roomH/2, globalModel.params.roomL*0.75];
-					var controlsTarget = [0, globalModel.params.roomH/2, 0];
-					var spotLightTarget = [0, 0, 0];
+				plain_bright: "plain_bright.png",
+				plain_dark: "plain_dark.png",
+				plain_bump: "plain_bump.png",
 
-					globalModel.camera.position.set(...cameraPos);
-					globalModel.controls.target.set(...controlsTarget);
+				rough_bright: "rough_bright.jpg",
+				rough_dark: "rough_dark.png",
+				rough_bump: "rough_bump.png",
 
-					if ( globalModel.lights.spot ){
-						globalModel.lights.spot.target.position.set(...spotLightTarget);
-					}
+				bricks_bright: "bricks_bright.png",
+				bricks_dark: "bricks_dark.png",
+				bricks_bump: "bricks_bump.png",
 
-					globalModel.controls.update();
-					
-					globalModel.render();
-					globalModel.startAnimation();
-					globalModel.sceneCreated = true;
+				vintage_bright: "vintage_bright.jpg",
+				vintage_dark: "vintage_dark.png",
+				vintage_bump: "vintage_bump.png",
 
+				modern_bright: "modern_bright.png",
+				modern_dark: "modern_dark.png",
+				modern_bump: "modern_bump.png",
+
+				canvas: "canvas.png",
+				canvas_bump: "canvas_bump.png",
+
+				wood: "wood_white_texture.png",
+				wood_bump: "wood_white_bump.png",
+
+				marble_light: "marble_light.jpg",
+				marble_medium: "marble_medium.jpg",
+				marble_dark: "marble_dark.jpg",
+
+				knitted_fabric: "fabric_bump.jpg",
+				knitted_bump: "knitted_bump.jpg",
+
+				carpet_bright: "carpet_bright.jpg",
+				carpet_dark: "carpet_dark.jpg",
+				carpet_bump: "carpet_bump.jpg",
+
+				woven_texture: "canvas.jpg",
+				woven_bump: "canvas_bump.png",
+
+				image_texture: "checker.png",
+				image_bump: "checker.png",
+
+			},
+
+		},
+
+		materials: {},
+
+		loadTexture: function(id, callback){
+
+			var _this = this;
+			
+			if ( _this.textures[id] == undefined && _this.textures.url[id] !== undefined && _this.textures.url[id] ){
+
+				_this.textures[id] = "initiated";
+				setLoadingbar(0, "modeltextureload", true, "Loading Texture");
+				if ( _this.textureLoader == undefined ){
+					_this.textureLoader = new THREE.TextureLoader();
+				}
+				var url = _this.textures.folder + _this.textures.url[id];
+
+				_this.textureLoader.load( url, function (texture) {
+					//texture.wrapS = THREE.RepeatWrapping;
+					//texture.wrapT = THREE.RepeatWrapping;
+					// texture.repeat.set(1, 1);
+					// texture.rotation = 0;
+					// texture.offset.set(0, 0);
+					texture.anisotropy = _this.maxAnisotropy;
+					texture.needsUpdate = true;
+					_this.textures[id] = texture;
 					setLoadingbar("hide");
+					if (typeof callback === "function" ) { 
+						callback();
+					}
+	            });
+			} else {
+				$.doTimeout(10, function(){					
+					if ( _this.textures[id] !== "initiated" ){
+						if (typeof callback === "function" ) { 
+							callback();
+						}
+						return false;
+					}
+					return true;
+				});
+			}
 
-					if (typeof callback === "function") {
-				    	callback();
-				    }
+		},
 
+		setMaterial: function(id, options, callback){
+
+			var _this = this;
+
+			if ( _this.materials[id] == undefined ){
+				_this.materials[id] = {};
+			}
+
+			var _material = _this.materials[id];
+
+			if ( _material.val == undefined ){
+
+				var materialProperties = {};
+				for ( var key in _material ) {
+					if ( _material.hasOwnProperty(key) && !key.in("type", "val", "repeat", "mapId", "bumpMapId", "offset", "wrap", "side", "title", "id", "name", "show", "editable") ){
+			           	materialProperties[key] = _material[key];
+			        }				
+				}
+
+				_material.type = getObjProp(_material, "type", "phong");
+
+				var side = getObjProp(_material, "side", "DoubleSide");
+				materialProperties.side = THREE[side];
+				
+				if ( _material.type == "lambert" ){
+					_material.val = new THREE.MeshLambertMaterial(materialProperties);
+				} else if ( _material.type == "standard" ){
+					_material.val = new THREE.MeshStandardMaterial(materialProperties);
+				} else if ( _material.type == "physical" ){
+					_material.val = new THREE.MeshPhysicalMaterial(materialProperties);
+				} else if ( _material.type == "phong" ){
+					_material.val = new THREE.MeshPhongMaterial(materialProperties);
+				}
+
+			}
+
+			var color = getObjProp(_material, "color", "#ffffff");
+			var mapId = getObjProp(_material, "mapId", false);
+			var bumpMapId = getObjProp(_material, "bumpMapId", false);
+			var repeat = getObjProp(_material, "repeat", false);
+			var offset = getObjProp(_material, "offset", false);
+			var wrap = getObjProp(_material, "wrap", false);
+
+			color = getObjProp(options, "color", color);
+			mapId = getObjProp(options, "mapId", mapId);
+			bumpMapId = getObjProp(options, "bumpMapId", bumpMapId);
+			repeat = getObjProp(options, "repeat", repeat);
+			offset = getObjProp(options, "offset", offset);
+			wrap = getObjProp(options, "wrap", wrap);
+
+			if ( color ){
+				_material.val.color.set(color);
+			}
+
+			if ( mapId ){
+
+				_this.loadTexture(mapId, function(){
+    				_material.val.map = _this.textures[mapId].clone();
+					if ( repeat ){
+						_material.val.map.repeat.set(repeat[0], repeat[1]);
+					}
+					if ( offset ){
+						_material.val.map.offset.set(offset[0], offset[1]);
+					}
+
+					if ( wrap == "mirror" ){
+						_material.val.map.wrapS = THREE.MirroredRepeatWrapping;
+						_material.val.map.wrapT = THREE.MirroredRepeatWrapping;
+
+					} else {
+						_material.val.map.wrapS = THREE.RepeatWrapping;
+						_material.val.map.wrapT = THREE.RepeatWrapping;
+					}
+
+					_material.val.map.needsUpdate = true;
+					_material.val.needsUpdate = true;
+					_this.render();
 				});
 
 			} else {
 
-				if (typeof callback === "function") {
-			    	callback();
-			    }
+				if ( _material.val !== undefined && _material.val.map !== undefined && _material.val.map ){
+					_material.val.map.dispose();
+					_material.val.map = undefined;
+					_material.val.needsUpdate = true;
+				}
 
 			}
 
-		},
+			if ( bumpMapId ){
 
-		setEnvironment : function(){
-
-			var room_geometry, room_material, room_mesh, feature_geometry, feature_material, feature_mesh;
-
-			var shape = globalModel.params.roomShape;
-			var walls = globalModel.params.wallTexture;
-			var ambiance = globalModel.params.envAmbiance;
-			var feature = globalModel.params.featureWall;
-
-			if ( globalModel.params.prevState.roomShape !== shape ){
-				
-				this.disposeObjectById(this.params.roomMeshId);
-				this.params.roomMeshId = undefined;
-
-				if ( shape !== "open" ){
-					if ( shape == "round"  ){
-						room_geometry = new THREE.CylinderBufferGeometry( this.params.roomR, this.params.roomR, this.params.roomH, 64 );
-					} else if ( shape == "square"  ){
-						room_geometry = new THREE.BoxBufferGeometry( this.params.roomW, this.params.roomH, this.params.roomL );
-						//var box_material = [this.materials.wall, this.materials.wall, this.materials.ceiling, this.materials.floor, this.materials.wall, this.materials.wall];
+				_this.loadTexture(bumpMapId, function(){
+    				_material.val.bumpMap = _this.textures[bumpMapId].clone();
+    				if ( repeat ){
+						_material.val.bumpMap.repeat.set(repeat[0], repeat[1]);
 					}
-					room_material = ambiance == "light" ? this.materials.wall_light : this.materials.wall_dark;
-					room_mesh = new THREE.Mesh( room_geometry, room_material );
-					room_mesh.receiveShadow = true;
-					room_mesh.position.set( 0, this.params.roomH/2, 0 );
-					this.params.roomMeshId = room_mesh.id;
-					this.scene.add( room_mesh );
-				}
+					if ( offset ){
+						_material.val.bumpMap.offset.set(offset[0], offset[1]);
+					}
+
+					if ( wrap == "mirror" ){
+						_material.val.bumpMap.wrapS = THREE.MirroredRepeatWrapping;
+						_material.val.bumpMap.wrapT = THREE.MirroredRepeatWrapping;
+
+					} else {
+						_material.val.bumpMap.wrapS = THREE.RepeatWrapping;
+						_material.val.bumpMap.wrapT = THREE.RepeatWrapping;
+					}
+
+					_material.val.bumpMap.needsUpdate = true;
+					_material.val.needsUpdate = true;
+					_this.render();
+				});
 
 			} else {
 
-				if ( globalModel.params.prevState.envAmbiance !== ambiance ){
-					this.scene.getObjectById(this.params.roomMeshId).material = ambiance == "light" ? this.materials.wall_light : this.materials.wall_dark;
+				if ( _material.val !== undefined && _material.val.bumpMap !== undefined && _material.val.bumpMap ){
+					_material.val.bumpMap.dispose();
+					_material.val.bumpMap = undefined;
+					_material.val.needsUpdate = true;
 				}
 
 			}
 
-			if ( feature ){
+			_material.val.needsUpdate = true;
 
-				if ( this.params.featureWallMeshId == undefined ){
-
-					var featureW = this.params.roomW*0.5;
-					var featureH = this.params.roomH*0.75;
-					var featureL = 0.5;
-
-					var featureMaterial = ambiance == "light" ? this.materials.pattern_light : this.materials.pattern_dark;
-					var flatWallMaterial = this.materials.wall_light_face;
-
-					feature_geometry = new THREE.BoxBufferGeometry( featureW, featureH, featureL );
-					feature_material = [ flatWallMaterial, flatWallMaterial, flatWallMaterial, flatWallMaterial, featureMaterial, flatWallMaterial ];
-
-					feature_mesh = new THREE.Mesh( feature_geometry, feature_material );
-					feature_mesh.receiveShadow = true;
-					feature_mesh.castShadow = true;
-					feature_mesh.position.set( 0, featureH/2, -this.params.roomL/4 );
-					this.params.featureWallMeshId = feature_mesh.id;
-
-					this.scene.add( feature_mesh );
-
-				} else {
-
-					if ( globalModel.params.prevState.envAmbiance !== ambiance ){
-						this.scene.getObjectById(this.params.featureWallMeshId).material = ambiance == "light" ? this.materials.pattern_light : this.materials.pattern_dark;
-					}
-
-				}
-
-			} else {
-
-				this.disposeObjectById(this.params.featureWallMeshId);
-				this.params.featureWallMeshId = undefined;
-			
-			}
-
-			globalModel.params.prevState.roomShape = shape;
-			globalModel.params.prevState.wallTexture = walls;
-			globalModel.params.prevState.envAmbiance = ambiance;
-			globalModel.params.prevState.featureWall = feature;
-
-			this.setLights();
-
-			this.render();
-
+			if (typeof callback === "function") {
+		    	callback();
+		    }
 
 		},
 
-		disposeObjectById : function(id){
-
-			if ( id !== undefined ){
-
-				var o = this.scene.getObjectById(id);
-
-				if (o.geometry) {
-		            o.geometry.dispose()
-		        }
-
-		        if (o.material) {
-		            if (o.material.length) {
-		                for (let i = 0; i < o.material.length; ++i) {
-		                    o.material[i].dispose()
-		                }
-		            }
-		            else {
-		                o.material.dispose()
-		            }
-		        }
-				
-				this.scene.remove(o);
-				o = undefined;
-
-				this.render();
-
-			}
-
-		},
-
+		// Model
 		createMaterials : function(){
 
 			var loader = new THREE.TextureLoader();
@@ -8698,375 +8014,830 @@ $(document).ready ( function(){
 
 		},
 
-		setDefaultFabricTexture : function(){
+		sceneCreated : false,
 
-			this.fabric.texture = this.textures.defaultFabric;
-			this.fabric.textureWmm = 25.4;
-			this.fabric.textureHmm = 25.4;
-			this.materials.fabric.map = this.fabric.texture;
-			this.fabric.texture.needsUpdate = true;
+		fps : [],
 
-		},
+		mouseAnimate : false,
+		forceAnimate : false,
+		autoRotate : false,
+		allowAutoRotate : true,
+		rotationSpeed : 0.01,
+		rotationDirection : 1,
 
-		updateFabricTextureDimensions : function(){
+		prevX : 0,
+		prevY : 0,
 
-			var xRepeats = this.modelUVMapWmm / this.fabric.textureWmm;
-			var yRepeats = this.modelUVMapHmm / this.fabric.textureHmm;
-			this.fabric.texture.repeat.set(xRepeats, yRepeats);
-			globalModel.fabric.texture.needsUpdate = true;
+		setInterface : function(instanceId = 0, render = true){
 
-		},
+			//console.log(["globalModel.setInterface", instanceId]);
+			//logTime("globalModel.setInterface("+instanceId+")");
 
-		loadSimulation : function(){
+			var modelBoxL = 0;
+			var modelBoxB = 0;
 
-			this.updateFabricTexture();
+			var modelBoxW = app.frameW - modelBoxL;
+			var modelBoxH = app.frameH - modelBoxB;
 
-			this.fabric.texture = new THREE.CanvasTexture(g_modelTextureCanvas);
-			this.fabric.texture.wrapS = THREE.RepeatWrapping;
-			this.fabric.texture.wrapT = THREE.RepeatWrapping;
-			this.fabric.texture.repeat.set(16, 16);
-			this.fabric.texture.anisotropy = 16;
+			$("#model-container").css({
+				"width":  modelBoxW,
+				"height": modelBoxH,
+				"left": modelBoxL,
+				"bottom": modelBoxB,
+			});
 
-			this.materials.fabric = new THREE.MeshPhongMaterial( {
+			globalPositions.update("model");
 
-		        map : this.fabric.texture,
-		        //bumpMap: textureBump,
-		        //bumpScale: 12,
-		        shininess: 1,
-		        side: THREE.DoubleSide
-
-		    });
-
-		},
-
-		updateFabricTexture : function(){
-
-			//var weaveW = globalWeave.weave2D8.length;
-			//var weaveH = globalWeave.weave2D8[0].length;
-
-			//var warpRepeat = [weaveW, globalPattern.warp.length].lcm();
-			//var weftRepeat = [weaveH, globalPattern.weft.length].lcm();
-
-			//var warpSize = globalSimulation.params.warpSize;
-			//var weftSize = globalSimulation.params.weftSize;
-			//var warpSpace = globalSimulation.params.warpSpace;
-			//var weftSpace = globalSimulation.params.weftSpace;
-
-			//var intersectionW = warpSize + warpSpace;
-			//var intersectionH = weftSize + weftSpace;
-
-			//var repeatW = warpRepeat * intersectionW;
-			//var repeatH = weftRepeat * intersectionH;
-
-			var textureWpx = globalSimulation.textureWpx;
-			var textureHpx = globalSimulation.textureHpx;
-
-			var canvasW = Math.min(2048, nearestPow2(textureWpx));
-			var canvasH = Math.min(2048, nearestPow2(textureHpx));
-
-			console.log([textureWpx, textureHpx, canvasW, canvasH]);
-
-			g_modelTextureContext = getCtx(61, "temp-canvas", "g_modelTextureCanvas", textureWpx, textureHpx, false);
-			globalSimulation.renderTo(g_modelTextureContext, textureWpx, textureHpx, globalWeave.weave2D8, "bl", 0, 0);
-
-			if ( globalModel.fabric.texture !== undefined ){
-				this.fabric.textureWmm = globalSimulation.textureWmm;
-				this.fabric.textureHmm = globalSimulation.textureHmm;
-				this.fabric.xRepeats = this.modelUVMapWmm / this.fabric.textureWmm;
-				this.fabric.yRepeats = this.modelUVMapHmm / this.fabric.textureHmm;
-				this.fabric.texture.repeat.set(this.fabric.xRepeats, this.fabric.yRepeats);
-				globalModel.fabric.texture.needsUpdate = true;
+			if ( app.tabs.active == "model" && render ){
+				globalModel.createScene(function(){
+					globalModel.renderer.setSize(app.frameW, app.frameH);
+					globalModel.camera.aspect = app.frameW / app.frameH;
+					globalModel.camera.updateProjectionMatrix();
+					globalModel.render();
+				});
 			}
 
-			this.fabric.needUpdate = false;
+			//logTimeEnd("globalModel.setInterface("+instanceId+")");
+
+		},
+
+		onTabSelect : function(){
+
+		},
+
+		setLights: function(){
+
+			var _this = this;
+			var _lights = this.lights;
+			var _params = this.params;
+			var _roomW = _params.roomW;
+			var _roomH = _params.roomH;
+
+			var lt = _params.lightTemperature;
+			var lh = lookup(lt, ["neutral", "cool", "warm"], [0xFFE4CE, 0xFFFFFF, 0xFFB46B]);
+			var li = _params.lightsIntensity;
 			
-		},
+			var ai = 0.5 * li;
+			var pi = 15 * li;
+			var si = 150 * li;
+			var fi = 75 * li;
+			var hi = 1.5 * li;
+			var di = 0.75 * li;
 
-		setModel : function(){
+			// _lights.directional0 = new THREE.DirectionalLight( 0xffffff, 1);
+			// _lights.directional0.position.set(_roomW, _roomH, _roomW);
+			// this.scene.add( _lights.directional0 );
 
-			var id = globalModel.params.gltfId;
-			var file, UVMapWmm, UVMapHmm, materialList;
-			var folder = "model/objects/";
+			// _lights.directional1 = new THREE.DirectionalLight( 0xffffff, 1);
+			// _lights.directional0.position.set(-_roomW, _roomH, -_roomW);
+			// this.scene.add( _lights.directional0 );
 
-			var cameraPos = [0, 0, 0];
-			var controlsTarget = [0, 0, 0];
-			var modelPos = [0, 0, 0];
-			var spotLightTarget = [0, 0, 0];
+			if ( !_lights.ambient && _params.ambientLight ){
+				_lights.ambient =  new THREE.AmbientLight( lh, ai );
+				this.scene.add( _lights.ambient );
+			} else if (_lights.ambient ){
+				_lights.ambient.visible = _params.ambientLight ;
+				_lights.ambient.intensity = ai;
+				_lights.ambient.color.setHex( lh );
+			}
 
-			if ( id == 1 ){
+			if ( !this.lights.point1 && this.params.pointLight ){
 
-				file = "table.glb";
-				UVMapWmm = 1400;
-				UVMapHmm = 1400;
-				modelPos = [0, 0, 0];
-				cameraPos = [0, this.params.roomH/2, this.params.roomL/4];
-				controlsTarget = [0, 7.5, 0];
-				spotLightTarget = [0, 7.5, 0];
+				var disp = _params.roomW/3;
+				var lightH = _roomH - 0.05;
 
-				materialList = {
-					table: globalModel.materials.wood,
-					fabric: globalModel.materials.fabric,
-				};
+				["point1", "point2", "point3", "point4", "point5"].forEach(v => {
+					_lights[v] = new THREE.PointLight( lh, pi, 50, 1);
+					_this.scene.add( _lights[v] );
 
-			} else if ( id == 2 ){
+				});
 
-				file = "pillows.glb";
-				UVMapWmm = 457;
-				UVMapHmm = 457;
-				modelPos = [0, 0, 0];
-				cameraPos = [0, this.params.roomH/2, this.params.roomL/4];
-				controlsTarget = [0, 5.5, 0];
-				spotLightTarget = [0, 5.5, 0];
+				_lights.point1.position.set( 0, lightH, 0 );
+				_lights.point2.position.set( disp, lightH, disp );
+				_lights.point3.position.set( disp, lightH, -disp );
+				_lights.point4.position.set( -disp, lightH, disp );
+				_lights.point5.position.set( -disp, lightH, -disp );
 
-				materialList = {
-					wood: globalModel.materials.wood,
-					metal: globalModel.materials.metal,
-					p1afabric: globalModel.materials.fabric,
-					p1bfabric: globalModel.materials.fabric,
-					p1cseam: globalModel.materials.defaultFabric,
-					p2afabric: globalModel.materials.fabric,
-					p2bfabric: globalModel.materials.fabric,
-					p2cseam: globalModel.materials.defaultFabric,
-					p3afabric: globalModel.materials.fabric,
-					p3bfabric: globalModel.materials.fabric,
-					p3cseam: globalModel.materials.defaultFabric
-				};
+			} else if ( this.lights.point1 ){
 
-				//file = "pillow.glb";
-				//UVMapWmm = 700;
-				//UVMapHmm = 570;
-				//cameraPos = [0.5, 2.5, 3.5];
-				//materialList = {
-					//top: globalModel.materials.fabric,
-					//bottom: globalModel.materials.fabric,
-					//seam: globalModel.materials.defaultFabric
-				//};
-
-			} else if ( id == 3 ){
-
-				file = "dress02.obj";
-				UVMapWmm = 1030;
-				UVMapHmm = 1460;
-				cameraPos = [0, 1, -4];
-				materialList = {
-					dress_fabric: globalModel.materials.fabric,
-				};
-
-			} else if ( id == 4 ){
-
-				file = "shirt01.obj";
-				UVMapWmm = 1400;
-				UVMapHmm = 1400;
-				cameraPos = [-43, 12, 86];
-				materialList = {
-					fabric: globalModel.materials.fabric,
-					button: globalModel.materials.glass,
-					thread: globalModel.materials.black,
-				};
-
-			} else if ( id == 5 ){
-
-				file = "chair03.obj";
-				UVMapWmm = 240;
-				UVMapHmm = 240;
-				cameraPos = [-15, 10, 15];
-				materialList = {
-					wood_material_01: globalModel.materials.wood
-				};
-
-			} else if ( id == 6 ){
-
-				file = "column.glb";
-				UVMapWmm = 1400;
-				UVMapHmm = 1400;
-				modelPos = [0, 0, 0];
-				cameraPos = [0, this.params.roomH/2, this.params.roomL/4];
-				controlsTarget = [0, 7.5, 0];
-				spotLightTarget = [0, 7.5, 0];
-
-				materialList = {
-					column: globalModel.materials.wood
-				};
-
-			} else if ( id == 7 ){
-
-				file = "longdress02.obj";
-				UVMapWmm = 2000;
-				UVMapHmm = 2000;
-				cameraPos = [-1.5, 0.75, 4];
-				materialList = {
-					dress_fabric: globalModel.materials.fabric,
-					belt_material: globalModel.materials.black
-				};
-
-			} else if ( id == 8 ){
-
-				file = "shirt_tie.glb";
-				UVMapWmm = 850;
-				UVMapHmm = 850;
-				modelPos = [0, 0, 0];
-				cameraPos = [-7.5, 16, 7.5];
-				controlsTarget = [0, 11, 0];
-				spotLightTarget = [0, 11, 0];
-				
-				materialList = {
-					shirt: globalModel.materials.fabric,
-					button: globalModel.materials.blackPlastic,
-					tie: globalModel.materials.white,
-					seam: globalModel.materials.white,
-					tag: globalModel.materials.white,
-					innerseam: globalModel.materials.defaultFabric,
-					thread: globalModel.materials.black,
-					marble: globalModel.materials.marble,
-					connectors: globalModel.materials.metal,
-					legs: globalModel.materials.metal
-
-				};
-
-			} else if ( id == 9 ){
-
-				file = "menshirt.glb";
-				UVMapWmm = 2000;
-				UVMapHmm = 2000;
-				modelPos = [0, 7.3, 0];
-				cameraPos = [0, 12, 20];
-				controlsTarget = [0, 11.5, 0];
-				spotLightTarget = [0, 12, 0];
-
-				materialList = {
-					shirt: globalModel.materials.fabric,
-					innercollar: globalModel.materials.white
-				};
-
-				if ( globalModel.params.buttonColor == "black" ){
-					materialList.button = globalModel.materials.blackPlastic;
-					materialList.thread = globalModel.materials.black;
-					materialList.buttonhole = globalModel.materials.black;
-				} else if ( globalModel.params.buttonColor == "white" ){
-					materialList.button = globalModel.materials.whitePlastic;
-					materialList.thread = globalModel.materials.white;
-					materialList.buttonhole = globalModel.materials.white;
-				}
-
-				if ( globalModel.params.collarColor == "white" ){
-					materialList.collar = globalModel.materials.white;
-					materialList.collarstand = globalModel.materials.white;
-					materialList.cuffleft = globalModel.materials.white;
-					materialList.cuffright = globalModel.materials.white;
-				} else {
-					materialList.collar = globalModel.materials.fabric;
-					materialList.collarstand = globalModel.materials.fabric;
-					materialList.cuffleft = globalModel.materials.fabric;
-					materialList.cuffright = globalModel.materials.fabric;
-				}
-
-			} else if ( id == 10 ){
-
-				file = "longdress.glb"
-				UVMapWmm = 2000;
-				UVMapHmm = 2000;
-				cameraPos = [-1.5, 0.75, 4];
-				materialList = {
-					dress: globalModel.materials.fabric,
-					belt: globalModel.materials.black
-				};
+				["point1", "point2", "point3", "point4", "point5"].forEach(v => {
+					_lights[v].visible = _params.pointLight;
+					_lights[v].intensity = pi;
+					_lights[v].color.setHex( lh );
+				});
 
 			}
 
-			globalModel.params.modelPos = modelPos;
-			globalModel.params.cameraPos = cameraPos;
-			globalModel.params.controlsTarget = controlsTarget;
+			if ( !_lights.spot && _params.spotLight ){
+				// SpotLight( color, intensity, distance, angle, penumbra, decay )
+			    _lights.spot = new THREE.SpotLight(lh, si, 50, 0.3, 1, 1);
+				_lights.spot.position.set( 16, 24, 16 );
+				_lights.spot.castShadow = true;
+				_lights.spot.target = new THREE.Object3D( 0, 0, 0 );
+				_lights.spot.target.position.set(0, 0, 0);
+			    _lights.spot.shadow.bias = -0.0001;
+			    _lights.spot.radius = 10;
+			    this.scene.add( _lights.spot.target );
+				this.scene.add( _lights.spot );
+				_lights.spot.shadow.mapSize.width = 512;
+				_lights.spot.shadow.mapSize.height = 512;
+				_lights.spot.shadow.camera.near = 0.5;
+				_lights.spot.shadow.camera.far = 85;
+			} else if ( _lights.spot ){
+				_lights.spot.visible = _params.spotLight;
+				_lights.spot.intensity = si;
+				_lights.spot.color.setHex( lh );
+			}
 
-			globalModel.modelUVMapWmm = UVMapWmm;
-			globalModel.modelUVMapHmm = UVMapHmm;
+			if ( !_lights.featureSpot && _params.featureSpotLight ){
+				// SpotLight( color, intensity, distance, angle, penumbra, decay )
+			    _lights.featureSpot = new THREE.SpotLight(lh, fi, 250, 0.65, 0.5, 1);
+				_lights.featureSpot.position.set( 0, _roomH, 0 );
+				_lights.featureSpot.castShadow = true;
+				_lights.featureSpot.target = new THREE.Object3D( 0, 0, 0 );
+				_lights.featureSpot.target.position.set(0, _roomH/4, -_roomW/2);
+			    _lights.featureSpot.shadow.bias = -0.0001;
+			    _lights.featureSpot.radius = 10;
+			    this.scene.add( _lights.featureSpot.target );
+				this.scene.add( _lights.featureSpot );
+				_lights.featureSpot.shadow.mapSize.width = 512;
+				_lights.featureSpot.shadow.mapSize.height = 512;
+				_lights.featureSpot.shadow.camera.near = 0.5;
+				_lights.featureSpot.shadow.camera.far = 85;
+			} else if ( _lights.featureSpot ){
+				_lights.featureSpot.visible = _params.featureSpotLight;
+				_lights.featureSpot.intensity = fi;
+				_lights.featureSpot.color.setHex( lh );
+			}
 
-			if ( globalModel.params.prevState.gltfId !== id ){
+			if ( !_lights.directional && _params.directionalLight ){
+				_lights.directional = new THREE.DirectionalLight( lh, di );
+				_lights.directional.position.set(0, _params.roomH/2, _params.roomW/4);
+				this.scene.add( _lights.directional );
+			} else if ( _lights.directional ){
+				_lights.directional.visible = _params.directionalLight;
+				_lights.directional.intensity = di;
+				_lights.directional.color.setHex( lh );
+			}
 
-				this.createScene(function(){
+			this.render();
+		
+		},
 
-					globalModel.removeModel();
-					globalModel.allowAutoRotate = false;
-					globalModel.params.prevState.gltfId = id;
-					var url = folder+file;
-					setLoadingbar(0, "setModel", true, "Loading Model");
+		// Model
+		createScene : function(callback = false){
 
-					globalModel.gltfLoader.load( url, function ( gltf ) {
+			var _this = this;
+			var _params = this.params;
 
-						globalModel.model = gltf.scene;
-						setLoadingbar("hide");
+			if ( !this.sceneCreated ){
 
-						globalModel.model.position.set(...modelPos);
-						//globalModel.controls.target.set(...controlsTarget);
-						globalModel.model.scale.set(1,1,1);
-						
-						globalModel.scene.add(globalModel.model);
-						//globalModel.camera.position.set(...cameraPos);
-						//globalModel.lights.spot.target.position.set(...spotLightTarget);
-						//globalModel.controls.update();
+				setLoadingbar(0, "modelcreatescene", true, "Creating Scene");
 
-						if ( !globalModel.fabric.texture ){
-							globalModel.setDefaultFabricTexture();
-						}
+				$.doTimeout("createModelScene", 100, function(){
 
-						globalModel.applyMaterials(materialList);
-
-						var modelRot = [0, 0, 0];
-
-						globalModel.animateSceneTo(modelRot, cameraPos, controlsTarget, spotLightTarget);
-
-						globalModel.render();
-
-						globalModel.postCreate();
-
-					}, function ( xhr ) {
-
-						var progress = Math.round(xhr.loaded / xhr.total * 100);
-						setLoadingbar(progress, "setModel", true, "Loading Model");
-						if ( progress == 100 ){
-							setLoadingbar("hide");
-						}
-
-					}, function ( error ) {
-
-						console.log( 'An error happened' );
-						console.error(error);
-						
+					_this.renderer = new THREE.WebGLRenderer({
+						antialias: true,
+						alpha: true,
+						preserveDrawingBuffer: true 
 					});
 
+					_this.renderer.setPixelRatio(g_pixelRatio);
+				    _this.renderer.setSize(app.frameW, app.frameH);
+
+				    var clearColor = toClearColor(_this.params.bgColor);
+				    _this.renderer.setClearColor(clearColor[0], clearColor[1]);
+
+				    _this.renderer.shadowMap.enabled = true;
+					_this.renderer.shadowMapSoft = true;
+					_this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+					_this.renderer.shadowMap.bias = 0.0001;
+
+				    _this.renderer.gammaInput = true;
+					_this.renderer.gammaOutput = true;
+		    		_this.renderer.gammaFactor = 2.2;
+
+		    		_this.renderer.physicallyCorrectLights = true;
+		    		_this.maxAnisotropy = _this.renderer.capabilities.getMaxAnisotropy();
+
+				    var container = document.getElementById("model-container");
+				    container.innerHTML = "";
+				    container.appendChild(_this.renderer.domElement);
+				    _this.renderer.domElement.id = "g_modelCanvas";
+
+				    addCssClassToDomId("g_modelCanvas", "graph-canvas");
+
+				    // scene
+				    _this.scene = new THREE.Scene();
+				    
+				    // camera
+				    _this.camera = new THREE.PerspectiveCamera(45, app.frameW / app.frameH, 0.1, 400);
+				    _this.scene.add( _this.camera ); //required, since camera has a child light
+
+				    // controls
+				    _this.controls = new THREE.OrbitControls( _this.camera, _this.renderer.domElement );
+				    _this.controls.minDistance = 0.5;
+				    _this.controls.maxDistance = 400;
+				    //_this.controls.minPolarAngle = 0;
+				    //_this.controls.maxPolarAngle = Math.PI/1.8;
+				    _this.controls.enablePan = false;
+				    _this.controls.mouseButtons = {
+						LEFT: THREE.MOUSE.ROTATE,
+						MIDDLE: THREE.MOUSE.DOLLY,
+						RIGHT: THREE.MOUSE.PAN
+					}
+
+					_this.controls.addEventListener("change", function(){
+
+						if ( !_params.animationQue ){
+							_params.viewPresets.update("user");
+						}
+
+						_this.render();
+
+					} );
+
+					_this.gltfLoader = new THREE.GLTFLoader();
+
+					// axes
+				    //_this.scene.add( new THREE.AxesHelper( 2 ) );
+
+				    //_this.scene.add(new THREE.CameraHelper(_this.camera));
+					//_this.scene.add( new THREE.SpotLightHelper( _this.lights.spot ) );
+
+					
+					var initCameraPos = [0, _this.params.roomH/2, _this.params.roomW*0.75];
+					var initControlsTarget = [0, _this.params.roomH/2, 0];
+					var initSpotLightTarget = [0, 0, 0];
+
+					_params.viewPresets.initScene = [[0,0,0], initCameraPos, initControlsTarget];
+
+					_this.camera.position.set(...initCameraPos);
+					_this.controls.target.set(...initControlsTarget);
+
+					if ( _this.lights.spot ){
+						_this.lights.spot.target.position.set(...initSpotLightTarget);
+					}
+
+					_this.controls.update();
+
+					_this.loadMaterialData(function(){
+
+						_this.setEnvironment(function(){
+
+							_this.render();
+							_this.startAnimation();
+							_this.sceneCreated = true;
+							setLoadingbar("hide");
+							if (typeof callback === "function") {
+						    	callback();
+						    }
+
+						});
+
+					});
+				    
 				});
 
 			} else {
 
-				globalModel.applyMaterials(materialList);
-				globalModel.render();
+				if (typeof callback === "function") {
+			    	callback();
+			    }
 
 			}
 
 		},
 
-		animateSceneTo : function(modelRotation = false, cameraPos = false, controlsTarget = false, spotLightTarget = false){
+		loadMaterialData: function(callback){
 
-			globalModel.controls.enabled = false;
-			globalModel.forceAnimate = true;
+			var _this = this;
+			app.wins.loadData("materialLibrary", "system", function(){
+				app.wins.materialLibrary.tabs.system.data.forEach(function(mat){
+					_this.materials[mat.name] = mat;
+				});
+				if (typeof callback === "function") {
+			    	callback();
+			    }
+			});
+
+		},
+
+		setEnvironment : function(callback){
+
+			var _this = this;
+			var _params = _this.params;
+
+			var areaRatio, textureRepeatX, textureRepeatY, roomWidth, roomHeight, xRepeats, yRepeats, xOffset, yOffset;
+
+			var room_geometry = false;
+			var room_material;
+			var room_mesh = _this.scene.getObjectById(_params.roomMeshId);
+
+			var changeRoomShape = _params.roomShape !== _params.prevState.roomShape;
+
+			var clearColor = toClearColor(_params.bgColor);
+			_this.renderer.setClearColor(clearColor[0], clearColor[1]);
+
+			if ( changeRoomShape ){
+				_this.disposeObjectById(_params.roomMeshId);
+				_params.roomMeshId = undefined;
+			}
+
+			if ( _params.roomShape.in("square", "round") ){
+
+				var textureTileWmm = lookup(_params.wallTexture, ["plain", "rough", "bricks", "vintage", "modern"], [600, 1500, 600, 600, 1000]);
+				var textureTileHmm = lookup(_params.wallTexture, ["plain", "rough", "bricks", "vintage", "modern"], [600, 1500, 600, 600, 635.3]);
+
+				if ( _params.roomShape == "square" ){
+
+					areaRatio = 1;
+					roomWidth = _params.roomW;
+					textureRepeatX = Math.round(roomWidth * 100 / textureTileWmm);
+
+				} else if ( _params.roomShape == "round" ){
+					
+					areaRatio = 4 / Math.PI;
+					//var roomRadius = Math.sqrt(_params.roomW*_params.roomW/Math.PI);
+					var roomRadius = _params.roomW * 4 / 2 / Math.PI;
+					roomWidth = roomRadius * 2;
+					textureRepeatX = Math.round(roomRadius * 2 * Math.PI * 100 / textureTileWmm);
+					
+				}
+
+				roomHeight = _params.roomH;
+				textureRepeatY = roomHeight* 100 / textureTileHmm;
+
+				var wallMaterialOptions = {
+					repeat: [textureRepeatX, textureRepeatY],
+					mapId: _params.wallTexture +"_"+ _params.envAmbiance,
+					bumpMapId: _params.wallTexture +"_bump"
+				};
+
+				_this.setMaterial("wall", wallMaterialOptions);
+
+				xRepeats = _this.materials.floor.repeat[0] * areaRatio;
+				yRepeats = _this.materials.floor.repeat[0] * areaRatio;
+				xOffset = - xRepeats % 2 / 2;
+				yOffset = - yRepeats % 2 / 2;
+				var floorMaterialOptions = {
+					mapId: _params.wallTexture == "plain" ? "plain_"+ _params.envAmbiance : "carpet_"+ _params.envAmbiance,
+					bumpMapId: _params.wallTexture == "plain" ? "plain_bump" : "carpet_bump",
+					repeat: [xRepeats, yRepeats],
+					offset: [xOffset, yOffset]
+				};
+				_this.setMaterial("floor", floorMaterialOptions);
+
+				xRepeats = _this.materials.ceiling.repeat[0] * areaRatio;
+				yRepeats = _this.materials.ceiling.repeat[0] * areaRatio;
+				xOffset = - xRepeats % 2 / 2;
+				yOffset = - yRepeats % 2 / 2;
+				var ceilingMaterialOptions = {
+					mapId: "plain_"+ _params.envAmbiance,
+					bumpMapId: "plain_bump",
+					repeat: [xRepeats, yRepeats],
+					offset: [xOffset, yOffset]
+				};
+				_this.setMaterial("ceiling", ceilingMaterialOptions);
+				
+				var w = _this.materials["wall"].val;
+				var f = _this.materials["floor"].val;
+				var c = _this.materials["ceiling"].val;
+
+				if ( changeRoomShape ){
+					if ( _params.roomShape == "round"  ){
+						room_geometry = new THREE.CylinderBufferGeometry( roomRadius, roomRadius, roomHeight, 64 );
+						room_material = [w, c, f];
+					} else if ( _params.roomShape == "square"  ){
+						room_geometry = new THREE.BoxBufferGeometry( roomWidth, roomHeight, roomWidth );
+						room_material = [ w, w, c, f, w, w ];
+					}
+					room_mesh = new THREE.Mesh( room_geometry, room_material );
+					_params.roomMeshId = room_mesh.id;
+					_this.scene.add( room_mesh );
+					room_mesh.receiveShadow = true;
+					room_mesh.position.set( 0, roomHeight/2, 0 );
+
+					if ( _params.roomShape == "round" ){
+						room_mesh.rotation.y = toRadians(90);
+					}
+
+				} else {
+
+					if ( _params.roomShape == "square"  ){
+						room_mesh.material = [ w, w, c, f, w, w ];
+					} else if ( _params.roomShape == "round"  ){
+						room_mesh.material = [w, c, f];
+					}
+
+				}
+
+				if ( _params.featureWall ){
+					_this.setFeatureWall();
+				}
+
+				if (typeof callback === "function") {
+			    	callback();
+			    }
+
+			}
+
+			if ( !_params.featureWall || _params.roomShape == "open"){
+
+				_this.disposeObjectById(_params.featureWallMeshId);
+				_params.featureWallMeshId = undefined;
+				_params.featureWall = false;
+
+			}
+
+			_params.prevState.roomShape = _params.roomShape;
+			_params.prevState.wallTexture = _params.wallTexture;
+			_params.prevState.envAmbiance = _params.envAmbiance;
+			_params.prevState.featureWall = _params.featureWall;
+			_params.prevState.featureWallTexture = _params.featureWallTexture;
+
+			this.setLights();
+
+			if ( _params.featureWall ){
+				_this.lights.featureSpot.target.position.set(0, roomHeight/4*0.75, -roomWidth/4);
+			} else {
+				_this.lights.featureSpot.target.position.set(0, roomHeight/4, -roomWidth/2);
+			}
+
+			this.render();
+
+		},
+
+		setFeatureWall: function(){
+
+			var _this = this;
+			var _params = _this.params;
+
+			var feature_mesh = _this.scene.getObjectById(_params.featureWallMeshId);
+
+			var featureW = _params.roomW * 0.5;
+			var featureH = _params.roomH * 0.75;
+			var featureL = 1.12;
+
+			var textureTileWmm = lookup(_params.featureWallTexture, ["plain", "rough", "bricks", "vintage", "modern"], [600, 1500, 600, 600, 1000]);
+			var textureTileHmm = lookup(_params.featureWallTexture, ["plain", "rough", "bricks", "vintage", "modern"], [600, 1500, 600, 600, 623]);
+
+			var textureRepeatX = featureW * 100 / textureTileWmm;
+			var textureRepeatY = featureH * 100 / textureTileHmm;
+
+			var plainWallOptions = {
+				mapId: false,
+				bumpMapId: false
+			};
+
+			var featureWallOptions = {
+				mapId: _params.featureWallTexture +"_"+ _params.envAmbiance,
+				bumpMapId: _params.featureWallTexture +"_bump",
+				repeat: [textureRepeatX, textureRepeatY]
+			};
+
+			_this.setMaterial("plainWall", plainWallOptions, function(material){
+
+				if ( _params.featureWallMeshId == undefined ){						
+
+					var feature_geometry = new THREE.BoxBufferGeometry( featureW, featureH, featureL );
+					feature_mesh = new THREE.Mesh( feature_geometry, _this.materials["plainWall"].val);
+					feature_mesh.receiveShadow = true;
+					feature_mesh.castShadow = true;
+					feature_mesh.position.set( 0, featureH/2, -_params.roomW/4 );
+					_params.featureWallMeshId = feature_mesh.id;
+					_this.scene.add( feature_mesh );
+				
+				} else {
+
+					feature_mesh.material = _this.materials["plainWall"].val;
+
+				}
+
+				_this.setMaterial("featureWall", featureWallOptions, function(material){
+					var w = _this.materials["plainWall"].val;
+					var f = _this.materials["featureWall"].val;
+					feature_mesh.material = [ w, w, w, w, f, w ];
+				});
+
+			});
+
+		},
+
+		disposeObjectById : function(id){
+
+			if ( id !== undefined ){
+				var o = this.scene.getObjectById(id);
+				if (o.geometry) {
+		            o.geometry.dispose()
+		        }
+		        if (o.material) {
+		            if (o.material.length) {
+		                for (let i = 0; i < o.material.length; ++i) {
+		                    o.material[i].dispose()
+		                }
+		            } else {
+		                o.material.dispose()
+		            }
+		        }
+				this.scene.remove(o);
+				o = undefined;
+				this.render();
+			}
+
+		},
+
+		modelDatabase: {
+
+			table: {
+				file : "table.glb",
+				UVMapWmm : 1400,
+				UVMapHmm : 1400,
+				modelRot : [0, 0.035, 0],
+				modelPos : [0, 0, 0],
+				cameraPos : [9.5, 11.5, 19],
+				controlsTarget : [0, 4, 0],
+				spotLightTarget : [0, 7.5, 0],
+				materialMap : {
+					table: "wood",
+					fabric: "woven",
+				}
+			},
+
+			pillows: {
+				file : "pillows.glb",
+				UVMapWmm : 457,
+				UVMapHmm : 457,
+				modelRot : [0, 0.035, 0],
+				modelPos : [0, 0, 0],
+				cameraPos : [8, 7, 18],
+				controlsTarget : [0, 2.85, 0],
+				spotLightTarget : [0, 5.5, 0],
+				materialMap : {
+					wood: "wood",
+					metal: "metal",
+					p1afabric: "woven",
+					p1bfabric: "woven",
+					p1cseam: "whiteFabric",
+					p2afabric: "woven",
+					p2bfabric: "woven",
+					p2cseam: "whiteFabric",
+					p3afabric: "woven",
+					p3bfabric: "woven",
+					p3cseam: "whiteFabric"
+				}
+			},
+
+			shirt_tie: {
+				file : "shirt_tie.glb",
+				UVMapWmm : 850,
+				UVMapHmm : 850,
+				modelRot : [0, 0.166, 0],
+				modelPos : [0, 0, 0],
+				cameraPos : [-8, 16, 8],
+				controlsTarget : [0, 9, 0],
+				spotLightTarget : [0, 11, 0],
+				materialMap : {
+					shirt: "woven",
+					button: "blackTransparent",
+					tie: "whiteFabric",
+					seam: "whiteFabric",
+					tag: "whiteFabric",
+					innerseam: "whiteFabric",
+					thread: "black",
+					marble: "marble",
+					connectors: "metal",
+					legs: "metal"
+
+				}
+			},
+
+			shirt: {
+				file : "menshirt.glb",
+				UVMapWmm : 2000,
+				UVMapHmm : 2000,
+				modelRot : [0, 0, 0],
+				modelPos : [0, 7.3, 0],
+				cameraPos : [0, 12, 20],
+				controlsTarget : [0, 12, 0],
+				spotLightTarget : [0, 12, 0],
+
+				materialMap : {
+					shirt: "woven",
+					innercollar: "whiteFabric",
+					button : "whiteTransparent",
+					thread : "white",
+					buttonhole : "white",
+					collar : "woven",
+					collarstand : "woven",
+					cuffleft : "woven",
+					cuffright : "woven"
+				}
+
+			},
+
+			tshirt: {
+				file : "tshirt.glb",
+				UVMapWmm : 1000,
+				UVMapHmm : 1000,
+				modelRot : [0, 0, 0],
+				modelPos : [0, 7.3, 0],
+				cameraPos : [0, 12, 20],
+				controlsTarget : [0, 12, 0],
+				spotLightTarget : [0, 12, 0],
+
+				materialMap : {
+					tshirt: "knitted"
+				}
+
+			},
+
+			bed: {
+				file : "bed.glb",
+				UVMapWmm : 2600,
+				UVMapHmm : 2300,
+				modelRot : [0, 0, 0],
+				modelPos : [0, 0, 0],
+				cameraPos : [20, 15, 20],
+				controlsTarget : [0, 4.85, 0],
+				spotLightTarget : [0, 4.85, 0],
+
+				materialMap : {
+					bed: "wood",
+					mattress: "whiteFabric",
+					fabric_back : "whiteFabric",
+					fabric_top : "woven",
+					pillow_left : "woven",
+					pillow_right : "woven"
+				}
+
+			},
+
+		},
+
+		setModel: function(){
+
+			var _this = this;
+			var _params = _this.params;
+
+			var folder = "model/objects/";
+			var data = app.wins.modelLibrary.selected.item;
+			var modelId = app.wins.modelLibrary.selected.tab + "-" +data.id;
+
+			var isNewLoading = true;
+
+			if ( data ){
+
+				if ( isNewLoading ){
+
+					_params.viewPresets.initModel = [data.modelRot, data.cameraPos, data.controlsTarget, data.spotLightTarget];
+					_params.viewPresets.current = "initModel";
+
+					_params.modelUVMapWmm = data.UVMapWmm;
+					_params.modelUVMapHmm = data.UVMapHmm;
+					_params.modelMaterialMap = data.materialMap;
+
+					_this.createScene(function(){
+
+						_this.removeModel();
+						_this.allowAutoRotate = false;
+						_params.prevState.modelId = modelId;
+						var url = folder+data.file;
+						setLoadingbar(0, "setModel", true, "Loading Model");
+
+						_this.gltfLoader.load( url, function ( gltf ) {
+
+							_this.model = gltf.scene;
+							_this.scene.add(_this.model);
+
+							_this.modelMeshes.length = 0;
+
+							_this.model.traverse( function ( node ) {
+								if ( node.isMesh ){
+									_this.modelMeshes.push(node);
+									node.receiveShadow = true;
+									node.castShadow = true;
+								} 
+							});
+
+							_this.model.position.set(...data.modelPos);
+							_this.model.scale.set(1,1,1);
+
+							_this.animateModelSceneTo(data.modelRot, data.cameraPos, data.controlsTarget, data.spotLightTarget, function(){
+
+								setLoadingbar(0, "applyMaterials", true, "Loading Materials");
+
+								_this.applyMaterialMap(data.materialMap, function(){
+
+									_this.updateCanvasTexture();
+									setLoadingbar("hide");
+									_this.render();
+									_this.postCreate();
+
+								});
+
+							});							
+							
+						}, function ( xhr ) {
+
+							var progress = Math.round(xhr.loaded / xhr.total * 100);
+							setLoadingbar(progress, "setModel", true, "Loading Model");
+							if ( progress == 100 ){
+								setLoadingbar("hide");
+							}
+
+						}, function ( error ) {
+
+							console.log( "An error happened" );
+							console.error(error);
+							
+						});
+
+					});
+				
+				} else {
+
+					_this.applyMaterialMap(_params.modelMaterialMap);
+					_this.render();
+
+				}
+
+			} else {
+
+				console.log( "Model data missing" );
+
+			}
+
+		},
+
+		changeView: function(){
+
+			var _this = this;
+			var _params = this.params;
+
+			if ( _this.sceneCreated && _this.model ){
+
+				_toolbar.setItemState("toolbar-model-rotate", false);
+				_this.autoRotate = false;
+				_this.model.rotation.y = normalizeToNearestRotation(this.model.rotation.y);
+
+				if ( _params.viewPresets.current == "initScene" ){
+
+					_params.viewPresets.current = "initModel";
+					this.animateModelSceneTo(..._params.viewPresets.initModel);
+				
+				} else if ( _params.viewPresets.current == "initModel" ){
+
+					_params.viewPresets.current = "user";
+					this.animateModelSceneTo(..._params.viewPresets.user);
+
+				} else if ( _params.viewPresets.current == "user" ){
+
+					_params.viewPresets.current = "initScene";
+					this.animateModelSceneTo(..._params.viewPresets.initScene);
+
+				}
+
+			} else if (_this.sceneCreated) {
+
+				this.animateModelSceneTo(..._params.viewPresets.initScene);
+
+			}
+
+		},
+
+		animateModelSceneTo : function(modelRotation = false, cameraPos = false, controlsTarget = false, spotLightTarget = false, callback){
+
+			var _this = this;
+
+			_this.params.animationQue++;
+			_this.controls.enabled = false;
+			_this.forceAnimate = true;
 
 			var tl = new TimelineLite({
 				delay:0,
 				onComplete: function(){
-					globalModel.controls.enabled = true;
-					globalModel.forceAnimate = false;
-					globalModel.allowAutoRotate = true;
+					_this.controls.enabled = true;
+					_this.forceAnimate = false;
+					_this.allowAutoRotate = true;
+					_this.params.animationQue--;
+
+					if (typeof callback === "function" ) { 
+						callback();
+					}
+
 					debug("Timeline.Status", "complete", "model");
 				},
 				onUpdate: function() {
 					debug("Timeline.Status", "updating", "model");
-					globalModel.controls.update();
+					_this.controls.update();
 				}
 				
 			});
 
-			if ( modelRotation ){
+			if ( _this.model && modelRotation ){
 
-				tl.add(TweenLite.to(globalModel.model.rotation, 2.5, { 
+				tl.add(TweenLite.to(_this.model.rotation, 1.5, { 
 					x: modelRotation[0],
 					y: modelRotation[1],
 					z: modelRotation[2],
@@ -9077,7 +8848,7 @@ $(document).ready ( function(){
 
 			if ( cameraPos ){
 
-				tl.add(TweenLite.to(globalModel.camera.position, 2.5, { 
+				tl.add(TweenLite.to(_this.camera.position, 1.5, { 
 					x: cameraPos[0],
 					y: cameraPos[1],
 					z: cameraPos[2],
@@ -9088,7 +8859,7 @@ $(document).ready ( function(){
 
 			if ( controlsTarget ){
 
-				tl.add(TweenLite.to(globalModel.controls.target, 2.5, { 
+				tl.add(TweenLite.to(_this.controls.target, 1.5, { 
 					x: controlsTarget[0],
 					y: controlsTarget[1],
 					z: controlsTarget[2],
@@ -9099,7 +8870,7 @@ $(document).ready ( function(){
 
 			if ( spotLightTarget ){
 
-				tl.add(TweenLite.to(globalModel.lights.spot.target.position, 2.5, { 
+				tl.add(TweenLite.to(_this.lights.spot.target.position, 1.5, { 
 					x: spotLightTarget[0],
 					y: spotLightTarget[1],
 					z: spotLightTarget[2],
@@ -9138,6 +8909,7 @@ $(document).ready ( function(){
 						debug("FPS", globalModel.fps.length, "model");
 						if ( globalModel.model && globalModel.autoRotate && globalModel.allowAutoRotate ){
 					    	globalModel.model.rotation.y += globalModel.rotationSpeed * globalModel.rotationDirection;
+					    	globalModel.params.viewPresets.update("user");
 					    }
 						globalModel.render();
 					}
@@ -9147,72 +8919,402 @@ $(document).ready ( function(){
 				
 		},
 
-		renderTexture : function(){
+		fillCanvasWithTile: function(baseCanvas, tileImageId, canvasWmm, canvasHmm, callback){
 
-			if ( this.sceneCreated ){
+			console.log(["fillCanvasWithTile", baseCanvas, tileImageId, canvasWmm, canvasHmm]);
+
+			var _this = this;
+			_this.images.get(tileImageId, function(){
+
+				var img = _this.images[tileImageId];
+
+				var canvasW = baseCanvas.width;
+				var canvasH = baseCanvas.height;
+
+				var imgW = img.val.width;
+				var imgH = img.val.height;
+
+				var imgWmm = img.wmm;
+				var imgHmm = img.hmm;
+
+				var copyW = imgW;
+				var copyH = imgH;
+
+				if ( canvasWmm < imgWmm ){
+					copyW = Math.round(canvasWmm / imgWmm * imgW)
+				}
+
+				if ( canvasHmm < imgHmm ){
+					copyH = Math.round(canvasHmm / imgHmm * imgH)
+				}
+
+				var tileW =  Math.round(canvasW * imgWmm / canvasWmm);
+				var tileH =  Math.round(canvasH * imgHmm / canvasHmm);
+
+				console.log([imgW, imgH, imgWmm, imgHmm, canvasW, canvasH, canvasWmm, canvasHmm, tileW, tileH]);
+
+				var tile = getCtx(25, "noshow", "g_tempCanvas", tileW, tileH, false);
+				tile.drawImage(img.val, 0, 0, copyW, copyH, 0, 0, tileW, tileH);
+
+				var base = baseCanvas.getContext("2d");
+				var pattern = base.createPattern(tile.canvas, "repeat");
+				base.rect(0, 0, canvasW, canvasH);
+				base.fillStyle = pattern;
+				base.fill();	
+
+				callback();
+			
+			});			
+
+		},
+
+		drawImageToCanvas: function(image, canvas){
+
+			console.log("drawImageToCanvas");
+
+			var ctx = canvas.getContext("2d");
+			var pattern = ctx.createPattern(image, "repeat");
+			ctx.rect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = pattern;
+			ctx.fill();	
+
+		},
+
+		getImageById: function(imageId, callback){
+
+			console.log("getImageById");
+
+			var _this = this;
+			var _url = _this.images.folder + _this.images.url[imageId];
+			var _image = _this.images[imageId];
+			if ( _image == undefined ){
+				_this.loadImage(_url, function(img){
+					_this.images[imageId] = img;
+					callback(_this.images[imageId]);
+				});
+			} else {
+				callback(_this.images[imageId]);
+			}
+
+		},
+
+		loadImage: function(url, callback ){
+
+			var _this = this;
+			var img = new Image();
+			img.onload = function() {
+				if (typeof callback === "function" ) { 
+					callback(img);
+				}
+			};
+			img.onerror = function() { "loadImage.error: "+url};
+			img.src = url;
+
+		},
+
+		createWeaveTexture : function(){
+
+			console.log("createWeaveTexture");
+
+			var _this = this;
+			_this.params.textureSource = "weave"
+
+			setLoadingbar(0, "canvastexture", true, "Applying Texture");
+
+			if ( _this.sceneCreated && _this.model ){
 
 				var textureWpx = globalSimulation.textureWpx;
 				var textureHpx = globalSimulation.textureHpx;
 				var canvasW = Math.min(2048, nearestPow2(textureWpx));
 				var canvasH = Math.min(2048, nearestPow2(textureHpx));
-				g_modelTextureContext = getCtx(61, "temp-canvas", "g_modelTextureCanvas", canvasW, canvasH, false);
-				globalSimulation.renderTo(g_modelTextureContext, textureWpx, textureHpx, globalWeave.weave2D8, "bl", 0, 0, function(){
-					globalModel.applyTexture();
+
+				g_modelWeaveMapContext = getCtx(61, "noshow", "g_modelWeaveMapCanvas", canvasW, canvasH, false);
+				globalSimulation.renderTo(g_modelWeaveMapContext, textureWpx, textureHpx, globalWeave.weave2D8, "bl", 0, 0, function(){
+					console.log("globalSimulation_created");
+					g_modelWeaveBumpMapContext = getCtx(61, "noshow", "g_modelWeaveBumpMapCanvas", canvasW, canvasH, false);
+					_this.applyCanvasTexture();
+					setLoadingbar("hide");
 				});
 
 			}
 
 		},
 
-		applyMaterials : function(materialList){
+		createImageTexture : function(callback){
+
+			var _this = this;
+
+			if ( _this.sceneCreated && _this.model ){
+
+				_this.params.textureSource = source
+				setLoadingbar(0, "canvastexture", true, "Applying Texture");
+
+				openFile("image" , image => {
+					var textureWpx = image.width;
+					var textureHpx = image.height;
+					var canvasW = Math.min(2048, nearestPow2(textureWpx));
+					var canvasH = Math.min(2048, nearestPow2(textureHpx));
+					g_modelImageMapContext = getCtx(61, "noshow", "g_modelImageMapCanvas", canvasW, canvasH, false);
+					g_modelImageMapContext.drawImage( image, 0, 0 , textureWpx , textureHpx, 0, 0, canvasW, canvasH);
+					g_modelImageBumpMapContext = getCtx(61, "noshow", "g_modelImageBumpMapCanvas", canvasW, canvasH, false);
+					setLoadingbar("hide");
+					if (typeof callback === "function" ) {  callback(); }
+				});					
+
+			}
+
+		},
+
+		applyMaterialMap : function(materialMap, callback){
+
+			console.log("applyMaterialMap");
+
+			var _this = this;
+
+			_this.params.modelMaterialLoadPending = 0;
 
 			var nodei = 0;
-			globalModel.model.traverse( function ( node ) {
+			_this.model.traverse( function ( node ) {
 				if ( node.isMesh ){
+					if ( materialMap[node.name] == undefined ){
 
-					node.receiveShadow = true;
-					node.castShadow = true;
+						_this.params.modelMaterialLoadPending++;
+						_this.setMaterial("white", {}, function(){
+							_this.params.modelMaterialLoadPending--;
+							node.material = _this.materials.white.val;
+						});
+						debug("OBJ Node-"+nodei, node.name+" - Material Not Set", "model");
 
-					if ( materialList[node.name] == undefined ){
-						node.material = globalModel.materials.white;
-						debug("OBJ Node-"+nodei, node.name+" - Mat Missing", "model");
 					} else {
-						node.material = materialList[node.name];
-						debug("OBJ Node-"+nodei, node.name, "model");
+
+						var n = materialMap[node.name];
+						_this.params.modelMaterialLoadPending++;
+						_this.setMaterial(n, {}, function(){
+							_this.params.modelMaterialLoadPending--;
+							node.material =  _this.materials[n].val;
+						});
+						debug("OBJ Node-"+nodei, node.name + " : " + n, "model");
+
 					}
 					nodei++;
 				} 
 			});
 
-			globalModel.updateFabricTextureDimensions();
+			$.doTimeout(10, function(){					
+				if ( !_this.params.modelMaterialLoadPending ){
+					if (typeof callback === "function" ) { 
+						callback();
+					}
+					return false;
+				}
+				return true;
+			});
 
 		},
 
-		applyTexture : function(){
+		createCanvasTexture: function(canvas){
 
-			this.fabric.needUpdate = false;
-			this.fabric.texture = new THREE.CanvasTexture(g_modelTextureCanvas);
-			this.fabric.texture.wrapS = THREE.RepeatWrapping;
-			this.fabric.texture.wrapT = THREE.RepeatWrapping;
-			this.fabric.texture.encoding = THREE.sRGBEncoding;
-			this.fabric.texture.flipY = false;
-			this.fabric.texture.anisotropy = 16;
-			this.fabric.textureWmm = globalSimulation.textureWmm;
-			this.fabric.textureHmm = globalSimulation.textureHmm;
-			this.fabric.xRepeats = this.modelUVMapWmm / this.fabric.textureWmm;
-			this.fabric.yRepeats = this.modelUVMapHmm / this.fabric.textureHmm;
-			this.fabric.texture.repeat.set(this.fabric.xRepeats, this.fabric.yRepeats);
-			this.fabric.texture.needsUpdate = true;
-			this.materials.fabric.map = this.fabric.texture;
-
-			this.materials.fabric.bumpMap = this.fabric.bump;
-
-
-			this.render();
+			var texture = new THREE.CanvasTexture(canvas);
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.encoding = THREE.sRGBEncoding;
+			texture.flipY = false;
+			texture.anisotropy = this.maxAnisotropy;
+			texture.center.set(0.5, 0.5);
+			return texture;
 
 		},
 
-		render : function(){
+		createCanavsMaterial: function(canavs){
+
+			var matOptions = {
+		        "id": 13,
+		        "name": "woven",
+		        "title": "Weave Pattern",
+		        "type": "physical",
+		        "color": "#C9C0C6",
+		        "bumpScale": 0.005,
+		        "roughness": 0.9,
+		        "metalness": 0,
+		        "reflectivity": 0,
+		        "side": "DoubleSide",
+		        "mapId": "canvas",
+		        "bumpMapId": "canvas_bump",
+		        "repeat": [80, 80],
+		        "show": 1,
+		        "editable": 1
+		    }
+
+		},
+
+		applyCanvasTexture : function(){
+
+			console.error("applyCanvasTexture_new");
+
+			var _this = this;
+			var _params = this.params;
+
+			var weaveWmm = globalSimulation.weaveWmm;
+			var weaveHmm = globalSimulation.weaveHmm;
+
+			_this.fillCanvasWithTile(g_modelWeaveBumpMapCanvas, "canvas_bump", weaveWmm, weaveHmm, function(){
+
+				var fabricMap = _this.createCanvasTexture(g_modelWeaveMapCanvas);
+				var fabricBumpMap = _this.createCanvasTexture(g_modelWeaveBumpMapCanvas);
+
+				var xRepeats = _params.modelUVMapWmm / weaveWmm;
+				var yRepeats = _params.modelUVMapHmm / weaveHmm;
+
+				fabricMap.repeat.set(xRepeats, yRepeats);
+				fabricMap.rotation = toRadians(_params.textureRotationDeg);
+				fabricMap.offset.set(-_params.textureOffsetX/_params.textureWidth, -_params.textureOffsetY/_params.textureHeight);
+				
+				fabricBumpMap.repeat.set(xRepeats, yRepeats);
+				fabricBumpMap.rotation = toRadians(_params.textureRotationDeg);
+				fabricBumpMap.offset.set(-_params.textureOffsetX/_params.textureWidth, -_params.textureOffsetY/_params.textureHeight);
+
+				_this.textures.fabricMap = fabricMap;
+				_this.textures.fabricBumpMap = fabricBumpMap;
+
+				if ( _this.weaveTextures.active == undefined ){
+					_this.weaveTextures.active = {
+						map: undefined,
+						bumpMap: undefined,
+						rotation: 0,
+						repeat: [1, 1],
+						offset: [0, 0]
+					};
+				}
+
+				_this.weaveTextures.active.map = fabricMap;
+				_this.weaveTextures.active.bumpMap = fabricBumpMap;
+
+				if ( _this.materials.woven !== undefined && _this.materials.woven.val !== undefined ){
+
+					_this.materials.woven.mapId = "fabricMap";
+					_this.materials.woven.val.map = _this.weaveTextures.active.map;
+					_this.materials.woven.mapId = "fabricBumpMap";
+					_this.materials.woven.val.bumpMap = _this.weaveTextures.active.bumpMap;
+
+				}
+
+				if ( _this.materials.knitted !== undefined && _this.materials.knitted.val !== undefined ){
+
+					_this.materials.knitted.mapId = "fabricMap";
+					_this.materials.knitted.val.map = _this.textures.fabricMap;
+					_this.materials.knitted.mapId = "fabricBumpMap";
+					_this.materials.knitted.val.bumpMap = _this.textures.fabricBumpMap;
+
+				}
+
+				//_this.textures.fabricMap.needsUpdate = true;
+				//_this.textures.fabricBumpMap.needsUpdate = true;
+				_this.render();
+				
+			});
+
+		},
+
+		applyCanvasTexture_old : function(){
+
+			console.error("applyCanvasTexture");
+
+			var _this = this;
+			var _params = _this.params;
+			var _fabric = _this.textures.fabric;
+			var _textures = _this.textures;
+			var _fabricBump = this.textures.fabricBump;
+			//var source = _this.params.textureSource;
+			var source = "weave";
+
+			if ( source == "weave" ){
+				var textureWmm = globalSimulation.weaevWmm;
+				var textureHmm = globalSimulation.weaveHmm;
+			} else if ( source == "image" ){
+				var units = _params.textureDimensionUnits;
+				var multiplier = units == "cm" ? 10 : units == "inch" ? 25.4 : 1;
+				var textureWmm = _params.textureWidth * multiplier;
+				var textureHmm = _params.textureHeight * multiplier;
+			}
+
+			_this.fillCanvasWithTile(g_modelWeaveBumpMapCanvas, "canvas_bump", textureWmm, textureHmm, function(){
+
+				var fabricMap = _this.createCanvasTexture(g_modelWeaveMapCanvas);
+				var fabricBumpMap = _this.createCanvasTexture(g_modelWeaveBumpMapCanvas);
+
+				var xRepeats = _params.modelUVMapWmm / textureWmm;
+				var yRepeats = _params.modelUVMapHmm / textureHmm;
+
+				fabricMap.repeat.set(xRepeats, yRepeats);
+				fabricMap.rotation = toRadians(_params.textureRotationDeg);
+				fabricMap.offset.set(-_params.textureOffsetX/_params.textureWidth, -_params.textureOffsetY/_params.textureHeight);
+				
+				fabricBumpMap.repeat.set(xRepeats, yRepeats);
+				fabricBumpMap.rotation = toRadians(_params.textureRotationDeg);
+				fabricBumpMap.offset.set(-_params.textureOffsetX/_params.textureWidth, -_params.textureOffsetY/_params.textureHeight);
+
+				_this.textures.fabricMap = fabricMap;
+				_this.textures.fabricBumpMap = fabricBumpMap;
+
+				if ( _this.materials.woven !== undefined && _this.materials.woven.val !== undefined ){
+
+					_this.materials.woven.mapId = "fabricMap";
+					_this.materials.woven.val.map = _this.textures.fabricMap;
+					_this.materials.woven.mapId = "fabricBumpMap";
+					_this.materials.woven.val.bumpMap = _this.textures.fabricBumpMap;
+
+				}
+
+				if ( _this.materials.knitted !== undefined && _this.materials.knitted.val !== undefined ){
+
+					_this.materials.knitted.mapId = "fabricMap";
+					_this.materials.knitted.val.map = _this.textures.fabricMap;
+					_this.materials.knitted.mapId = "fabricBumpMap";
+					_this.materials.knitted.val.bumpMap = _this.textures.fabricBumpMap;
+
+				}
+
+				//_this.textures.fabricMap.needsUpdate = true;
+				//_this.textures.fabricBumpMap.needsUpdate = true;
+				_this.render();
+				
+			});
+
+		},
+
+		updateCanvasTexture: function(){
+
+			console.log("updateCanvasTexture");
+
+			var _this = this;
+			var _params = _this.params;
+			var _fabric = _this.textures.fabric;
+			var source = _this.params.textureSource;
+
+			if ( _fabric ){
+				if ( source == "weave" ){
+					var textureWmm = globalSimulation.weaveWmm;
+					var textureHmm = globalSimulation.weaveHmm;
+				} else if ( source == "image" ){
+					var units = _params.textureDimensionUnits;
+					var multiplier = units == "cm" ? 10 : units == "inch" ? 25.4 : 1;
+					var textureWmm = _params.textureWidth * multiplier;
+					var textureHmm = _params.textureHeight * multiplier;
+				}
+				
+				var xRepeats = _params.modelUVMapWmm / textureWmm;
+				var yRepeats = _params.modelUVMapHmm / textureHmm;
+				_fabric.repeat.set(xRepeats, yRepeats);
+				_fabric.center.set(0.5, 0.5);
+				_fabric.rotation = toRadians(_params.textureRotationDeg);
+				_fabric.offset.set(-_params.textureOffsetX/_params.textureWidth, -_params.textureOffsetY/_params.textureHeight);
+				_fabric.needsUpdate = true;
+			}
+
+		},
+
+		// Model
+		render: function(){
 
 			if ( this.sceneCreated ){
 
@@ -9225,6 +9327,11 @@ $(document).ready ( function(){
 				debug("Camera x", Math.round(cameraPos.x * 1000)/1000, "model");
 				debug("Camera y", Math.round(cameraPos.y * 1000)/1000, "model");
 				debug("Camera z", Math.round(cameraPos.z * 1000)/1000, "model");
+
+				var controlsTarget = this.controls.target;
+				debug("Controls Target x", Math.round(controlsTarget.x * 1000)/1000, "model");
+				debug("Controls Target y", Math.round(controlsTarget.y * 1000)/1000, "model");
+				debug("Controls Target z", Math.round(controlsTarget.z * 1000)/1000, "model");
 
 				if ( this.model ){
 					var modelRot = this.model.rotation;
@@ -9254,19 +9361,53 @@ $(document).ready ( function(){
 			debug("Points", this.renderer.info.render.points, "model");
 			debug("Lines", this.renderer.info.render.lines, "model");
 
+		},
+
+		doMouseInteraction : function(canvasMousePos, evt = "mousemove"){
+
+			var _this = this;
+			var _params = _this.params;
+			var doRender = false;
+			var hoverMesh;
+
+			var mx = ( canvasMousePos.x / app.frameW ) * 2 - 1;
+			var my = ( canvasMousePos.y / app.frameH ) * 2 - 1;
+			_this.raycaster.setFromCamera( { x: mx, y: my }, _this.camera );
+			var intersects = _this.raycaster.intersectObjects(_this.modelMeshes, false);
+
+			if ( intersects.length ){
+				hoverMesh = intersects[0];
+
+				if ( evt == "click" && app.wins.materialLibrary.win !== undefined && !app.wins.materialLibrary.win.isHidden() && app.wins.materialLibrary.selected ){
+
+					var selectedMaterialId = app.wins.materialLibrary.selected.id;
+					var selectedMaterialTab = app.wins.materialLibrary.selected.tab;
+
+					_this.setMaterial(selectedMaterialId, {}, function(){
+						hoverMesh.object.material = _this.materials[selectedMaterialId].val;
+						_this.render();
+					});
+
+				}
+
+				//debug("Hover Mesh", hoverMesh.object.name, "model");
+			}
+
+			//
+
 		}
 
 	};
 
 	$("#model-container").on("mouseover", function(evt) {
 
-		globalModel.mouseAnimate = true;
+		//globalModel.mouseAnimate = true;
 
 	});
 
 	$("#model-container").on("mouseout", function(evt) {
 
-		globalModel.mouseAnimate = false;
+		//globalModel.mouseAnimate = false;
 
 	});
 
@@ -9276,40 +9417,79 @@ $(document).ready ( function(){
 	});
 
 	$("#model-container").on("mousedown", function(evt) {
-
 		globalModel.allowAutoRotate = false;
 		app.mouse.set("model", 0, 0, true, evt.which);
-	
 	});
 
 	function addMesh(shape, size, pos, mat, col, target){
 
-		var mesh, geometry, material;
+		var mesh, geometry, material, map, bumpMap, url;
 
-		if ( shape == "cube" ){
-			geometry = new THREE.BoxGeometry( size[0], size[1], size[2] );
-		}
+		var textureLoader = new THREE.TextureLoader();
 
-		if ( mat == "phong" ){
-			material  = new THREE.MeshPhongMaterial( {
-		        color: col,
-		        side: THREE.DoubleSide,
-		        shininess: 1
-		    });
-		} else if ( mat == "standard" ){
-			material = new THREE.MeshStandardMaterial( {
-		        color: col,
-		        side: THREE.DoubleSide,
-		        roughness: 1,
-		        metalness: 0,
-		    });
-		}
 
-		mesh = new THREE.Mesh( geometry, material );
-		mesh.castShadow = true;
-		mesh.receiveShadow = true;
-		mesh.position.set(pos[0], pos[1], pos[2])
-		target.add( mesh );
+		url = "model/textures/map.png";
+
+		map = textureLoader.load( url, function (texture) {
+			map.wrapS = THREE.RepeatWrapping;
+			map.wrapT = THREE.RepeatWrapping;
+			map.repeat.set(1, 1);
+			// map.rotation = 0;
+			// map.offset.set(0, 0);
+			map.anisotropy = 16;
+			map.needsUpdate = true;
+
+			url = "model/textures/bumpmap.png";
+
+			bumpMap = textureLoader.load( url, function (texture) {
+				bumpMap.wrapS = THREE.RepeatWrapping;
+				bumpMap.wrapT = THREE.RepeatWrapping;
+				bumpMap.repeat.set(2, 2);
+				// bumpMap.rotation = 0;
+				// bumpMap.offset.set(0, 0);
+				bumpMap.anisotropy = 16;
+				bumpMap.needsUpdate = true;
+
+				if ( shape == "cube" ){
+					geometry = new THREE.BoxGeometry( size[0], size[1], size[2] );
+				}
+
+				if ( mat == "phong" ){
+					material  = new THREE.MeshPhongMaterial( {
+				        color: col,
+				        side: THREE.DoubleSide,
+				        shininess: 1,
+				        map: map,
+				        bumpMap: bumpMap,
+				        bumpScale: 0.5
+				    });
+
+				    map.needsUpdate = true;
+				    bumpMap.needsUpdate = true;
+
+				} else if ( mat == "standard" ){
+					material = new THREE.MeshStandardMaterial( {
+				        color: col,
+				        side: THREE.DoubleSide,
+				        roughness: 1,
+				        metalness: 0,
+				    });
+				}
+
+				mesh = new THREE.Mesh( geometry, material );
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+				mesh.position.set(pos[0], pos[1], pos[2])
+				target.add( mesh );
+
+				globalModel.render();
+
+	        });
+
+
+        });
+
+		
 
 	}
 
@@ -9337,21 +9517,150 @@ $(document).ready ( function(){
 		var yarnRadius = getYarnRadius(yarnNumber, yarnNumberSystem)[0];
 		if ( returnUnits == "px" ){
 			yarnDia = yarnRadius * 2 / 25.4 * screenDPI;
+		} else if ( returnUnits == "in" ){
+			yarnDia = yarnRadius * 2 / 25.4;
+		} else if ( returnUnits == "mm" ){
+			yarnDia = yarnRadius * 2;
 		}
 		return yarnDia;
 	}
 
-	var mesh, thread, sprite, numberTexture, spriteMaterial;
+	function activeApply(domId){
 
-	var line, lineGeometry, lineMaterial;
-	
-	var ray_direction = new THREE.Vector3();
+		var el, value;
 
-	var raycaster = new THREE.Raycaster();
+		var dom = $("#"+domId);
+		var active = popForms.active[domId];
+		var _this = g(active.parent);
+		var _params = _this.params;
+		var _set = _params[active.child].find(a => a[2] == domId);
+		var _type = _set[0];
+		var _var = _set[3];
+
+		if ( _type == "number" ){
+			value = dom.numVal();
+		} else if ( _type == "check" ){
+			value = dom.prop("checked");
+		} else if ( _type.in("text", "select")  ){
+			value = dom.val();
+		}
+
+		_params[_var] = value;
+		
+		if ( domId == "threeCastShadow" ){
+
+			_this.applyShadowSetting();
+		
+		} else if ( domId == "threeBGColor" ){
+
+			var clearColor = toClearColor(_this.params.bgColor);
+			_this.renderer.setClearColor(clearColor[0], clearColor[1]);
+			_this.render();
+
+		} else if ( domId == "threeProjection" ){
+
+			_this.swithCameraTo(_this.params.projection);
+
+		} else if ( domId == "threeShowAxes" ){
+
+			_this.axes.visible = _this.params.showAxes;
+			_this.rotationAxisLine.visible = _this.params.showAxes;
+			_this.render();
+
+		} else if ( domId == "weaveAutoPatternLockColors" ){
+
+			el = $("#weaveAutoPatternLockedColors");
+			if ( value ){
+				el.val( globalPattern.colors("fabric").join("") );
+				el.closest(".xrow").show();
+			} else {
+				el.closest(".xrow").hide();
+			}
+
+		} else if ( domId == "weaveAutoColorwayLockColors" ){
+
+			el = $("#weaveAutoColorwayLockedColors");
+			if ( value ){
+				el.val( globalPattern.colors("fabric").join("") );
+				el.closest(".xrow").show();
+			} else {
+				el.closest(".xrow").hide();
+			}
+
+		} else if ( domId == "weaveAutoColorwayShareColors" ){
+
+			globalWeave.params.autoColorwayLinkColors = value;
+			el = $("#weaveAutoColorwayLinkColors");
+			el.prop("checked", value);
+
+		} else if ( domId == "artworkSeamlessX" ){
+
+			_this.updateScrollingParameters(1);
+			_this.render2D8(10);
+
+		} else if ( domId == "artworkSeamlessY" ){
+
+			_this.updateScrollingParameters(1);
+			_this.render2D8(10);
+
+		} else if ( domId == "weaveSeamlessWeave" ){
+
+			globalWeave.render2D8(1, "weave");
+			app.config.save(3);
+
+			el = $("#weaveRepeatCalc");
+			if ( value ){
+				el.closest(".xrow").hide();
+			} else {
+				el.closest(".xrow").show();
+			}
+
+		} else if ( domId == "weaveSeamlessThreading" ){
+
+			globalWeave.render2D8(1, "threading");
+			app.config.save(3);
+
+		} else if ( domId == "weaveSeamlessLifting" ){
+
+			globalWeave.render2D8(1, "lifting");
+			app.config.save(3);
+
+		} else if ( domId == "weaveSeamlessWarp" ){
+
+			globalPattern.render8(1, "warp");
+			app.config.save(6);
+
+		} else if ( domId == "weaveSeamlessWeft" ){
+
+			globalPattern.render8(1, "weft");
+			app.config.save(3);
+
+		} else if ( domId == "weaveRepeatCalc" ){
+
+			_this.render2D8(1, "weave");
+			
+		}  else if ( domId.in("modelLightTemperature", "modelAmbientLight", "modelDirectionalLight", "modelPointLight", "modelSpotLight", "modelFeatureSpotLight", "modelLightsIntensity") ){
+
+			_this.setLights();
+			
+		}
+
+	};
 
 	var globalThree = {
 
 		ObjName: "three",
+
+		domContainer: "three-container",
+		domElementId: "g_threeCanvas",
+		domElementClass: "graph-canvas",
+
+		status: {
+			scene: false,
+			textures: false,
+			materails: false,
+			fabric: false
+		},
 
 		fps : [],
 
@@ -9366,6 +9675,31 @@ $(document).ready ( function(){
 			spot: undefined
 		},
 
+		raycaster: new THREE.Raycaster(),
+
+		textures: {
+
+			needsUpdate: true,
+			pending: 0,
+			threadBumpMap: {
+				url: "three/textures/bump_yarn.png",
+				val: undefined
+			},
+			test512: {
+				url: "three/textures/uvgrid_01.jpg",
+				val: undefined
+			}
+
+		},
+
+		materials: {
+			needsUpdate: true,
+			default:{},
+			fabric: {},
+			warp: {},
+			weft: {}
+		},
+
 		fabric: undefined,
 		threads : [],
 		childIds : [],
@@ -9374,9 +9708,14 @@ $(document).ready ( function(){
 		outlinePass: undefined,
 		effectFXAA: undefined,
 		renderPass: undefined,
-		outlinePassSelected: [],
+
+		threadsUnderMouse: {
+			warp: false,
+			weft: false
+		},
 
 		sceneCreated : false,
+
 		animate : false,
 
 		modelParams: {
@@ -9385,16 +9724,6 @@ $(document).ready ( function(){
 
 		currentPreset: 0,
 		rotationPresets: [[0,0,0], [0,0,-180], [0,0,0], [-90, 0, 0], [-90, 90, 0], [-30,45,0], [-30,0,0],],
-
-		sceneParams: {
-			initCameraPos: new THREE.Vector3( 0, 9, 0 ),
-			cameraPos: new THREE.Vector3( 0, 9, 0 ),
-			initControlsTarget: new THREE.Vector3( 0, 0, 0 ),
-			controlsTarget: new THREE.Vector3( 0, 0, 0 ),
-		},
-
-		frameW : 0,
-		frameH : 0,
 
 		threeMode : "bicount",
 
@@ -9432,9 +9761,6 @@ $(document).ready ( function(){
 		warpPathSegments : 0,
 		weftPathSegments : 0,
 
-		mouseOverOutline : false,
-		mouseOverHighlight : false,
-
 		defaultOpacity : 0,
 		defaultDepthTest : true,
 
@@ -9445,10 +9771,76 @@ $(document).ready ( function(){
 		mouseAnimate : false,
 		forceAnimate : false,
 
+		// Three
+		params : {
+
+			animate: false,
+
+			initCameraPos: new THREE.Vector3( 0, 9, 0 ),
+			cameraPos: new THREE.Vector3( 0, 9, 0 ),
+			initControlsTarget: new THREE.Vector3( 0, 0, 0 ),
+			controlsTarget: new THREE.Vector3( 0, 0, 0 ),
+			initFabricRotation: new THREE.Vector3( 0, 0, 0 ),
+			fabricRotation:new THREE.Vector3( 0, 0, 0 ),
+
+			structure: [
+				["select", "Mode", "threeMode", "threeMode", [["bicount", "Bi-Count"], ["multicount", "Multi-Count"]], { config:"3/5" }],
+				["select", "Profile", "threeYarnProfile", "yarnProfile", [["circular", "Circular"], ["elliptical", "Elliptical"], ["racetrack", "Racetrack"]], { config:"3/5" }],
+				["select", "Structure", "threeYarnStructure", "yarnStructure", [["spun", "Spun"], ["test", "Test"], ["flat", "Flat"]], { config:"3/5"}],
+				["number", "Warp Number", "threeWarpNumber", "warpNumber", 20, { config:"1/3", min:1, max:120 }],
+				["number", "Weft Number", "threeWeftNumber", "weftNumber", 20, { config:"1/3", min:1, max:120 }],
+				["number", "Warp Density", "threeWarpDensity", "warpDensity", 55, { config:"1/3", min:1, max:360 }],
+				["number", "Weft Density", "threeWeftDensity", "weftDensity", 55, { config:"1/3", min:1, max:360 }],
+				["number", "Warp Eccentricity", "threeWarpEccentricity", "warpEccentricity", 0.85, { config:"1/3", min:0, max:0.95, step:0.05, precision:2 }],
+				["number", "Weft Eccentricity", "threeWeftEccentricity", "weftEccentricity", 0.65, { config:"1/3", min:0, max:0.95, step:0.05, precision:2 }],
+				["number", "Radius Segments", "threeRadialSegments", "radialSegments", 8, { config:"1/3", min:1, max:36 }],
+				["number", "Tubular Segments", "threeTubularSegments", "tubularSegments", 8, { config:"1/3", min:1, max:36 }],
+				["number", "Warp Start", "threeWarpStart", "warpStart", 1, { config:"1/3" }],
+				["number", "Weft Start", "threeWeftStart", "weftStart", 1, { config:"1/3" }],
+				["number", "Warp Threads", "threeShowWarpThreads", "warpThreads", 12, { config:"1/3", min:2, max:120 }],
+				["number", "Weft Threads", "threeShowWeftThreads", "weftThreads", 12, { config:"1/3", min:2, max:120 }],
+				["check", "Show Curve Nodes", "threeShowCurveNodes", "showCurveNodes", 0, { config:"1/3" }],
+				["check", "Show Wireframe", "threeShowWireframe", "showWireframe", 0, { config:"1/3" }],
+				["check", "Smooth Shading", "threeSmoothShading", "smoothShading", 1, { config:"1/3" }],
+				["check", "End Caps", "threeEndCaps", "endCaps", 1, { config:"1/3" }],
+				["control", "Save"]
+			],
+
+			scene: [
+				
+				["select", "Projection", "threeProjection", "projection", [["perspective", "PERSP"], ["orthographic", "ORTHO"]], { config:"1/2", active: true }],
+				["select", "Background", "threeBGColor", "bgColor", [["white", "White"], ["black", "Black"], ["grey", "Grey"], ["transparent", "Transparent"]], { config:"1/2", active: true }],
+				["check", "Show Axes", "threeShowAxes", "showAxes", 0, { config:"1/3", active: true }],
+				["check", "Hover Outline", "threeMouseHoverOutline", "mouseHoverOutline", 0, { config:"1/3", active: true }],
+				["check", "Hover Highlight", "threeMouseHoverHighlight", "mouseHoverHighlight", 0, { config:"1/3", active: true }],
+				["check", "Cast Shadow", "threeCastShadow", "castShadow", 1, { config:"1/3", active: true }],
+
+			]
+				
+		},
+
+		applyShadowSetting: function(){
+
+			var _this = this;
+
+			_this.createScene(function(){
+				_this.lights.directional0.castShadow = _this.params.castShadow;
+				var threads = _this.fabric.children;
+				for (var i = threads.length-1; i >= 0; --i) {
+					if ( threads[i].name == "thread" ){
+						threads[i].castShadow = _this.params.castShadow;
+						threads[i].receiveShadow = _this.params.castShadow;
+					}
+				}
+				_this.render();
+			});
+
+		},
+
 		resetPosition: function(callback = false){
 
-			globalThree.currentPreset = 0;
-			globalThree.animateSceneTo(globalThree.modelParams.initRotation, globalThree.sceneParams.initCameraPos, globalThree.sceneParams.initControlsTarget, callback);
+			this.currentPreset = 0;
+			this.animateThreeSceneTo(this.modelParams.initRotation, this.params.initCameraPos, this.params.initControlsTarget, callback);
 			
 		},
 
@@ -9460,7 +9852,7 @@ $(document).ready ( function(){
 			this.currentPreset = index;
 			var pos = this.rotationPresets[index];
 			var modelRotation = new THREE.Vector3(toRadians(pos[0]), toRadians(pos[1]), toRadians(pos[2]));
-			globalThree.animateSceneTo(modelRotation);
+			globalThree.animateThreeSceneTo(modelRotation);
 
 		},
 
@@ -9472,8 +9864,8 @@ $(document).ready ( function(){
 			var threeBoxL = 0;
 			var threeBoxB = 0;
 
-			var threeBoxW = this.frameW - threeBoxL;
-			var threeBoxH = this.frameH - threeBoxB;
+			var threeBoxW = app.frameW - threeBoxL;
+			var threeBoxH = app.frameH - threeBoxB;
 
 			$("#three-container").css({
 				"width":  threeBoxW,
@@ -9487,10 +9879,10 @@ $(document).ready ( function(){
 			if ( app.tabs.active == "three" && render ){
 				globalThree.createScene(function(){
 					if ( globalThree.camera.isPerspectiveCamera ){
-				        globalThree.camera.aspect = globalThree.frameW / globalThree.frameH;
+				        globalThree.camera.aspect = app.frameW / app.frameH;
 				    } else {
 
-				    	var aspect = globalThree.frameW / globalThree.frameH;
+				    	var aspect = app.frameW / app.frameH;
 				    	var frustumSize = globalThree.frustumSize;
 
 				        globalThree.camera.left = frustumSize * aspect  / - 2;
@@ -9498,10 +9890,10 @@ $(document).ready ( function(){
 				        globalThree.camera.top = frustumSize / 2;
 				        globalThree.camera.bottom = frustumSize / - 2;
 				    }
-					globalThree.renderer.setSize(globalThree.frameW, globalThree.frameH);
+					globalThree.renderer.setSize(app.frameW, app.frameH);
 					globalThree.camera.updateProjectionMatrix();
-					globalThree.composer.setSize( globalThree.frameW, globalThree.frameH );
-					globalThree.render();
+					globalThree.composer.setSize( app.frameW, app.frameH );
+					//globalThree.render();
 				});
 			}
 
@@ -9511,235 +9903,133 @@ $(document).ready ( function(){
 
 		onTabSelect : function(){
 
-			globalThree.setInterface(3);
-			globalStatusbar.set("threeIntersection", 0, 0);
-
-		},
-
-		params : {
-
-			structure: [
-				["select", "Mode", "threeMode", "threeMode", "3/5", [["bicount", "Bi-Count"], ["multicount", "Multi-Count"]]],
-				["select", "Profile", "threeYarnProfile", "yarnProfile", "2/3", [["circular", "Circular"], ["elliptical", "Elliptical"], ["racetrack", "Racetrack"]]],
-				["number", "Warp Number", "threeWarpNumber", "warpNumber", "2/5", 20, 1, 120],
-				["number", "Weft Number", "threeWeftNumber", "weftNumber", "2/5", 20, 1, 120],
-				["number", "Warp Density", "threeWarpDensity", "warpDensity", "2/5", 55, 1, 360],
-				["number", "Weft Density", "threeWeftDensity", "weftDensity", "2/5", 55, 1, 360],
-				["number", "Warp Eccentricity", "threeWarpEccentricity", "warpEccentricity", "2/5", 0.85, 0, 0.95, 0.05, 2],
-				["number", "Weft Eccentricity", "threeWeftEccentricity", "weftEccentricity", "2/5", 0.65, 0, 0.95, 0.05, 2],
-				["number", "Radius Segments", "threeRadiusSegments", "radiusSegments", "2/5", 8, 1, 36],
-				["number", "Node Path Segments", "threeNodePathSegments", "nodePathSegments", "2/5", 4, 1, 36],
-				["number", "Warp Start", "threeWarpStart", "warpStart", "2/5", 1],
-				["number", "Weft Start", "threeWeftStart", "weftStart", "2/5", 1],
-				["number", "Warp Threads", "threeShowWarpThreads", "warpThreads", "2/5", 12, 2, 120],
-				["number", "Weft Threads", "threeShowWeftThreads", "weftThreads", "2/5", 12, 2, 120],
-				["check", "Shw Path Nodes", "threeShowPathNodes", "showPathNodes", "2/5", 0],
-				["check", "Show Wireframe", "threeShowWireframe", "showWireframe", "2/5", 0],
-				["check", "Smooth Shading", "threeSmoothShading", "smoothShading", "2/5", 1],
-				["check", "Cast Shadow", "threeCastShadow", "castShadow", "2/5", 1],
-				["control", "Save"]
-			],
-
-			scene: [
-				
-				["select", "Projection", "threeProjection", "projection", "3/5", [["perspective", "Perspective"], ["orthographic", "Orthographic"]]],
-				["select", "Background", "threeBGColor", "bgColor", "1/2", [["white", "White"], ["grey", "Grey"], ["black", "Black"], ["transparent", "Transparent"]]],
-				["check", "Show Axes", "threeShowAxes", "showAxes", "2/5", 0],
-				["control", "Apply"]
-
-			],
-				
 		},
 
 		createScene : function(callback = false){
 
-			if ( !this.sceneCreated ){
+			if ( !this.status.scene ){
 
 				setLoadingbar(0, "threecreatescene", true, "Creating Scene");
 
-				$.doTimeout("createThreeScene", 100, function(){
+				$.doTimeout("createThreeScene", 10, function(){
 
-					globalThree.renderer = new THREE.WebGLRenderer({
+					var _this = globalThree;
+
+					_this.renderer = new THREE.WebGLRenderer({
 						antialias: true,
 						alpha: true,
 						preserveDrawingBuffer: true 
 					});
 
-					globalThree.renderer.setPixelRatio(g_pixelRatio);
-				 	globalThree.renderer.setSize(globalThree.frameW, globalThree.frameH);
+					_this.renderer.setPixelRatio(g_pixelRatio);
+				 	_this.renderer.setSize(app.frameW, app.frameH);
 
-				 	globalThree.renderer.shadowMap.enabled = true;
-					globalThree.renderer.shadowMapSoft = true;
-					globalThree.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-					globalThree.renderer.shadowMap.bias = 0.0001;
+				 	_this.renderer.physicallyCorrectLights = true;
+				 	_this.renderer.shadowMap.enabled = true;
+					_this.renderer.shadowMapSoft = true;
+					_this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+					_this.renderer.shadowMap.bias = 0.0001;
+					// _this.renderer.gammaInput = true;
+					// _this.renderer.gammaOutput = true;
+		   			// _this.renderer.gammaFactor = 1.1;
 
-					// globalThree.renderer.gammaInput = true;
-					// globalThree.renderer.gammaOutput = true;
-		   			// globalThree.renderer.gammaFactor = 1.1;
+		   			debug("maxAnisotropy", _this.maxAnisotropy, "three");
+		   			debug("maxTextureSize", _this.renderer.capabilities.maxTextureSize, "three");
 
-		    		globalThree.renderer.physicallyCorrectLights = true;
-
-				    var container = document.getElementById("three-container");
+				    var container = document.getElementById(_this.domContainer);
 				    container.innerHTML = "";
-				    container.appendChild(globalThree.renderer.domElement);
-				    globalThree.renderer.domElement.id = "g_threeCanvas";
-
-				    addStyleClassToElement("g_threeCanvas", "graph-canvas");
+				    container.appendChild(_this.renderer.domElement);
+				    _this.renderer.domElement.id = _this.domElementId;
+				    addCssClassToDomId(_this.domElementId, _this.domElementClass);
 
 				    // scene
-				    globalThree.scene = new THREE.Scene();
+				    _this.scene = new THREE.Scene();
 				    
 				    // cameras
-				    var aspect = globalThree.frameW / globalThree.frameH;
-				    var frustumSize = globalThree.frustumSize;
-				   	globalThree.perspectiveCamera = new THREE.PerspectiveCamera(45, aspect, 1, 1000);
-				   	globalThree.orthographicCamera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, -200, 500 );
+				    var aspect = app.frameW / app.frameH;
+				    var frustumSize = _this.frustumSize;
+				   	_this.perspectiveCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 500);
+				   	_this.orthographicCamera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, -200, 500 );
    					
-				   	if ( globalThree.params.projection == "perspective" ){
-				   		globalThree.camera = globalThree.perspectiveCamera;
-				   	} else if ( globalThree.params.projection == "orthographic" ){
-				   		globalThree.camera = globalThree.orthographicCamera;
+				   	if ( _this.params.projection == "perspective" ){
+				   		_this.camera = _this.perspectiveCamera;
+				   	} else if ( _this.params.projection == "orthographic" ){
+				   		_this.camera = _this.orthographicCamera;
 				   	}
 
-        			globalThree.scene.add( globalThree.camera );
+        			_this.scene.add( _this.camera );
+        			// _this.scene.add(new THREE.CameraHelper(_this.camera));
 
 				    // controls
-				    globalThree.controls = new THREE.OrbitControls( globalThree.camera, globalThree.renderer.domElement );
-				    globalThree.controls.minDistance = 1;
-				    globalThree.controls.maxDistance = 100;
-				    //globalModel.controls.minPolarAngle = 0;
-				    //globalModel.controls.maxPolarAngle = Math.PI/1.8;
+				    _this.controls = new THREE.OrbitControls( _this.camera, _this.renderer.domElement );
+				    _this.controls.minDistance = 1;
+				    _this.controls.maxDistance = 100;
+				    _this.controls.enableKeys = false;
+
+				    //_this.controls.minPolarAngle = 0;
+				    //_this.controls.maxPolarAngle = Math.PI/1.8;
+
+					// _this.controls.enableDamping = true;
+					// _this.controls.dampingFactor = 0.05;
+					// _this.controls.rotateSpeed = 0.1;
+
+					// _this.controls.autoRotate = true;
+					// _this.controls.autoRotateSpeed = 1;
+
+					_this.camera.position.copy(_this.params.initCameraPos);
+					_this.controls.target.copy(_this.params.initControlsTarget);
+					_this.controls.update();
+
+					_this.controls.addEventListener("change", function(){
+
+						_this.render();
+
+
+					} );
+
+
+					_this.setLights();
 				    
-				    // globalThree.scene.add(new THREE.CameraHelper(globalThree.camera));
-					//globalModel.scene.add( new THREE.SpotLightHelper( globalModel.lights.spot ) );
-
-					// ambient
-        			globalThree.scene.add( new THREE.AmbientLight( 0xffffff, 1 ) );
-
-        			// light
-			        var light = new THREE.PointLight( 0xffffff, 0.5 );
-			        light.position.set( 0, 6, 0 );
-			        //globalThree.camera.add( light );
-
-			        globalThree.lights.ambient = new THREE.AmbientLight( 0xffffff, 0.75 );
-					//globalThree.scene.add( globalThree.lights.ambient );
-
-			        // SpotLight( color, intensity, distance, angle, penumbra, decay )
-			        globalThree.lights.spot = new THREE.SpotLight(0xffffff, 1.5, 100, 1, 1, 0);
-					globalThree.lights.spot.position.set( -10, 10, -10 );
-
-					globalThree.lights.spot.castShadow = true;
-					globalThree.lights.spot.target = new THREE.Object3D( 0, 0, 0 );
-					globalThree.lights.spot.target.position.set(0, 0, 0);
-				    globalThree.lights.spot.shadow.bias = -0.0001;
-				    globalThree.lights.spot.radius = 10;
-				    globalThree.scene.add( globalThree.lights.spot.target );
-					globalThree.lights.spot.shadow.mapSize.width = 512;
-					globalThree.lights.spot.shadow.mapSize.height = 512;
-					globalThree.lights.spot.shadow.camera.near = 0.5;
-					globalThree.lights.spot.shadow.camera.far = 85;
-					globalThree.scene.add( globalThree.lights.spot );
-
-					debugInput("number", "globalThree.lights.spot.intensity", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.position.x", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.position.y", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.position.z", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.radius", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.shadow.bias", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.shadow.camera.near", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.shadow.camera.far", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.penumbra", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.decay", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.angle", false, "live", function(val){
-						globalThree.render();
-					});
-
-					debugInput("number", "globalThree.lights.spot.distance", false, "live", function(val){
-						globalThree.render();
-					});
-
-
-
-
-				    //globalThree.camera.add( globalThree.lights.spot );
-
-					globalThree.camera.position.copy(globalThree.sceneParams.initCameraPos);
-					globalThree.controls.target.copy(globalThree.sceneParams.initControlsTarget);
-					globalThree.controls.update();
-
-					globalThree.fabric = new THREE.Group();
-				    globalThree.scene.add(globalThree.fabric);
-				    var initRotation = globalThree.modelParams.initRotation;
-				    globalThree.fabric.rotation.set(initRotation.x, initRotation.y, initRotation.z);
+					_this.fabric = new THREE.Group();
+				    _this.scene.add(_this.fabric);
+				    var initRotation = _this.modelParams.initRotation;
+				    _this.fabric.rotation.set(initRotation.x, initRotation.y, initRotation.z);
 
 					// Custom Axes
-					globalThree.axes = new THREE.Group();
+					_this.axes = new THREE.Group();
 					var xArrow = new THREE.ArrowHelper( new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1, 0xFF0000 );
 					var yArrow = new THREE.ArrowHelper( new THREE.Vector3( 0,1,1), new THREE.Vector3(0,0,0), 1, 0x00FF00 );
 					var zArrow = new THREE.ArrowHelper( new THREE.Vector3( 0,0,-1), new THREE.Vector3(0,0,0), 1, 0x0000FF );
 					xArrow.name = "axes-arrow-x";
 					yArrow.name = "axes-arrow-y";
 					zArrow.name = "axes-arrow-z";
-					globalThree.axes.add( xArrow );
-					globalThree.axes.add( yArrow );
-					globalThree.axes.add( zArrow );
-					globalThree.axes.name = "axes";
-					globalThree.fabric.add(globalThree.axes);
+					_this.axes.add( xArrow );
+					_this.axes.add( yArrow );
+					_this.axes.add( zArrow );
+					_this.axes.name = "axes";
+					_this.fabric.add(_this.axes);
 
-					globalThree.setBgColor(globalThree.params.bgColor);
-					globalThree.axes.visible = globalThree.params.showAxes;
+					var clearColor = toClearColor(_this.params.bgColor);
+				    _this.renderer.setClearColor(clearColor[0], clearColor[1]);
+
+					_this.axes.visible = _this.params.showAxes;
 
 					var line_material = new THREE.LineBasicMaterial( { color: 0x999999 } );
 					var line_geometry = new THREE.Geometry();
 					line_geometry.vertices.push(new THREE.Vector3( 0, -10, 0) );
 					line_geometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
 					line_geometry.vertices.push(new THREE.Vector3( 0, 10, 0) );
-					globalThree.rotationAxisLine = new THREE.Line( line_geometry, line_material );
-					globalThree.scene.add( globalThree.rotationAxisLine );
+					_this.rotationAxisLine = new THREE.Line( line_geometry, line_material );
+					_this.scene.add( _this.rotationAxisLine );
+					_this.rotationAxisLine.visible = _this.params.showAxes;
 
-					globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
+					_this.composerSetup();
 
-					globalThree.composerSetup();
-
-					globalThree.render();
-					globalThree.startAnimation();
-					globalThree.sceneCreated = true;
-
+					_this.status.scene = true;
+					_this.render();
+					_this.startAnimation();
 					setLoadingbar("hide");
-
-					if (typeof callback === "function") {
-				    	callback();
-				    }
+					if (typeof callback === "function") { callback(); }
 
 				});
 
@@ -9753,11 +10043,35 @@ $(document).ready ( function(){
 
 		},
 
+		setLights: function(){
+
+			var _this = this;
+
+			_this.lights.directional0 = new THREE.DirectionalLight( 0xffffff, 1);
+			_this.lights.directional0.position.set(-10, 10, -10);
+
+			_this.lights.directional1 = new THREE.DirectionalLight( 0xffffff, 1 );
+			_this.lights.directional1.position.set(10, -10, 10);
+			_this.scene.add( _this.lights.directional1 );
+
+			_this.lights.ambient = new THREE.AmbientLight( 0xffffff, 2 );
+			_this.scene.add( _this.lights.ambient );
+
+			_this.lights.directional0.castShadow = _this.params.castShadow;
+			_this.lights.directional0.shadow.bias = -0.0001;
+			_this.lights.directional0.shadow.mapSize.width = 512;
+			_this.lights.directional0.shadow.mapSize.height = 512;
+			_this.lights.directional0.shadow.camera.near = 0.5;
+			_this.lights.directional0.shadow.camera.far = 100;
+		    _this.scene.add( _this.lights.directional0 );
+
+		},
+
 		composerSetup: function(){
 			globalThree.composer = new THREE.EffectComposer( globalThree.renderer );
 			globalThree.renderPass = new THREE.RenderPass( globalThree.scene, globalThree.camera );
 			globalThree.composer.addPass( globalThree.renderPass );
-			globalThree.outlinePass = new THREE.OutlinePass( new THREE.Vector2(globalThree.frameW, globalThree.frameH), globalThree.scene, globalThree.camera );
+			globalThree.outlinePass = new THREE.OutlinePass( new THREE.Vector2(app.frameW, app.frameH), globalThree.scene, globalThree.camera );
 			
 			globalThree.outlinePass.edgeStrength = Number(10);
 			globalThree.outlinePass.edgeGlow = Number(0);
@@ -9766,24 +10080,10 @@ $(document).ready ( function(){
 			globalThree.outlinePass.visibleEdgeColor.set("#ffffff");
 			globalThree.outlinePass.hiddenEdgeColor.set("#222222");
 
-			globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
-
 			globalThree.effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-			globalThree.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / globalThree.frameW, 1 / globalThree.frameH );
+			globalThree.effectFXAA.uniforms[ "resolution" ].value.set( 1 / app.frameW, 1 / app.frameH );
 			globalThree.composer.addPass( globalThree.effectFXAA );
 			globalThree.composer.addPass( globalThree.outlinePass );
-		},
-
-		setBgColor: function(color){
-			if ( color == "transparent" ){
-				globalThree.renderer.setClearColor(0x000000, 0);
-			} else if ( color == "black" ){
-				globalThree.renderer.setClearColor(0x000000, 1);
-			}  else if ( color == "white" ){
-				globalThree.renderer.setClearColor(0xFFFFFF, 1);
-			}  else if ( color == "grey" ){
-				globalThree.renderer.setClearColor(0x7F7F7F, 1);
-			}
 		},
 
 		swithCameraTo: function(projection){
@@ -9814,7 +10114,6 @@ $(document).ready ( function(){
 				this.camera.updateProjectionMatrix();
 				this.controls.update();
 				this.render();
-
 			}
 
 		},
@@ -9873,203 +10172,462 @@ $(document).ready ( function(){
 			this.renderer.forceContextLoss(); 
 			//this.renderer.context = undefined;
 			this.renderer.domElement = undefined;
-			this.sceneCreated = false;
+			this.status.scene = false;
 
 		},
 
-		buildFabric: function() {
+		disposeMaterials: function(callback){
 
-			globalThree.createScene(function(){
+			var _this = this;
 
-				globalThree.clearFabric();
+			["warp", "weft"].forEach(function(set){
+				for (var c in _this.materials[set]) {
+					if (_this.materials[set].hasOwnProperty(c)){
+			           	_this.materials[set][c].dispose();
+						_this.materials[set][c] = undefined;
+			        }				
+				}
+				_this.materials[set] = [];
+			});
 
-				globalThree.axes.visible = globalThree.params.showAxes;
-				globalThree.rotationAxisLine.visible = globalThree.params.showAxes;
+		},
 
-				var threeMode = globalThree.params.threeMode;
-				var yarnProfile = globalThree.params.yarnProfile;
-				var warpNumber = globalThree.params.warpNumber;
-				var weftNumber = globalThree.params.weftNumber;
-				var warpDensity = globalThree.params.warpDensity;
-				var weftDensity = globalThree.params.weftDensity;
-				var warpEccentricity = globalThree.params.warpEccentricity;
-				var weftEccentricity = globalThree.params.weftEccentricity;
-				var radiusSegments = globalThree.params.radiusSegments;
-				var nodePathSegments = globalThree.params.nodePathSegments;
-				var warpStart = globalThree.params.warpStart;
-				var weftStart = globalThree.params.weftStart;
-				var warpThreads = globalThree.params.warpThreads;
-				var weftThreads = globalThree.params.weftThreads;
-				var showPathNodes = globalThree.params.showPathNodes;
-				var showWireframe = globalThree.params.showWireframe;
+		resetFabric: function(){
 
-				if ( globalWeave.weave2D8 !== undefined && globalWeave.weave2D8.length && globalWeave.weave2D8[0] !== undefined && globalWeave.weave2D8[0].length ){
+			var threads = this.fabric.children;
+			var set, code;
+			for (var i = threads.length - 1; i >= 0; i--) {
+				if ( threads[i].name == "thread" ){
+					set = threads[i].userData.threadSet;
+					code = threads[i].userData.colorCode;
+					if ( threads[i].material.name !== set+"-"+code ){
+						threads[i].material.name = set+"-"+code;
+						threads[i].material = globalThree.materials[set][code];
+					}
+				}
+            }
 
-					// addMesh("cube", [1,2,3], [1,2,3], "phong", 0xff0000, globalThree.scene);
-					// addMesh("cube", [3,2,1], [3,2,1], "standard", 0x00ff00, globalThree.scene);
+		},
 
-					var weave2D8 = globalWeave.weave2D8.tileFill(warpThreads, weftThreads, 1-warpStart, 1-weftStart);
-					globalThree.weave2D8 = weave2D8;
+		loadTextures: function(callback){
 
-					globalThree.defaultOpacity = globalThree.params.showPathNodes ? 0.25 : 1;
-					globalThree.defaultDepthTest = globalThree.params.showPathNodes ? false : true;
+			var _this = this; 
 
-					var warpPathSegments = (globalThree.params.weftThreads + 1) * nodePathSegments;
-					var weftPathSegments = (globalThree.params.warpThreads + 1) * nodePathSegments;
-					globalThree.params.warpPathSegments = warpPathSegments;
-				    globalThree.params.weftPathSegments = weftPathSegments;
+			if ( _this.textures.needsUpdate ){
 
-				     // End to End Distance
-				    var xDist = 25.4/warpDensity;
-				    var zDist = 25.4/weftDensity;
-					globalThree.xDist = xDist;
-					globalThree.zDist = zDist;
+				setLoadingbar(0, "threeloadingtextures", true, "Loading Textures");
+				var loader = new THREE.TextureLoader();
 
-					// Structure Dimensions
-					var structureWx = xDist * (warpThreads-1);
-					var structureHz = zDist * (weftThreads-1);
+				for ( var key in _this.textures ) {
+				
+					if ( _this.textures.hasOwnProperty(key) && _this.textures[key].url !== undefined ){
 
-					globalThree.structureWx = structureWx;
-					globalThree.structureHz = structureHz;
+						_this.textures.pending++;
 
-					globalThree.axes.position.set(-structureWx/2 - xDist, 0, structureHz/2 + zDist);
+						_this.textures[key].val = loader.load( _this.textures[key].url, function (texture) {
 
-					// Offset model to center
-				    var xOffset = xDist * (warpThreads-1) / 2;
-					var zOffset = zDist * (weftThreads-1) / 2;
+							texture.wrapS = THREE.RepeatWrapping;
+							texture.wrapT = THREE.RepeatWrapping;
+							//texture.rotation = toRadians(45);
+							//texture.repeat.set(1, 1);
+							//texture.offset.set(0, 0);
+							texture.anisotropy = _this.renderer.capabilities.getMaxAnisotropy();
+							texture.needsUpdate = true;
 
-					globalThree.xOffset = xOffset;
-					globalThree.zOffset = zOffset;
+							_this.render();
 
-					var warpRadius = getYarnRadius(warpNumber, "nec")[0];
-					globalThree.warpRadius = warpRadius;
+							_this.textures.pending--;
 
-					var weftRadius = getYarnRadius(weftNumber, "nec")[0];
-					globalThree.weftRadius = weftRadius;
+							if ( !_this.textures.pending ){
 
-					var warpRadiusY = warpRadius;
-					var warpRadiusX = warpRadius;
-					var weftRadiusY = weftRadius;
-					var weftRadiusX = weftRadius;
-					var maxFabricThickness = (warpRadius + weftRadius) * 2;
+								setLoadingbar("hide");
+								_this.textures.needsUpdate = false;
 
-					if ( yarnProfile == "elliptical" ){
+								debugInput("number", "Texture Rotation", true, "live", function(val){
+									globalThree.materials.warp.W.bumpMap.rotation = toRadians(Number(val));
+								});
 
-						warpRadiusY = Math.pow(Math.pow(warpRadius,4)*(1-Math.pow(warpEccentricity,2)),1/4);
-						warpRadiusX = Math.pow(warpRadius,2)/warpRadiusY;
-						weftRadiusY = Math.pow(Math.pow(weftRadius,4)*(1-Math.pow(weftEccentricity,2)),1/4);
-						weftRadiusX = Math.pow(weftRadius,2)/weftRadiusY;
-						maxFabricThickness = (warpRadiusY + weftRadiusY) * 2;
+								debugInput("text", "Texture Repeat", true, "live", function(val){
+									var val = val.split(",");
+									var val0 = Number(val[0]);
+									var val1 = Number(val[1]);
+									globalThree.materials.warp.W.bumpMap.repeat.set( val[0], val[1] );
+								});
+
+								debugInput("text", "Texture Offset", true, "live", function(val){
+									var val = val.split(",");
+									var val0 = Number(val[0]);
+									var val1 = Number(val[1]);
+									globalThree.materials.warp.W.bumpMap.offset.set( val[0], val[1] );
+								});
+
+								if (typeof callback === "function" ) { 
+									callback();
+								}
+
+							}
+
+			            });
 
 					}
 
-					globalThree.warpRadiusX = warpRadiusX;
-					globalThree.warpRadiusY = warpRadiusY;
-					globalThree.weftRadiusX = weftRadiusX;
-					globalThree.weftRadiusY = weftRadiusY;
-					globalThree.maxFabricThickness = maxFabricThickness;
+				}
 
-				    var endArray, pickArray = [], colorCode, colorHex;
+			} else {
 
-					// updating scene:
-					var axesOriginX = -(structureWx/2 + xDist + Math.min(xDist, zDist)/2);
-					var axesOriginY = 0;
-					var axesOriginZ = structureHz/2 + zDist + Math.min(xDist, zDist)/2;
-					globalThree.axes.position.set(axesOriginX, axesOriginY, axesOriginZ);
-					globalThree.render();
+				if (typeof callback === "function") { callback(); }	
 
-					debugInput("number", "globalThree.axes.position.x", false, "live", function(val){
-						globalThree.render();
-					});
+			}
 
-					debugInput("number", "globalThree.axes.position.y", false, "live", function(val){
-						globalThree.render();
-					});
+		},
 
-					debugInput("number", "globalThree.axes.position.z", false, "live", function(val){
-						globalThree.render();
-					});
-					
-				    var percentagePerThread = 100/(globalThree.params.warpThreads + globalThree.params.weftThreads);
-				    var cycle = 0;
-				    var startX = 0;
-				    var lastX = globalThree.params.warpThreads - 1;
-				    var x = startX;
+		// Three
+		createMaterials: function(callback){
 
-				    var startY = 0;
-				    var lastY = globalThree.params.weftThreads - 1;
-				    var y = startY;
+			var bumpMap, material, materialOptions, color, yarnL, yarnT;
+			var _this = this; 
+			var _params = _this.params; 
 
-				    globalThree.threads = [];
+			var renderSide = _this.params.endCaps ? THREE.FrontSide : THREE.DoubleSide;
 
-				    var percent;
+			_this.loadTextures(function(){
+				setLoadingbar(0, "threecreatingmaterials", true, "Creating Materials");
+				if ( !_this.status.materials ){
+					_this.disposeMaterials();
 
-				    setLoadingbar(0, "warpdraw", true, "Rendering Warp Threads");
-				    $.doTimeout("warpdraw", 1, function(){
-						cycle++;
-						percent = Math.round(cycle * percentagePerThread);
-						setLoadingbar(percent);
-						globalThree.add3DThread("warp", x);
-						x++;
-						globalThree.render();
-						if ( x == lastX ){
-							setLoadingbar("hide");
-							setLoadingbar(percent, "weftdraw", true, "Rendering Weft Threads");
-						}
-						if ( x > lastX ){
-							$.doTimeout("weftdraw", 1, function(){
-								cycle++;
-								percent = Math.round(cycle * percentagePerThread);
-								setLoadingbar(percent);
-								globalThree.add3DThread("weft", y);
-								y++;
-								globalThree.render();
-								if ( y > lastY ){
-									setLoadingbar("hide");
-									globalThree.sceneCreated = true;
-									afterBuildFabric();
-									return false;
+					var patternColors = {
+						warp: globalPattern.colors("warp"),
+						weft: globalPattern.colors("weft")
+					};
+					["warp", "weft"].forEach(function(set){
+						patternColors[set].forEach(function(colorCode, i){
+
+							color = app.palette.colors[colorCode];
+
+							materialOptions = {
+								color: color.hex,
+								side: renderSide,
+				                roughness: 1,
+				                metalness: 0,
+				                transparent: true,
+				                opacity: _this.defaultOpacity,
+				                depthWrite: true,
+				                wireframe: _this.params.showWireframe,
+				                name: set+"-"+colorCode
+							};
+							_this.materials[set][colorCode] = new THREE.MeshStandardMaterial( materialOptions );
+
+							if ( _this.params.yarnStructure == "spun" ){
+
+								if ( _params.threeMode == "bicount" && set == "warp" ){
+									yarnL = _params.warpThreads / _params.warpDensity;
+									yarnT = getYarnDia(_params.weftNumber, "nec", "in");
+								} else if ( _params.threeMode == "bicount" && set == "weft" ){
+									yarnL = _params.weftThreads / _params.weftDensity;
+									yarnT = getYarnDia(_params.weftNumber, "nec", "in");
+								} else if ( _params.threeMode == "multicount" && set == "warp" ){
+									yarnL = _params.warpThreads / _params.warpDensity;
+									yarnT = getYarnDia(color.yarn, color.system, "in");
+								} else if ( _params.threeMode == "multicount" && set == "weft" ){
+									yarnL = _params.weftThreads / _params.weftDensity;
+									yarnT = getYarnDia(color.yarn, color.system, "in");
 								}
-								return true;
-							});
-							return false;
-						}
-						return true;
+
+								bumpMap = _this.textures.threadBumpMap.val.clone();
+								bumpMap.offset.set(getRandom(0, 1), getRandom(0, 1));
+								bumpMap.repeat.set(yarnL / yarnT / 5, 1);
+
+								bumpMap.needsUpdate = true;
+								_this.materials[set][colorCode].bumpMap = bumpMap;
+								_this.materials[set][colorCode].bumpScale = 0.01;
+
+							} else if ( _this.params.yarnStructure == "test" ){
+								bumpMap = _this.textures.test512.val.clone();
+
+								if ( _params.threeMode == "bicount" && set == "warp" ){
+									yarnL = _params.warpThreads / _params.warpDensity;
+									yarnT = getYarnDia(_params.weftNumber, "nec", "in");
+								} else if ( _params.threeMode == "bicount" && set == "weft" ){
+									yarnL = _params.weftThreads / _params.weftDensity;
+									yarnT = getYarnDia(_params.weftNumber, "nec", "in");
+								} else if ( _params.threeMode == "multicount" && set == "warp" ){
+									yarnL = _params.warpThreads / _params.warpDensity;
+									yarnT = getYarnDia(color.yarn, color.system, "in");
+								} else if ( _params.threeMode == "multicount" && set == "weft" ){
+									yarnL = _params.weftThreads / _params.weftDensity;
+									yarnT = getYarnDia(color.yarn, color.system, "in");
+								}
+
+								bumpMap.offset.set(getRandom(0, 1), getRandom(0, 1));
+								bumpMap.repeat.set(yarnL / yarnT / 5, 1);
+
+								bumpMap.needsUpdate = true;
+								_this.materials[set][colorCode].bumpMap = bumpMap;
+								_this.materials[set][colorCode].bumpScale = 0.01;
+							}
+
+						});
 					});
-
-				} else {
-
-					console.log("buildFabric Error : Invalid Weave2D8");
 
 				}
+				setLoadingbar("hide");
+
+				_this.render();
+
+				if (typeof callback === "function") { callback(); }
+
+
+				
+			});
+
+        },
+
+		buildFabric: function() {
+
+			var _this = this;
+
+			_this.createScene(function(){
+
+				_this.removeFabric();
+
+				_this.createMaterials(function(){
+
+					_this.axes.visible = _this.params.showAxes;
+					_this.rotationAxisLine.visible = _this.params.showAxes;
+
+					var threeMode = _this.params.threeMode;
+					var yarnProfile = _this.params.yarnProfile;
+					var warpNumber = _this.params.warpNumber;
+					var weftNumber = _this.params.weftNumber;
+					var warpDensity = _this.params.warpDensity;
+					var weftDensity = _this.params.weftDensity;
+					var warpEccentricity = _this.params.warpEccentricity;
+					var weftEccentricity = _this.params.weftEccentricity;
+					var radialSegments = _this.params.radialSegments;
+					var tubularSegments = _this.params.tubularSegments;
+					var warpStart = _this.params.warpStart;
+					var weftStart = _this.params.weftStart;
+					var warpThreads = _this.params.warpThreads;
+					var weftThreads = _this.params.weftThreads;
+					var showCurveNodes = _this.params.showCurveNodes;
+					var showWireframe = _this.params.showWireframe;
+
+					if ( globalWeave.weave2D8 !== undefined && globalWeave.weave2D8.length && globalWeave.weave2D8[0] !== undefined && globalWeave.weave2D8[0].length ){
+
+						// addMesh("cube", [1,2,3], [1,2,3], "phong", 0xff0000, _this.scene);
+						// addMesh("cube", [3,2,1], [3,2,1], "standard", 0x00ff00, _this.scene);
+
+						var weave2D8 = globalWeave.weave2D8.tileFill(warpThreads, weftThreads, 1-warpStart, 1-weftStart);
+						_this.weave2D8 = weave2D8;
+
+						_this.defaultOpacity = _this.params.showCurveNodes ? 0.25 : 1;
+						_this.defaultDepthTest = _this.params.showCurveNodes ? false : true;
+
+						var warpPathSegments = (_this.params.weftThreads + 1) * tubularSegments;
+						var weftPathSegments = (_this.params.warpThreads + 1) * tubularSegments;
+						_this.params.warpPathSegments = warpPathSegments;
+					    _this.params.weftPathSegments = weftPathSegments;
+
+					     // End to End Distance
+					    var xDist = 25.4/warpDensity;
+					    var zDist = 25.4/weftDensity;
+						_this.xDist = xDist;
+						_this.zDist = zDist;
+
+						// Structure Dimensions
+						var structureWx = xDist * (warpThreads-1);
+						var structureHz = zDist * (weftThreads-1);
+
+						_this.structureWx = structureWx;
+						_this.structureHz = structureHz;
+
+						_this.axes.position.set(-structureWx/2 - xDist, 0, structureHz/2 + zDist);
+
+						// Offset model to center
+					    var xOffset = xDist * (warpThreads-1) / 2;
+						var zOffset = zDist * (weftThreads-1) / 2;
+
+						_this.xOffset = xOffset;
+						_this.zOffset = zOffset;
+
+						var warpRadius = getYarnRadius(warpNumber, "nec")[0];
+						_this.warpRadius = warpRadius;
+
+						var weftRadius = getYarnRadius(weftNumber, "nec")[0];
+						_this.weftRadius = weftRadius;
+
+						var warpRadiusY = warpRadius;
+						var warpRadiusX = warpRadius;
+						var weftRadiusY = weftRadius;
+						var weftRadiusX = weftRadius;
+						var maxFabricThickness = (warpRadius + weftRadius) * 2;
+
+						if ( yarnProfile == "elliptical" ){
+
+							warpRadiusY = Math.pow(Math.pow(warpRadius,4)*(1-Math.pow(warpEccentricity,2)),1/4);
+							warpRadiusX = Math.pow(warpRadius,2)/warpRadiusY;
+							weftRadiusY = Math.pow(Math.pow(weftRadius,4)*(1-Math.pow(weftEccentricity,2)),1/4);
+							weftRadiusX = Math.pow(weftRadius,2)/weftRadiusY;
+							maxFabricThickness = (warpRadiusY + weftRadiusY) * 2;
+
+						}
+
+						_this.warpRadiusX = warpRadiusX;
+						_this.warpRadiusY = warpRadiusY;
+						_this.weftRadiusX = weftRadiusX;
+						_this.weftRadiusY = weftRadiusY;
+						_this.maxFabricThickness = maxFabricThickness;
+
+					    var endArray, pickArray = [], colorCode, colorHex;
+
+						// updating scene:
+						var axesOriginX = -(structureWx/2 + xDist + Math.min(xDist, zDist)/2);
+						var axesOriginY = 0;
+						var axesOriginZ = structureHz/2 + zDist + Math.min(xDist, zDist)/2;
+						_this.axes.position.set(axesOriginX, axesOriginY, axesOriginZ);
+						//globalThree.render();
+
+						debugInput("number", "globalThree.axes.position.x", false, "live", function(val){
+							//globalThree.render();
+						});
+
+						debugInput("number", "globalThree.axes.position.y", false, "live", function(val){
+							//globalThree.render();
+						});
+
+						debugInput("number", "globalThree.axes.position.z", false, "live", function(val){
+							//globalThree.render();
+						});
+						
+					    var percentagePerThread = 100/(_this.params.warpThreads + _this.params.weftThreads);
+					    var cycle = 0;
+					    var startX = 0;
+					    var lastX = _this.params.warpThreads - 1;
+					    var x = startX;
+
+					    var startY = 0;
+					    var lastY = _this.params.weftThreads - 1;
+					    var y = startY;
+
+					    _this.threads = [];
+
+					    var percent;
+
+					    setLoadingbar(0, "warpdraw", true, "Rendering Warp Threads");
+					    $.doTimeout("warpdraw", 1, function(){
+							cycle++;
+							percent = Math.round(cycle * percentagePerThread);
+							setLoadingbar(percent);
+							_this.addThread("warp", x);
+							_this.render();
+
+							x++;
+							if ( x == lastX ){
+								setLoadingbar("hide");
+								setLoadingbar(percent, "weftdraw", true, "Rendering Weft Threads");
+							}
+							if ( x > lastX ){
+								$.doTimeout("weftdraw", 1, function(){
+									cycle++;
+									percent = Math.round(cycle * percentagePerThread);
+									setLoadingbar(percent);
+									_this.addThread("weft", y);
+									_this.render();
+									y++;
+									if ( y > lastY ){
+										setLoadingbar("hide");
+										_this.afterBuildFabric();
+										return false;
+									}
+									return true;
+								});
+								return false;
+							}
+							return true;
+						});
+
+					} else {
+
+						console.log("buildFabric Error : Invalid Weave2D8");
+
+					}
+
+				});
 
 			});
 
 		},
 
-		add3DThread: function (threadSet, threeIndex){
+		afterBuildFabric: function(){
 
-			// console.log("add3DThread");
+			var _this = this;
+			
+			_this.threads.forEach(function(thread, i){
+				thread.material.opacity = _this.defaultOpacity;
+				thread.material.depthTest = _this.defaultDepthTest;
+			});
 
-			var sx, sy, sz, waveLength, waveAmplitude, pathSegments, intersectH, threadArray, colorCode, colorHex, orientation, yarnRadiusX, yarnRadiusY;
+			_this.timeline = new TimelineLite({
+				delay:0,
+				autoRemoveChildren : true,
+				smoothChildTiming : true,
+				onStart: function(){
+					_this.controls.enabled = false;
+					_this.animate = true;
+					debug("Timeline.Status", "start", "three");
+				},
+				onComplete: function(){
+					_this.controls.enabled = true;
+					_this.animate = false;
+					debug("Timeline.Status", "complete", "three");
+				},
+				onUpdate: function() {
+					_this.camera.updateProjectionMatrix();
+					debug("Timeline.Status", "updating", "three");
+				}
+			});
+
+			// debug Console
+			debug("Geometries", _this.renderer.info.memory.geometries, "three");
+			debug("Textures", _this.renderer.info.memory.textures, "three");
+			
+			debug("Calls", _this.renderer.info.render.calls, "three");
+			debug("Triangles", _this.renderer.info.render.triangles, "three");
+			debug("Points", _this.renderer.info.render.points, "three");
+			debug("Lines", _this.renderer.info.render.lines, "three");
+
+			_this.threadsUnderMouse.warp = false;
+			_this.threadsUnderMouse.weft = false;
+
+			_this.render();
+
+		},
+
+		addThread: function (threadSet, threeIndex){
+
+			// console.log("addThread : " + threadSet + "-" + threeIndex);
+
+			var _this = this;
+
+			var sx, sy, sz, waveLength, waveAmplitude, pathSegments, intersectH, threadUpDownArray, colorCode, colorHex, orientation, yarnRadiusX, yarnRadiusY;
 			var warpPathSegments, weftPathSegments;
 			var weaveIndex, patternIndex;
 			var radius, xRadius, yRadius;
 
-			var xDist = globalThree.xDist;
-			var zDist = globalThree.zDist;
-			var xOffset = globalThree.structureWx/2;
-			var zOffset = globalThree.structureHz/2;
-			var hft = globalThree.maxFabricThickness/2; // half fabric thickness
+			var xDist = _this.xDist;
+			var zDist = _this.zDist;
+			var xOffset = _this.structureWx/2;
+			var zOffset = _this.structureHz/2;
+			var hft = _this.maxFabricThickness/2; // half fabric thickness
 			
-			var threeMode = globalThree.params.threeMode;
-			var yarnProfile = globalThree.params.yarnProfile;
-			var radiusSegments = globalThree.params.radiusSegments;
+			var threeMode = _this.params.threeMode;
+			var yarnProfile = _this.params.yarnProfile;
+			var radialSegments = _this.params.radialSegments;
 			
-			var WpRx = globalThree.warpRadiusX;
-			var WpRy = globalThree.warpRadiusY;
-			var WfRx = globalThree.weftRadiusX;
-			var WfRy = globalThree.weftRadiusY;
+			var WpRx = _this.warpRadiusX;
+			var WpRy = _this.warpRadiusY;
+			var WfRx = _this.weftRadiusX;
+			var WfRy = _this.weftRadiusY;
 
 			var rigidityVar = (WfRy*Math.sqrt(WfRy*WfRx)*zDist*zDist)/(WpRy*Math.sqrt(WpRy*WpRx)*zDist*zDist);
 			var WpWa = hft * rigidityVar / (1+rigidityVar); // Warp Wave Amplitude
@@ -10086,14 +10644,14 @@ $(document).ready ( function(){
 
 				xRadius = WpRx;
 				yRadius = WpRy;
-				pathSegments = globalThree.params.warpPathSegments;
+				pathSegments = _this.params.warpPathSegments;
 
-				weaveIndex = loopNumber(threeIndex + globalThree.params.warpStart - 1, globalWeave.ends);
-				patternIndex = (threeIndex+globalThree.params.warpStart-1) % globalPattern.warp.length;
+				weaveIndex = loopNumber(threeIndex + _this.params.warpStart - 1, globalWeave.ends);
+				patternIndex = (threeIndex+_this.params.warpStart-1) % globalPattern.warp.length;
 
-				var yarnNumber = globalThree.params.warpNumber;
-				var yarnNumberSystem = globalThree.params.warpNumberSystem;
-				var yarnEccentricity = globalThree.params.warpEccentricity;
+				var yarnNumber = _this.params.warpNumber;
+				var yarnNumberSystem = _this.params.warpNumberSystem;
+				var yarnEccentricity = _this.params.warpEccentricity;
 
 				orientation = "z";
 
@@ -10108,32 +10666,35 @@ $(document).ready ( function(){
 
 				xRadius = WfRx;
 				yRadius = WfRy;
-				pathSegments = globalThree.params.weftPathSegments;
+				pathSegments = _this.params.weftPathSegments;
 
-				weaveIndex = loopNumber(threeIndex + globalThree.params.weftStart - 1, globalWeave.picks);
-				patternIndex = (threeIndex+globalThree.params.weftStart-1) % globalPattern.weft.length;
+				weaveIndex = loopNumber(threeIndex + _this.params.weftStart - 1, globalWeave.picks);
+				patternIndex = (threeIndex+_this.params.weftStart-1) % globalPattern.weft.length;
 
-				var yarnNumber = globalThree.params.weftNumber;
-				var yarnNumberSystem = globalThree.params.weftNumberSystem;
-				var yarnEccentricity = globalThree.params.weftEccentricity;
+				var yarnNumber = _this.params.weftNumber;
+				var yarnNumberSystem = _this.params.weftNumberSystem;
+				var yarnEccentricity = _this.params.weftEccentricity;
 
 				orientation = "x";
 
 			}
+
+			threadUpDownArray = getThreadUpDownArray(_this.weave2D8, threadSet, threeIndex);
+			colorCode = globalPattern[threadSet][patternIndex] || false;
+			colorHex = colorCode ? app.palette.colors[colorCode].hex : (threadSet == "warp" ? "#0000FF" : "#FFFFFF");
 
 			var userData = {
 
 				type : "tube",
 		    	threadSet : threadSet,
 		    	weavei : weaveIndex,
+		    	patterni: patternIndex,
 		    	threei : threeIndex,
-		    	customId : threadSet+"-"+threeIndex
+		    	colorCode: colorCode,
+		    	threeId: threadSet+"-"+threeIndex,
+			    weaveId: threadSet+"-"+weaveIndex
 
 			};
-
-			threadArray = getThreadArray(globalThree.weave2D8, threadSet, threeIndex);
-			colorCode = globalPattern[threadSet][patternIndex] || false;
-			colorHex = colorCode ? app.palette.colors[colorCode].hex : (threadSet == "warp" ? "#0000FF" : "#FFFFFF");
 
 			if ( threeMode == "multicount" && yarnProfile == "circular" ){
 
@@ -10159,13 +10720,15 @@ $(document).ready ( function(){
 
 			}
 
-			globalThree.add3DWave(sx, sy, sz, xRadius, yRadius, waveLength, waveAmplitude, threadArray, orientation, colorHex, userData, pathSegments, radiusSegments, yarnProfile);
+			_this.add3DWave(sx, sy, sz, xRadius, yRadius, waveLength, waveAmplitude, threadUpDownArray, orientation, colorHex, userData, pathSegments, radialSegments, yarnProfile);
 
 		},
 
-		add3DWave: function(sx, sy, sz, xTubeRadius, yTubeRadius, waveLength, waveAmplitude, arr, orientation, hex, userData, pathSegments, radiusSegments, shapeProfile){
+		add3DWave: function(sx, sy, sz, xTubeRadius, yTubeRadius, waveLength, waveAmplitude, threadUpDownArray, orientation, hex, userData, pathSegments, radialSegments, shapeProfile){
 
 			//console.log(["add3DWave", userData.threadSet]);
+
+			var _this = this;
 
 			var segmentY;
 
@@ -10179,75 +10742,66 @@ $(document).ready ( function(){
 		    // var atan = Math.atan2(wa*2, wl/2) / Math.PI * 2;
 		    // var bca =  (atan * wl + atan * wa) / 1.5;
 
-		    var state, prevState, n, nx, ny, nz, curvePoints, material, geometry;
+		    var state, prevState, n, nx, ny, nz, curvePoints, threadMaterial, geometry;
 
 		    var threadSet = userData.threadSet;
+		    var colorCode = userData.colorCode;
 		    var isWarp = threadSet == "warp";
 		    var isWeft = threadSet == "weft";
-		    var pointCount = globalThree.params.nodePathSegments;
+		    var pointCount = _this.params.tubularSegments;
 
 		    var points = [];
 
 		    if ( isWarp ){
 
-		    	for (n = 0; n < arr.length ; n++) {
-		            state = arr[n];
-
+		    	for (n = 0; n < threadUpDownArray.length ; n++) {
+		            state = threadUpDownArray[n];
 		            if ( n ){
-
 		            	nz = sz + (n-1) * wl/2;
-
 		            	if (n == 1){
 		            		ny = prevState ? wa : - wa;
-		            		curvePoints = warpSegmentPoints(sx, ny, sz-wl/2 , wl/2, 0, bca, pointCount, prevState);
+		            		curvePoints = waveSegmentPoints("z", sx, ny, sz-wl/2 , wl/2, 0, bca, pointCount, prevState);
 		            		points = points.concat(curvePoints);
 		            	}
-		                
 		                if ( state == prevState ){
 		                    ny = state ? wa : - wa;
-		                    curvePoints = warpSegmentPoints(sx, ny, nz , wl/2, 0, bca, pointCount, state);
+		                    curvePoints = waveSegmentPoints("z", sx, ny, nz , wl/2, 0, bca, pointCount, state);
 		                } else {
-		                    curvePoints = warpSegmentPoints(sx, sy, nz, wl/2, wa*2, bca, pointCount, prevState);
+		                    curvePoints = waveSegmentPoints("z", sx, sy, nz, wl/2, wa*2, bca, pointCount, prevState);
 		                }
 		                points = points.concat(curvePoints);
-
-		                if (n == arr.length - 1 ){
+		                if (n == threadUpDownArray.length - 1 ){
 		            		ny = state ? wa : - wa;
-		            		curvePoints = warpSegmentPoints(sx, ny, nz+wl/2 , wl/2, 0, bca, pointCount, state, false);
+		            		curvePoints = waveSegmentPoints("z", sx, ny, nz+wl/2 , wl/2, 0, bca, pointCount, state, false);
 		            		points = points.concat(curvePoints);
 		            	}
-
 		            }
 		            prevState = state;
 			    }
 		    
 		    } else if ( isWeft ){
 
-		    	for (n = 0; n < arr.length ; n++) {
-		            state = arr[n];
+		    	for (n = 0; n < threadUpDownArray.length ; n++) {
+		            state = threadUpDownArray[n];
 		            if ( n ){
 		                nx = sx - (n-1) * wl/2;
-
 		                if (n == 1){
 		            		ny = prevState ? wa : - wa;
-		            		curvePoints = weftSegmentPoints(sx+wl/2, ny, sz , wl/2, 0, bca, pointCount, prevState);
+		            		curvePoints = waveSegmentPoints("x", sx+wl/2, ny, sz , wl/2, 0, bca, pointCount, prevState);
 		            		points = points.concat(curvePoints);
 		            	}
-
 		                if ( state == prevState ){
 		                    ny = state ? wa : - wa;
-		                    curvePoints = weftSegmentPoints(nx, ny, sz , wl/2, 0, bca, pointCount, state);
+		                    curvePoints = waveSegmentPoints("x", nx, ny, sz , wl/2, 0, bca, pointCount, state);
 		                } else {
-		                    curvePoints = weftSegmentPoints(nx, sy, sz, wl/2, wa*2, bca, pointCount, prevState);
+		                    curvePoints = waveSegmentPoints("x", nx, sy, sz, wl/2, wa*2, bca, pointCount, prevState);
 		                }
 		                points = points.concat(curvePoints);
-
-		                if (n == arr.length - 1 ){
+		                if (n == threadUpDownArray.length - 1 ){
 		                	ny = state ? wa : - wa;
-		            		curvePoints = weftSegmentPoints(nx-wl/2, ny, sz , wl/2, 0, bca, pointCount, state, false);
+		            		curvePoints = waveSegmentPoints("x", nx-wl/2, ny, sz , wl/2, 0, bca, pointCount, state, false);
 		            		points = points.concat(curvePoints);
 		            	}
-
 		            }
 		            prevState = state;
 			    }
@@ -10257,18 +10811,6 @@ $(document).ready ( function(){
 		    var path = new THREE.CatmullRomCurve3(points);
 
 		    if ( shapeProfile == "elliptical" ){
-
-		    	material = new THREE.MeshStandardMaterial( {
-			        color: hex,
-			        side: THREE.DoubleSide,
-			        //flatShading: true,
-			        roughness: 1,
-			        metalness: 0,
-			        transparent: true,
-			        opacity: globalThree.defaultOpacity,
-			        depthWrite: true,
-			        wireframe: globalThree.params.showWireframe
-			    });
 
 			    var threadEllipse;
 
@@ -10282,50 +10824,84 @@ $(document).ready ( function(){
 
 		    	}
 
-				var threadShape = new THREE.Shape(threadEllipse.getPoints( globalThree.params.radiusSegments ));
+				var threadShape = new THREE.Shape(threadEllipse.getPoints( _this.params.radialSegments ));
+
 				var extrudeSettings = {
 					steps: pathSegments,
 					extrudePath: path
 				};
 
-				geometry = new THREE.ExtrudeBufferGeometry( threadShape, extrudeSettings );
+				if ( _this.params.smoothShading ){
 
-				if ( globalThree.params.smoothShading ){
-					var tempGeometry = new THREE.Geometry().fromBufferGeometry( geometry );
-					tempGeometry.mergeVertices();
-					tempGeometry.computeVertexNormals();
-					geometry = new THREE.BufferGeometry().fromGeometry( tempGeometry );
+					geometry = new THREE.ExtrudeGeometry( threadShape, extrudeSettings );
+					
+					geometry.mergeVertices();
+					geometry.computeVertexNormals();
+
+					geometry = new THREE.BufferGeometry().fromGeometry( geometry );
+
+				} else {
+
+					geometry = new THREE.ExtrudeBufferGeometry( threadShape, extrudeSettings );
+
 				}
 				
 		    } else if ( shapeProfile == "circular" ){
 
-		    	material = new THREE.MeshStandardMaterial( {
-			        color: hex,
-			        side: THREE.DoubleSide,
-			        //flatShading: true,
-			        roughness: 1,
-			        metalness: 0,
-			        transparent: true,
-			        opacity: globalThree.defaultOpacity,
-			        depthWrite: true,
-			        wireframe: globalThree.params.showWireframe
-			    });
+		    	if ( _this.params.endCaps ){
 
-			    if ( !globalThree.params.smoothShading ){
-			    	material.flatShading = true;
-			    }
+		    		geometry = new THREE.TubeGeometry( path, pathSegments, xTubeRadius, radialSegments, false );
 
-		    	geometry = new THREE.TubeGeometry( path, pathSegments, xTubeRadius, radiusSegments, false );
-			    geometry = new THREE.BufferGeometry().fromGeometry( geometry );
+		    		var i, p0, p1, p2, uv0, uv1, uv2, face;
+
+		    		var normal = new THREE.Vector3( 0, 1, 0 );
+		    		var materialIndex = 0;
+		    		
+		    		var startShape = new THREE.Geometry();
+		    		startShape.vertices.push(path.points[0]);
+		    		startShape.vertices.push(...geometry.vertices.slice(0, radialSegments));
+
+					var endShape = new THREE.Geometry();
+		    		endShape.vertices.push(path.points[path.points.length-1]);
+		    		endShape.vertices.push(...geometry.vertices.slice(-radialSegments).reverse());
+		    		
+		    		[startShape, endShape].forEach(function(v, i){
+						for (i = 0; i < radialSegments; i++) {
+							p0 = 0;
+							p1 = i+1;
+							p2 = p1 == radialSegments ? 1 : i+2;
+							face = new THREE.Face3( p0, p1, p2, normal, null, materialIndex );
+							v.faces.push(face);
+							uv0 = new THREE.Vector2();
+							uv1 = new THREE.Vector2();
+							uv2 = new THREE.Vector2();
+							v.faceVertexUvs[0].push([uv0, uv1, uv2]);
+						}
+						v.verticesNeedUpdate = true;
+						v.elementsNeedUpdate = true;
+						v.computeBoundingSphere();
+						geometry.merge(v);
+					});
+
+		    		geometry.mergeVertices();
+					geometry = new THREE.BufferGeometry().fromGeometry( geometry );
+					
+		    	} else {
+
+		    		geometry = new THREE.TubeBufferGeometry( path, pathSegments, xTubeRadius, radialSegments, false );
+
+		    	}
 			    
-		    	
 		    }
 
-		    thread = new THREE.Mesh( geometry, material );
-		    
+		    threadMaterial = _this.materials[threadSet][colorCode];
+		    threadMaterial.flatShading = !_this.params.smoothShading;
+
+		    var thread = new THREE.Mesh( geometry, threadMaterial );
+
 		    thread.name = "thread";
 
-		    if ( globalThree.params.showPathNodes ){
+		    if ( _this.params.showCurveNodes ){
 
 		    	var pathPoints = path.points;
 		    	var nodePointGeometry = new THREE.BufferGeometry().setFromPoints( pathPoints );
@@ -10336,11 +10912,13 @@ $(document).ready ( function(){
 			    	threadSet : threadSet,
 			    	weavei : userData.weavei,
 			    	threei : userData.threei,
-			    	customId : userData.customId
+			    	colorCode: userData.colorCode,
+			    	threeId: userData.threeId,
+			    	weaveId: userData.weaveId
 			    };
 			    nodePoints.name = "points";
 				this.fabric.add( nodePoints );
-				globalThree.childIds.push(nodePoints.id);
+				_this.childIds.push(nodePoints.id);
 
 				var geometry_line = new THREE.BufferGeometry().setFromPoints( pathPoints );
 				var material_line = new THREE.LineBasicMaterial({ color: hex });
@@ -10350,150 +10928,138 @@ $(document).ready ( function(){
 			    	threadSet : threadSet,
 			    	weavei : userData.weavei,
 			    	threei : userData.threei,
-			    	customId : userData.customId
+			    	colorCode: userData.colorCode,
+			    	threeId: userData.threeId,
+			    	weaveId: userData.weaveId
 			    };
 			    line.name = "line";
 				this.fabric.add( line );
-				globalThree.childIds.push(line.id);
+				_this.childIds.push(line.id);
 		    	
 		    }
+
+		    thread.castShadow = _this.params.castShadow;
+			thread.receiveShadow = _this.params.castShadow;
 		    
 		    thread.userData = {
 		    	type : "tube",
 		    	threadSet : threadSet,
 		    	weavei : userData.weavei,
 		    	threei : userData.threei,
-		    	customId : userData.customId
+			    colorCode: userData.colorCode,
+			    threeId: userData.threeId,
+			    weaveId: userData.weaveId
 		    };
 
-		    thread.receiveShadow = true;
-			thread.castShadow = true;
+		    _this.fabric.add(thread);
 
-		    globalThree.fabric.add(thread);
+		    _this.threads.push(thread);
+		    _this.childIds.push(thread.id);
 
-		    //this.scene.add( thread );
-		    globalThree.threads.push(thread);
-		    globalThree.childIds.push(thread.id);
+		    //_this.render();
 		    
 		},
 
-		removeFabric: function(){
-
-			var objectCount = globalThree.childIds.length;
-			var myObj;
-			for (let i = objectCount - 1; i >= 0; i--) {
-				myObj = this.scene.getObjectById(globalThree.childIds[i]);
-				console.log(myObj);
-				if ( myObj ){
-					this.scene.remove(myObj);
-				    myObj.geometry.dispose();
-					myObj.material.dispose();
-					myObj = undefined;
+		removeThread: function(threadSet, threeIndex) {
+			var _this = this;
+			var threads = _this.fabric.children;
+			for (var i = _this.fabric.children.length-1; i >= 0; --i) {
+				if ( threads[i].userData.threadSet == threadSet && threads[i].userData.threei == threeIndex ){
+					_this.childIds = _this.childIds.removeItem(threads[i].id);
+					_this.disposeNode(threads[i]);
+	                _this.fabric.remove(threads[i]);
 				}
 			}
-			globalThree.threads = [];
-			globalThree.childIds = [];
-
 		},
 
-		clearFabric: function(){
-
-			for (var i = globalThree.fabric.children.length - 1; i >= 0; i--) {
-
-				if ( globalThree.fabric.children[i].name == "thread" ){
-					globalThree.fabric.children[i].geometry.dispose();
-	                globalThree.fabric.children[i].material.dispose();
-	                globalThree.fabric.remove(globalThree.fabric.children[i]);
+		removeFabric: function(){
+			var threads = this.fabric.children;
+			for (var i = threads.length - 1; i >= 0; i--) {
+				if ( threads[i].name !== "axes" ){
+					this.disposeNode(threads[i]);
+	                this.fabric.remove(threads[i]);
 				}
-
             }
-            globalThree.threads = [];
-            globalThree.childIds = [];
-            globalThree.render();
-
+            this.threads = [];
+            this.childIds = [];
 		},
 
-		setSceneViewTo: function(modelPos = false, modelRotation = false, cameraPos = false, controlsTarget = false, spotLightTargetPos = false){
+		animateThreeSceneTo : function(modelRotation = false, cameraPos = false, controlsTarget = false, callback = false){
 
-			if ( modelPos ){ this.model.position.set(modelPos.x, modelPos.y, modelPos.z); }
-			if ( modelRotation ){ this.model.rotation.set(modelRotation.x, modelRotation.y, modelRotation.z); }
-			if ( cameraPos ){ this.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z); }
-			if ( controlsTarget ){ this.controls.target.set(controlsTarget.x, controlsTarget.y, controlsTarget.z); }
-			if ( spotLightTargetPos ){ this.lights.spot.target.position.set(spotLightTargetPos.x, spotLightTargetPos.y, spotLightTargetPos.z); }
-		    this.controls.update();
-		    this.render();
+			var _this = this;
 
-		},
-
-		animateSceneTo : function(modelRotation = false, cameraPos = false, controlsTarget = false, callback = false){
-
-			globalThree.controls.enabled = false;
-			globalThree.forceAnimate = true;
-
-			var tl = new TimelineLite({
-				delay:0,
-				onComplete: function(){
-					globalThree.controls.enabled = true;
-					debug("Timeline.Status", "complete", this.ObjName);
-					if (typeof callback === "function") {
-				    	callback();
-				    }
-				},
-				onUpdate: function() {
-					debug("Timeline.Status", "updating", this.ObjName);
-					globalThree.controls.update();
-				}
-				
-			});
+			_this.timeline.clear();
 
 			if ( modelRotation ){
-				tl.add(TweenLite.to(globalThree.fabric.rotation, 1.5, { 
+
+				_this.timeline.add(TweenLite.to(_this.fabric.rotation, 1.5, { 
 					x: modelRotation.x,
 					y: modelRotation.y,
 					z: modelRotation.z,
 					ease : Power4.easeInOut
 				}), 0);
-			}
 
-			if ( cameraPos ){
-				tl.add(TweenLite.to(globalThree.camera.position, 1.5, { 
-					x: cameraPos.x,
-					y: cameraPos.y,
-					z: cameraPos.z,
-					ease : Power4.easeInOut
-				}), 0);
 			}
 
 			if ( controlsTarget ){
-				tl.add(TweenLite.to(globalThree.controls.target, 1.5, { 
+
+				_this.timeline.add(TweenLite.to(_this.controls.target, 1.5, { 
 					x: controlsTarget.x,
 					y: controlsTarget.y,
 					z: controlsTarget.z,
 					ease : Power4.easeInOut
 				}), 0);
+
+			}
+
+			if ( cameraPos ){
+
+				_this.timeline.add(TweenLite.to(_this.camera.position, 1.5, { 
+					x: cameraPos.x,
+					y: cameraPos.y,
+					z: cameraPos.z,
+					ease : Power4.easeInOut
+				}), 0);
+
+				_this.timeline.add(TweenLite.to(_this.camera.rotation, 1.5, { 
+					x: -1.570795326639436,
+					y: 0,
+					z: 0,
+					ease : Power4.easeInOut
+				}), 0);
+
+				_this.timeline.add(TweenLite.to(_this.camera, 1.5, { 
+					zoom: 1,
+					ease : Power4.easeInOut
+				}), 0);
+
 			}
 
 		},
 
-		render : function(){
+		// Three
+		render: function(){
 
-			if ( this.sceneCreated ){
+			if ( this.scene ){
+
+				//this.controls.update();
+				//this.renderer.render( this.scene, this.camera );
+				this.composer.render();
 
 				var cameraPos = this.camera.position.clone();
 				var cameraRotation = this.camera.rotation.clone();
 				var controlsTarget = this.controls.target.clone();
 
 				this.rotationAxisLine.position.copy(controlsTarget);
-
-				//this.renderer.render( this.scene, this.camera );
-				this.composer.render();
-
-				this.sceneParams.cameraPos.copy(cameraPos);
-				this.sceneParams.controlsTarget.copy(controlsTarget);
+				this.params.cameraPos.copy(cameraPos);
+				this.params.controlsTarget.copy(controlsTarget);
+				var objectPos = new THREE.Vector3( 0, 0, 0 );
+				var distance = cameraPos.distanceTo( objectPos );  
 
 				debug("Camera x", Math.round(cameraPos.x * 1000)/1000, this.ObjName);
 				debug("Camera y", Math.round(cameraPos.y * 1000)/1000, this.ObjName);
 				debug("Camera z", Math.round(cameraPos.z * 1000)/1000, this.ObjName);
+				debug("Camera Zoom", Math.round(this.camera.zoom * 1000)/1000, this.ObjName);
 
 				debug("Camera Rx", Math.round(cameraRotation.x * 1000)/1000, this.ObjName);
 				debug("Camera Ry", Math.round(cameraRotation.y * 1000)/1000, this.ObjName);
@@ -10508,10 +11074,6 @@ $(document).ready ( function(){
 
 				debug("Azimuthal", Math.round(this.controls.getAzimuthalAngle() * 1000)/1000, this.ObjName);
 				debug("Polar", Math.round(this.controls.getPolarAngle() * 1000)/1000, this.ObjName);
-
-				var objectPos = new THREE.Vector3( 0, 0, 0 );
-				var distance = cameraPos.distanceTo( objectPos );  
-
 				debug("Distance", Math.round(distance * 1000)/1000, this.ObjName);
 
 			}
@@ -10520,19 +11082,20 @@ $(document).ready ( function(){
 
 		startAnimation : function() {
 
+			var _this = this;
+
 			window.requestAnimationFrame(() => {
-				if (app.tabs.active == "three"){
-					if ( this.mouseAnimate || this.forceAnimate ){
-						const now = performance.now();
-						while (globalThree.fps.length > 0 && globalThree.fps[0] <= now - 1000) {
-							globalThree.fps.shift();
-						}
-						globalThree.fps.push(now);
-						debug("FPS", globalThree.fps.length, "three");
-						globalThree.render();
+
+				if ( app.tabs.active == "three" && _this.animate ){
+					const now = performance.now();
+					while (_this.fps.length > 0 && _this.fps[0] <= now - 1000) {
+						_this.fps.shift();
 					}
+					_this.fps.push(now);
+					debug("FPS", _this.fps.length, "three");
+					_this.render();
 				}
-				globalThree.startAnimation();
+				_this.startAnimation();
 			});
 				
 		},
@@ -10546,16 +11109,168 @@ $(document).ready ( function(){
 			debug("Points", this.renderer.info.render.points, this.ObjName);
 			debug("Lines", this.renderer.info.render.lines, this.ObjName);
 
+		},
+
+		getFirstWarpWeftThreads : function(threads){
+
+			var set;
+			var first = {
+				warp: false,
+				weft: false
+			}
+			for (var i = 0; i < threads.length; i++) {
+				set = threads[i].object.userData.threadSet;
+				if ( !first[set] ){
+					first[set] = threads[i];
+					if ( first.warp && first.weft ){ break; }
+				} 
+			}
+			return first;
+
+		},
+
+		outlineThreads: function(threadMeshes){
+
+			var threadObjects = [];
+			this.outlinePass.selectedObjects = threadObjects;
+			this.render();
+			threadMeshes.forEach(function(thread, i){
+				threadObjects.push(thread.object);
+			});
+			this.outlinePass.selectedObjects = threadObjects;
+			this.render();
+
+		},
+
+		highlightThreads: function(threadMeshes){
+
+			var cloneMaterial, matName;
+
+			if ( threadMeshes.length ){
+
+				globalThree.threads.forEach(function(thread, i){
+					thread.material.opacity = 0.25;
+					thread.material.depthTest = false;
+				});
+
+				threadMeshes.forEach(function(thread, i){
+
+					matName = thread.object.material.name;
+
+					cloneMaterial = thread.object.material.clone();
+					cloneMaterial.depthTest = true;
+					cloneMaterial.opacity = 1;
+					cloneMaterial.name = thread.object.material.name+"-clone";
+					thread.object.material = cloneMaterial;
+					cloneMaterial.needsUpdate = true;
+					globalThree.render();
+
+				});
+
+			} else {
+
+				globalThree.resetFabric();
+				globalThree.threads.forEach(function(thread, i){
+					thread.material.opacity = globalThree.defaultOpacity;
+					thread.material.depthTest = globalThree.defaultDepthTest;
+				});
+
+			}
+
+		},
+
+		doMouseInteraction : function(canvasMousePos, evt = "mousemove"){
+
+			var _this = this;
+			var _params = _this.params;
+			var doRender = false;
+
+			var mx = ( canvasMousePos.x / app.frameW ) * 2 - 1;
+			var my = ( canvasMousePos.y / app.frameH ) * 2 - 1;
+			_this.raycaster.setFromCamera( { x: mx, y: my }, _this.camera );
+			var intersects = _this.raycaster.intersectObjects(_this.threads);
+			var first = _this.getFirstWarpWeftThreads(intersects);
+
+			var firsts = [];
+			var warpThreei = -1;
+			var weftThreei = -1;
+
+			//console.log([_this.threadsUnderMouse.warp, _this.threadsUnderMouse.weft]);
+
+			if ( first.warp ){					
+				warpThreei = Number(first.warp.object.userData.threei)+1;
+				firsts.push(first.warp);
+				if ( _this.threadsUnderMouse.weft !== weftThreei ){
+					doRender = true;
+				}
+				_this.threadsUnderMouse.warp = warpThreei;
+			}
+
+			if ( first.weft ){
+				weftThreei = Number(first.weft.object.userData.threei)+1;
+				firsts.push(first.weft);
+
+				if ( _this.threadsUnderMouse.weft !== weftThreei ){
+					doRender = true;
+				}
+				_this.threadsUnderMouse.weft = weftThreei;
+			}
+
+			//console.log([warpThreei, weftThreei]);
+
+			globalStatusbar.set("threeIntersection", warpThreei, weftThreei);
+
+			if ( _params.mouseHoverOutline && doRender){
+				console.log("doRender");
+				this.outlineThreads(firsts);
+			}
+
+			if ( _params.mouseHoverHighlight && doRender){
+				console.log("doRender");
+				this.highlightThreads(firsts);
+			}
+
+			if ( evt == "dblclick" && first.warp && first.weft){
+
+				var endIndex = first.warp.object.userData.weavei;
+				var pickIndex = first.weft.object.userData.weavei;
+				globalWeave.setGraph(0, "weave", "toggle", {col: endIndex+1, row: pickIndex+1, trim: false});
+				_this.weave2D8 = globalWeave.weave2D8.tileFill(_params.warpThreads, _params.weftThreads, 1-_params.warpStart, 1-_params.weftStart);
+				var replaceThreadThreeIds = [];
+				_this.threads = $.grep(_this.threads, function(e, i){
+					if ( e.userData.weaveId.in("warp-"+endIndex,"weft-"+pickIndex) ){
+						replaceThreadThreeIds.push(e.userData.threeId);
+						return false;
+					} else {
+						return true;
+					}
+				});
+				replaceThreadThreeIds.forEach(function(v){
+					var data = v.split("-");
+					var set = data[0];
+					var threadIndex = Number(data[1]);
+					_this.removeThread(set, threadIndex);
+					_this.addThread(set, threadIndex);
+				});
+
+				_this.threadsUnderMouse.weft = false;
+				_this.threadsUnderMouse.weft = false;
+
+				_this.render();
+				_this.doMouseInteraction(canvasMousePos);
+
+			}
+
 		}
 
 	};
 
 	$("#three-container").on("mouseover", function(evt) {
-			globalThree.mouseAnimate = true;
+		// globalThree.mouseAnimate = true;
 	});
 
 	$("#three-container").on("mouseout", function(evt) {
-		globalThree.mouseAnimate = false;
+		// globalThree.mouseAnimate = false;
 	});
 
 	$("#three-container").on("mouseup", function(evt) {
@@ -10566,369 +11281,82 @@ $(document).ready ( function(){
 		app.mouse.set("three", 0, 0, true, evt.which);
 	});
 
-	$("#three-container").on("mousemove", function(evt) {
+	function waveSegmentPoints(towards, sx, sy, sz, w, h, bca, segmentPoints, dir, removeLastPoint = true){
 
-		debug("isDown", app.mouse.isDown);
+		var staPoint, endPoint, control1, control2;
 
-		if ( globalThree.sceneCreated && !app.mouse.isDown ){
+	    h = dir ? h : -h;
 
-			var iThreadSet, warpUUIDs = [], weftUUIDs = [];
-			var mousePos = { x: 0, y: 0 };
-			var threeMouse = getMouse(evt, $(this)[0]);
-			mousePos.x = ( threeMouse.x / globalThree.frameW ) * 2 - 1;
-			mousePos.y = ( threeMouse.y / globalThree.frameH ) * 2 - 1;
-			raycaster.setFromCamera( mousePos, globalThree.camera );
+	    staPoint = new THREE.Vector3( sx, sy + h/2, sz );
 
-			var intersects = raycaster.intersectObjects(globalThree.threads);
-			var intersects_firstWarpWeft = filterFirstWarpWeftThreads(intersects);
+	    if ( towards == "z" ){
 
-			var intersection = {
-				warp : 0,
-				weft : 0
-			};
+	    	control1 = new THREE.Vector3( sx, sy + h/2, sz + bca );
+	    	control2 = new THREE.Vector3( sx, sy - h/2 , sz+w-bca );
+	    	endPoint = new THREE.Vector3( sx, sy - h/2, sz + w );
 
-			var its, iti;
+	    } else if ( towards = "x" ){
 
-			globalThree.outlinePassSelected = [];
-			globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
+	    	control1 = new THREE.Vector3( sx - bca, sy + h/2, sz );
+	    	control2 = new THREE.Vector3( sx - w + bca, sy - h/2 , sz );
+	    	endPoint = new THREE.Vector3( sx - w, sy - h/2, sz );
 
-			intersects_firstWarpWeft.forEach(function(thread, i){
-				its = thread.object.userData.threadSet;
-				iti = thread.object.userData.threei;
+	    }
 
-				if ( globalThree.mouseOverOutline ){
-					globalThree.outlinePassSelected.push(thread.object);
-					globalThree.outlinePass.selectedObjects = globalThree.outlinePassSelected;
-				}
-				intersection[its] = iti + 1;
+	    var curve = new THREE.CubicBezierCurve3( staPoint, control1, control2, endPoint);
+	    var points = curve.getPoints(segmentPoints);
+	    
+	    if ( removeLastPoint ){
+	    	points.pop();
+	    }
+
+	    return points;
+
+	}
+
+	$(document).on("dblclick", "#three-container", function(evt) {
+		
+		if (evt.which == 1) {
+			var threeMousePos = getMouseFromClientXY("three", app.mouse.currentx, app.mouse.currenty);
+			globalThree.doMouseInteraction(threeMousePos, "dblclick");
+		}
+
+	});
+
+	$(document).on("mousedown", "#model-container", function(evt) {
+		
+		if (evt.which == 1) {
+			app.mouse.downx = app.mouse.currentx;
+			app.mouse.downy = app.mouse.currenty;
+			app.mouse.isDrag = false;
+			$.doTimeout("mouedragcheck", 600, function(){
+				app.mouse.isDrag = true;
 			});
+		}
 
-			globalStatusbar.set("threeIntersection", intersection.warp, intersection.weft);
+	});
 
-			if ( intersects.length && globalThree.mouseOverHighlight ){
+	$(document).on("mouseup", "#model-container", function(evt) {
+		
+		if (evt.which == 1) {
 
-				globalThree.threads.forEach(function(thread, i){
-					thread.material.opacity = 0.25;
-					thread.material.depthTest = false;
-				});
+			var movex = Math.abs(app.mouse.downx - app.mouse.currentx);
+			var movey = Math.abs(app.mouse.downy - app.mouse.currenty);
 
-				intersects_firstWarpWeft.forEach(function(thread, i){
-					thread.object.material.depthTest = true;
-					thread.object.material.opacity = 1;
-				});
+			if ( movex > 3 || movey > 3 ){
+				app.mouse.isDrag = true;
+			}
 
-				//globalThree.outlinePass.selectedObjects = intersects[0].object;
-				//globalThree.composer.addPass( globalThree.outlinePass );
-
-			} else {
-
-				globalThree.threads.forEach(function(thread, i){
-					thread.material.opacity = globalThree.defaultOpacity;
-					thread.material.depthTest = globalThree.defaultDepthTest;
-				});
-
+			if ( !app.mouse.isDrag ){
+				var modelMousePos = getMouseFromClientXY("model", app.mouse.currentx, app.mouse.currenty);
+				globalModel.doMouseInteraction(modelMousePos, "click");
 			}
 
 		}
 
 	});
 
-	function filterFirstWarpWeftThreads(threads){
-
-		var firstThreads = [];
-		var foundWarp = false;
-		var foundWeft = false;
-		var threadSet;
-
-		for (var i = 0; i < threads.length; i++) {
-
-			threadSet = threads[i].object.userData.threadSet;
-			
-			if ( !foundWarp && threadSet == "warp" ){
-
-				firstThreads.push(threads[i]);
-				foundWarp = true;
-
-			} else if ( !foundWeft && threadSet == "weft" ){
-
-				firstThreads.push(threads[i]);
-				foundWeft = true;
-
-			}
-
-			if ( foundWarp && foundWeft ){
-				break;
-			}
-
-		}
-
-		return firstThreads;
-
-	}
-
-	function setThreeTextSpriteCanvas(canvasId, text, canvasW = 64 , canvasH = 64){
-
-		var canvas = $("<canvas/>", { id: canvasId, width: canvasW, height: canvasH})[0];
-		
-		canvas.id = canvasId;
-		canvas.width = canvasW;
-		canvas.height = canvasH;
-		canvas.style.zIndex = -1;
-
-		document.body.appendChild(canvas);
-
-		const ctx = canvas.getContext("2d");
-		const x = canvasW/2;
-		const y = canvasH/2;
-
-		ctx.fillStyle = "rgba(255, 255, 255, 1)";
-		ctx.fillRect(0, 0, canvasW, canvasH);
-
-		ctx.fillStyle = "rgba(0, 0, 0, 1)";
-		ctx.fillRect(4, 4, canvasW-8, canvasH-8);
-
-		ctx.fillStyle = "rgba(240, 240, 240, 1)";
-		ctx.font = "32px helvetica";
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		ctx.fillText(text, x, y);
-
-		numberTexture = new THREE.CanvasTexture(
-		    document.querySelector("#"+canvasId)
-		);
-
-		spriteMaterial = new THREE.SpriteMaterial({
-		    map: numberTexture,
-		    transparent: true,
-		    depthTest: false,
-		    depthWrite: false
-		});
-
-		sprite = new THREE.Sprite(spriteMaterial);
-
-	}
-
-
-	function warpSegmentPoints(sx, sy, sz, w, h, bca, segmentPoints, dir, removeLastPoint = true){
-
-	    h = dir ? h : -h;
-	    var curve = new THREE.CubicBezierCurve3(
-	        new THREE.Vector3( sx, sy + h/2, sz ),
-	        new THREE.Vector3( sx, sy + h/2, sz + bca ),
-	        new THREE.Vector3( sx, sy - h/2 , sz+w-bca ),
-	        new THREE.Vector3( sx, sy - h/2, sz + w )
-	    );
-	    var points = curve.getPoints(segmentPoints);
-	    if ( removeLastPoint ){ points.pop(); }
-	    return points;
-
-	}
-
-	function weftSegmentPoints(sx, sy, sz, w, h, bca, segmentPoints, dir, removeLastPoint = true){
-
-	    h = dir ? h : -h;
-	    var curve = new THREE.CubicBezierCurve3(
-	        new THREE.Vector3( sx, sy + h/2, sz ),
-	        new THREE.Vector3( sx - bca, sy + h/2, sz ),
-	        new THREE.Vector3( sx - w + bca, sy - h/2 , sz ),
-	        new THREE.Vector3( sx - w, sy - h/2, sz )
-	    );
-	    var points = curve.getPoints(segmentPoints);
-	    if ( removeLastPoint ){ points.pop(); }
-	    return points;
-
-	}
-
-	function afterBuildFabric(){
-
-		debugInput("text", "AnimateRotation", "0,0,0", "live", function(val){
-			var pos = val.split(",");
-			var modelRotation = new THREE.Vector3(toRadians(pos[0]), toRadians(pos[1]), toRadians(pos[2]));
-			globalThree.animateSceneTo(modelRotation);
-		});
-
-		globalThree.threads.forEach(function(thread, i){
-			thread.material.opacity = globalThree.defaultOpacity;
-			thread.material.depthTest = globalThree.defaultDepthTest;
-		});
-
-		// debug Console
-		debug("Geometries", globalThree.renderer.info.memory.geometries, "three");
-		debug("Textures", globalThree.renderer.info.memory.textures, "three");
-		
-		debug("Calls", globalThree.renderer.info.render.calls, "three");
-		debug("Triangles", globalThree.renderer.info.render.triangles, "three");
-		debug("Points", globalThree.renderer.info.render.points, "three");
-		debug("Lines", globalThree.renderer.info.render.lines, "three");
-
-		globalThree.render();
-
-	}
-
-	function removeThreeChilds(){
-		scene.remove.apply(scene, scene.children);
-		globalThree.render();
-	}
-
-	function drawRaycastLine(raycaster) {
-	    let material = new THREE.LineBasicMaterial({
-	      color: 0xff0000,
-	      linewidth: 10
-	    });
-	    let geometry = new THREE.Geometry();
-	    let startVec = new THREE.Vector3(
-	      raycaster.ray.origin.x,
-	      raycaster.ray.origin.y,
-	      raycaster.ray.origin.z);
-
-	    let endVec = new THREE.Vector3(
-	      raycaster.ray.direction.x,
-	      raycaster.ray.direction.y,
-	      raycaster.ray.direction.z);
-	    
-	    // could be any number
-	    endVec.multiplyScalar(5000);
-	    
-	    // get the point in the middle
-	    let midVec = new THREE.Vector3();
-	    midVec.lerpVectors(startVec, endVec, 0.5);
-
-	    geometry.vertices.push(startVec);
-	    geometry.vertices.push(midVec);
-	    geometry.vertices.push(endVec);
-
-	    let line = new THREE.Line(geometry, material);
-	    scene.add(line);
-	    globalThree.childIds.push(line.id);
-
-	  }
-
-	$("#three-container").on("dblclick", function(evt) {
-
-		var iThreadSet, warpUUIDs = [], weftUUIDs = [];
-		var wi, ti, ts;
-		var replaceThreads = {
-			warp : [],
-			weft : []
-		};
-		var intersectUUIDs = {
-			warp : [],
-			weft : []
-		};	
-
-		var threeMouse = { x: 0, y: 0 };
-
-		var threeDblClickMouse = getMouse(evt, $(this)[0]);
-
-		if (typeof evt.which == "undefined") {
-
-		} else if (evt.which == 1) {
-
-			threeMouse.x = ( threeDblClickMouse.x / globalThree.frameW ) * 2 - 1;
-			threeMouse.y = ( threeDblClickMouse.y / globalThree.frameH ) * 2 - 1;
-			
-			raycaster.setFromCamera( threeMouse, globalThree.camera );
-
-			var intersects = raycaster.intersectObjects(globalThree.threads);
-			
-			if ( intersects.length >= 4 ){
-
-				intersects.forEach(function(thread, i){
-
-					iThreadSet = thread.object.userData.threadSet;	
-					intersectUUIDs[iThreadSet].push(thread.object.uuid);
-
-				});
-
-				var validIntersection = intersectUUIDs.warp.length >= 2 && intersectUUIDs.warp.allEqual() && intersectUUIDs.weft.length >= 2 && intersectUUIDs.weft.allEqual();
-
-				if ( validIntersection ){
-
-					var warpThread_uuid = intersectUUIDs.warp[0];
-					var weftThread_uuid = intersectUUIDs.weft[0];
-
-					var warpThread_obj = globalThree.scene.getObjectByProperty("uuid", warpThread_uuid);
-					var weftThread_obj = globalThree.scene.getObjectByProperty("uuid", weftThread_uuid);
-
-					var wpWeavei = warpThread_obj.userData.weavei; // Actual globalWeave.weave2D8 index of warp Thread
-					var wfWeavei = weftThread_obj.userData.weavei; // Actual globalWeave.weave2D8 index of weft Thread
-
-					var wpThreei = warpThread_obj.userData.threei; // copied globalThree.weave2D8 index of warp Thread
-					var wfThreei = weftThread_obj.userData.threei; // copied globalThree.weave2D8 index of weft Thread
-
-					globalWeave.setGraph2D8("weave", "toggle", wpWeavei+1, wfWeavei+1, true, true, false);
-
-					var weave2D8 = globalWeave.weave2D8.tileFill(globalThree.params.warpThreads, globalThree.params.weftThreads, 1-globalThree.params.warpStart, 1-globalThree.params.weftStart);
-					globalThree.weave2D8 = weave2D8;
-
-					// remove intersecting threads from globalThree.threads and populate replaceThreads Array
-					globalThree.threads = $.grep(globalThree.threads, function(e, i){
-						
-						wi = e.userData.weavei;
-						ti = e.userData.threei;
-						ts = e.userData.threadSet;
-
-						if ( (wi == wpWeavei && ts == "warp") || (wi == wfWeavei && ts == "weft") ){
-							replaceThreads[ts].push(ti);
-							return false;
-						} else {
-							return true;
-						}
-
-					});
-
-					replaceThreads.warp.forEach(function(v, i){
-						threeRemoveElement("warp-"+v);
-						globalThree.add3DThread("warp", v);
-					});
-
-					replaceThreads.weft.forEach(function(v, i){
-						threeRemoveElement("weft-"+v);
-						globalThree.add3DThread("weft", v);
-					});
-
-				}
-
-			}
-
-			globalThree.render();
-
-		} else if (evt.which == 2) {
-
-		} else if (evt.which == 3) {
-
-		}
-
-	});
-
-	function threeRemoveElement(customId) {
-
-		var element, myObj, eid;
-		for (var i = globalThree.fabric.children.length-1; i >= 0; --i) {
-			element = globalThree.fabric.children[i];
-			if ( element.userData.customId == customId){
-				eid = element.id;
-				globalThree.childIds = globalThree.childIds.removeItem(eid);
-				myObj = globalThree.fabric.getObjectById(eid);
-			    myObj.geometry.dispose();
-				myObj.material.dispose();
-				globalThree.fabric.remove(myObj);
-				myObj = undefined;
-			}
-		}
-	}
-
-	function threeGetThreadMesh(threadSet, threadIndex) {
-		var element;
-		for (var i = scene.children.length-1; i >= 0; --i) {
-			element = scene.children[i];
-			if ( element.userData.type == "tube" && element.userData.threadSet == threadSet && element.userData.threei == threadIndex){
-				return scene.getObjectById(element.id);
-			}
-		}
-	}
-
-	function getThreadArray(arr2D8, threadSet, threadi){
+	function getThreadUpDownArray(arr2D8, threadSet, threadi){
 
 		var threadArr;
 
@@ -10978,6 +11406,7 @@ $(document).ready ( function(){
 	};
 
 	var globalPattern = {
+
 		"warp" : [],
 		"weft" : [],
 
@@ -10987,6 +11416,32 @@ $(document).ready ( function(){
 		"mouseDown" : {
 			"warp" : false,
 			"weft" : false
+		},
+
+		rightClick: {
+			yarnset: "",
+			threadNum: 0,
+			code: ""
+		},
+
+		stripeAt: function(set, index){
+
+			var pat = set.in("warp", "weft") ? this[set] : set;
+			if ( index >= pat.length ){ return false;}
+			var val = pat[index];
+			var leftPart = pat.slice(0, index).reverse();
+			var rightPart = pat.slice(index+1, pat.length);
+			var start = leftPart.length;
+			for (var i = 0; i < leftPart.length; i++) {
+			    if (leftPart[i] == val) { start--; } else { break; }
+			}
+			var end = index;
+			for (i = 0; i < rightPart.length; i++) {
+			    if (rightPart[i] == val) { end++; } else { break; }
+			}
+			var size = end - start + 1;
+			return { start: start, end: end, size: size, val: val }
+
 		},
 
 		updateStatusbar : function(){
@@ -11003,12 +11458,21 @@ $(document).ready ( function(){
 			return globalPattern[yarnSet].length;
 		},
 
-		insert : function(yarnSet, colorCode, threadi, numOfThreads = 1, renderWeave = true, addHistory = true){
+		insert : function(yarnSet, item, posi, repeat = 1){
 
-			var insertPattern = colorCode.repeat(numOfThreads);
-			var overflow = globalWeave.seamless ? "loop" : "extend";
-			var newPattern = paste1D(insertPattern, this[yarnSet], threadi, overflow, "a");
-			this.set(1, yarnSet, newPattern);
+			if ( $.isArray(item) ){
+				item = item.join("");
+			}
+			item = item.repeat(repeat).split("");
+			var pat = this[yarnSet].slice();
+			pat = pat.insert(posi, item);
+			this.set(1, yarnSet, pat);
+
+		},
+
+		removeBlank: function(yarnSet){
+
+			globalPattern.set(1, yarnSet, globalPattern[yarnSet].removeItem("0"));
 
 		},
 
@@ -11017,7 +11481,7 @@ $(document).ready ( function(){
 				[start, end] = [end, start];
 			}
 			var left = this[yarnSet].slice(0, start);
-			var right = this[yarnSet].slice(end+1, g_patternLimit-1);
+			var right = this[yarnSet].slice(end+1, app.limits.maxPatternSize-1);
 			this.set(1, yarnSet, left.concat(right));
 		},
 		
@@ -11060,28 +11524,42 @@ $(document).ready ( function(){
 			return stripes.length;
 		},
 
+		fillStripe: function(yarnSet, threadNum, code){
+
+			var stripeData = getStripeData(globalPattern[yarnSet], threadNum-1);
+			var stripeSize = stripeData[2];
+			var stripeArray = filledArray(code, stripeSize);
+			var newPattern = paste1D_old(stripeArray, globalPattern[yarnSet], stripeData[0]);
+			globalPattern.set(21, yarnSet, newPattern);
+
+		},
+
 		colors : function (yarnSet = "fabric"){
 			var arr = ["warp","weft"].includes(yarnSet) ? this[yarnSet] : this.warp.concat(this.weft);
 			return arr.filter(Boolean).unique();
 		},
 
-		set : function (instanceId, yarnSet, pattern, renderWeave = true, threadNum = 0, overflow = false, addHistory = true){
+		format: function(pattern){
+			if ( $.type(pattern) === "string" ){
+				pattern = pattern.replace(/[^A-Za-z0]/g, "");
+				pattern = pattern.split("");
+			} else if ( $.type(pattern) === "array" ){
+			}
+			return pattern;
+		},
+
+		set: function (instanceId, yarnSet, pattern, renderWeave = true, threadNum = 0, overflow = false, addHistory = true){
 
 			// console.log(["globalPattern.set", instanceId]);
 
-			pattern = Array.isArray(pattern) ? pattern : pattern.split("");
+			pattern = globalPattern.format(pattern);
 
 			if ( threadNum ){
 				pattern = paste1D(pattern, this[yarnSet], threadNum-1, overflow, "a");
 			}
 
-			//pattern = pattern.removeItem("_");
-
 			this[yarnSet] = pattern;
 			this.render8(4, yarnSet);
-
-			globalPattern.updateStatusbar();
-			app.palette.updateChipArrows();
 
 			if ( !pattern.length ){
 				globalWeave.setProps(7, {graphDrawStyle: "graph"});
@@ -11095,29 +11573,32 @@ $(document).ready ( function(){
 				globalHistory.record(5);
 			}
 
-			globalSimulation.update();
+			//globalSimulation.update();
 
 		},
 
+		// Pattern
 		render8 : function (instanceId, yarnSet = "fabric"){
 
 			// console.log(["globalPattern.render8", instanceId, yarnSet]);
 
 			if ( yarnSet.in("warp", "fabric") ){
-				this.render8Set(g_warpContext, "warp", globalWeave.scrollX, this.seamlessWarp, app.origin);
+				this.render8Set(g_warpContext, "warp", globalWeave.scrollX, globalWeave.params.seamlessWarp, app.origin);
 			}
 
 			if ( yarnSet.in("weft", "fabric") ){
-				this.render8Set(g_weftContext, "weft", globalWeave.scrollY, this.seamlessWeft, app.origin);
+				this.render8Set(g_weftContext, "weft", globalWeave.scrollY, globalWeave.params.seamlessWeft, app.origin);
 			}
 
 			app.palette.updateChipArrows();
+			globalPattern.updateStatusbar();
 
 		},
 
+		// Pattern Set
 		render8Set : function(ctx, yarnSet, offset = 0, seamless = false, origin = "tl"){
 
-			debugTime("renderPattern"+yarnSet);
+			// debugTime("renderPattern"+yarnSet);
 
 			var x, y, i, state, arrX, arrY, drawX, drawY, code, color, colors, r, g, b, a, patternX, patternY, rectW, rectH, opacity;
 			var xTranslated, yTranslated, gradientOrientation, index;
@@ -11132,8 +11613,8 @@ $(document).ready ( function(){
 			var drawSpace = yarnSet == "warp" ? ctxW : ctxH;
 
 			// Draw Background Check
-			var light32 = rgbaToColor32(255,255,255,64);
-			var dark32 = rgbaToColor32(0,0,0,13);
+			var light32 = app.ui.grid.bgl32;
+			var dark32 = app.ui.grid.bgd32;
 			var pgW = yarnSet == "warp" ? g_pointPlusGrid : g_patternElementSize;
 			var pgH = yarnSet == "weft" ? g_pointPlusGrid : g_patternElementSize;
 			var scrollX = yarnSet == "warp" ? offset : 0;
@@ -11198,18 +11679,16 @@ $(document).ready ( function(){
 
 				}
 
-				debugTimeEnd("renderPattern"+yarnSet);
+				// debugTimeEnd("renderPattern"+yarnSet);
 
 			}
 
 			if ( g_showGrid && g_pointPlusGrid >= g_showGridMinPointPlusGrid ){					
-				light32 = rgbaToColor32(153,153,153,255);
-				dark32 = rgbaToColor32(51,51,51,255);
 
 				if (yarnSet == "warp"){
-					drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, 0, g_gridMajor, 0, light32, dark32, offset, offset, ctxW, ctxH, g_gridThickness);
+					drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, 0, g_gridMajor, 0, app.ui.grid.light32, app.ui.grid.dark32, offset, offset, ctxW, ctxH, g_gridThickness);
 				} else {
-					drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, 0, g_gridMinor, 0, g_gridMajor, light32, dark32, offset, offset, ctxW, ctxH, g_gridThickness);
+					drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, 0, g_gridMinor, 0, g_gridMajor, app.ui.grid.light32, app.ui.grid.dark32, offset, offset, ctxW, ctxH, g_gridThickness);
 				}
 				
 			}
@@ -11308,16 +11787,25 @@ $(document).ready ( function(){
 				var2 = globalPattern.stripeCount("weft");
 				$("#sb-stripe-count").text("Stripes: " + var1 + " \xD7 " + var2);
 			
-			} else if ( item == "shaftCount"){
+			} else if ( item == "shafts"){
 				
-				//$("#sb-shaft-count").text("Shafts: " + getWeaveShafts()); 
+				var shafts = globalWeave.shafts;
+				if ( shafts <= app.limits.maxShafts ){
+					$("#sb-weave-3").text("Shafts = "+shafts);
+				} else {
+					$("#sb-weave-3").text("Shafts > "+app.limits.maxShafts);
+				}
 
-				txt = isNaN(var1) ? var1 : "Shafts = " + var1;
-				$("#sb-weave-shafts").text(txt);
-			
 			} else if ( item == "weaveIntersection"){
 				
-				$("#sb-weave-intersection").text(var1 + ", " + var2);
+				$("#sb-weave-1").text(var1 + ", " + var2);
+
+			} else if ( item == "weave-icon"){
+
+				var src = $("#sb-weave-icon").find("img").attr("src");
+				if ( src !== var1 ){
+					$("#sb-weave-icon img").attr("src","img/icons/"+var1);
+				}
 
 			} else if ( item == "threadingIntersection"){
 				
@@ -11355,7 +11843,7 @@ $(document).ready ( function(){
 
 			} else if ( item == "weaveSize"){
 
-				$("#sb-weave-size").text("[" + var1 + " \xD7 " + var2 + "]");
+				$("#sb-weave-2").text("[" + var1 + " \xD7 " + var2 + "]");
 			
 			} else if ( item == "artworkColor"){
 
@@ -11524,25 +12012,29 @@ $(document).ready ( function(){
 
 	$(document).on("click", ".acw-item", function(evt){
 
-		$(this).siblings("li").removeClass("innerShadowBlue");
-		$(this).addClass("innerShadowBlue");
+		$(this).attr("status", "selected").siblings("li").attr("status", "unselected");
 
 		//var li = $(this).parents(".acw-item");
 		var li = $(this);
 		var colorIndex = li.attr("data-color-index");
 
-		if ( !artworkColorsWindow.isHidden() && !weaveLibraryWin.isHidden() && globalWeaves.selected.length ){
+		if ( !artworkColorsWindow.isHidden() && app.wins.weaveLibrary.win !== undefined && !app.wins.weaveLibrary.win.isHidden() && app.wins.weaveLibrary.selected ){
 
-			var selected = globalWeaves.selected;
-			var colorWeave = weaveTextToWeave2D8(selected[2]);
+			var sId = app.wins.weaveLibrary.selected.id;
+			var sTab = app.wins.weaveLibrary.selected.tab;
+
+			var sObj = app.wins.getTabItemById("weaveLibrary", sTab, sId);
+			var txtWeave = sObj.weave;
+
+			var colorWeave = weaveTextToWeave2D8(txtWeave);
 
 			globalArtwork.colors[colorIndex].colorWeaveStatus = true;
-			globalArtwork.colors[colorIndex].weaveName = selected[1];
+			globalArtwork.colors[colorIndex].weaveName = sObj.title;
 			globalArtwork.colors[colorIndex].weave = colorWeave;
 			globalArtwork.colors[colorIndex].offsetx = 0;
 			globalArtwork.colors[colorIndex].offsety = 0;
 
-			li.find(".acw-name").text(selected[1]);
+			li.find(".acw-name").text(sObj.title);
 			li.find(".acw-info").text(colorWeave.length +"\xD7"+ colorWeave[0].length + " \xA0 \xA0 x:0 \xA0 y:0");
 			applyWeave2D8ToArtworkColor(colorWeave, colorIndex);
 
@@ -11604,14 +12096,8 @@ $(document).ready ( function(){
 		paRatio : 1,
 		zoom : 0,
 
-		seamlessX : false,
-		seamlessY : false,
-
 		minZoom : -10,
 		maxZoom : 10,
-
-		frameW : 0,
-		frameH : 0,
 
 		viewW : 0,
 		viewH : 0,
@@ -11625,39 +12111,21 @@ $(document).ready ( function(){
 		maxScrollX : 0,
 		maxScrollY : 0,
 
-		onTabSelect : function(){
+		// Artwork
+		params:{
 
-			createArtworkLayout(3);
-	    	globalStatusbar.set("artworkIntersection", "-", "-");
-	    	globalStatusbar.set("artworkColor", "-", "-");
-	    	globalStatusbar.set("artworkColorCount");
+			viewSettings: [
+
+				["check", "Seamless X", "artworkSeamlessX", "seamlessX", 0, { active: true }],
+				["check", "Seamless Y", "artworkSeamlessY", "seamlessY", 0, { active: true }],
+
+			]
 
 		},
 
-		setArtwork8 : function(arr8, colors32, pixelCounts){
+		onTabSelect : function(){
 
-			var [iw, ih] = arr8.get("wh");
-			this.artwork8 = arr8;
-			this.width = iw;
-			this.height = ih;
 
-			var cr, cg, cb, color ;
-			this.colors = [];
-			
-			colors32.forEach(function(color32, i){
-				color = color32ToTinyColor(color32);
-				globalArtwork.colors[i] = {
-					"count" : pixelCounts[i],
-					"hex" : color.toHexString(),
-					"rgba" : color.toRgb(),
-					"rgba_str" : color.toRgbString(),
-					"color32" : color32
-				};
-
-			});
-
-			this.populateColorList();
-			this.resetView();
 		},
 
 		setArtwork2D8 : function(arr2D8, colors32, pixelCounts){
@@ -11737,20 +12205,10 @@ $(document).ready ( function(){
 				}
 			}
 
-			if ( prop == "seamlessY" ){
-				this.seamlessY = value;
-				artworkToolbar.setItemState("toolbar-artwork-seamless-y", value);
-			}
-
-			if ( prop == "seamlessX" ){
-				this.seamlessX = value;
-				artworkToolbar.setItemState("toolbar-artwork-seamless-x", value);
-			}
-
 			if ( render ){
 				this.updateScrollingParameters(1);
 				this.render2D8(10);
-				//app.saveConfigurations(9);
+				//app.config.save(9);
 			}
 			
 		},
@@ -11768,107 +12226,14 @@ $(document).ready ( function(){
 
 		},
 
-		render : function(origin = "bl"){
+		// Artwork working
+		render2D8: function(origin = "bl"){
 
-			debugTime("render > artwork");
-
-			var ctx = g_artworkContext;
-			var xOffset = this.scrollX;
-			var yOffset = this.scrollY;
-			var xSeamless = this.seamlessX;
-			var ySeamless = this.seamlessY;
-			var pixelW = this.pixelW;
-			var pixelH = this.pixelH;
-			var arr = this.array;
-
-			if ( arr.length ){
-
-				if ( pixelW < 1 || pixelH < 1){
-					arr = this.scaledArray;
-					pixelW = 1;
-					pixelH = 1;
-				} else {
-					arr = this.array;
-				}
-
-				var ctxW = ctx.canvas.clientWidth;
-				var ctxH = ctx.canvas.clientHeight;
-				var arrW = arr.length;
-				var arrH = arr[0].length;
-
-				var pointOffsetX = xOffset % pixelW;
-				var pointOffsetY = yOffset % pixelH;
-
-				var xMaxPoints = Math.ceil((ctxW - pointOffsetX) / pixelW);
-				var yMaxPoints = Math.ceil((ctxH - pointOffsetY) / pixelH);
-
-				var xOffsetPoints = Math.floor(Math.abs(xOffset) / pixelW);
-				var yOffsetPoints = Math.floor(Math.abs(yOffset) / pixelH);
-
-				var xDrawPoints = arrW - xOffsetPoints;
-				var yDrawPoints = arrH - yOffsetPoints;
-
-				xDrawPoints = xSeamless ? xMaxPoints : Math.min(xDrawPoints, xMaxPoints);
-				yDrawPoints = ySeamless ? yMaxPoints : Math.min(yDrawPoints, yMaxPoints);
-
-				xDrawPoints = Math.max(0, xDrawPoints);
-				yDrawPoints = Math.max(0, yDrawPoints);
-
-				var drawStartIndexX = xOffsetPoints;
-				var drawStartIndexY = yOffsetPoints;
-
-				var drawLastIndexX = drawStartIndexX + xDrawPoints;
-				var drawLastIndexY = drawStartIndexY + yDrawPoints;
-
-				ctx.clearRect(0, 0, ctxW, ctxH);
-				var imagedata = ctx.createImageData(ctxW, ctxH);
-	      		var pixels = new Uint32Array(imagedata.data.buffer);
-
-	      		var x, y, drawX, drawY, colorIndex, color, arrX, arrY;
-
-				for ( x = drawStartIndexX; x < drawLastIndexX; ++x) {
-					arrX = loopNumber(x, arrW);
-					drawX = (x - drawStartIndexX) * pixelW + pointOffsetX;
-					for ( y = drawStartIndexY; y < drawLastIndexY; ++y) {
-						arrY = loopNumber(arrH - y - 1, arrH);
-						drawY = (y - drawStartIndexY) * pixelH + pointOffsetY;
-						colorIndex = arr[arrX][arrY];
-						color = this.colors[colorIndex].rgba;
-						drawRectBuffer(app.origin, pixels, drawX, drawY, pixelW, pixelH, ctxW, ctxH, "rgba", color);
-					}
-				}
-				
-				/*
-				for ( x = drawStartIndexX; x < drawLastIndexX; ++x) {
-					arrX = loopNumber(x, arrW);
-					drawX = (x - drawStartIndexX) * pixelW + pointOffsetX;
-					for ( y = drawStartIndexY; y < drawLastIndexY; ++y) {
-						arrY = loopNumber(arrH - y - 1, arrH);
-						drawY = (y - drawStartIndexY) * pixelH + pointOffsetY;
-						color = this.buffer32[arrY * arrW + arrX];
-						drawRectBuffer(app.origin, pixels, drawX, drawY, pixelW, pixelH, ctxW, ctxH, "color32", color);
-					}
-				}
-				*/
-
-				debugTimeEnd("render > artwork");
-
-				ctx.putImageData(imagedata, 0, 0);
-
-			} else {
-
-				console.error("globalArtwork.render : Invalid Array");
-
-			}
-
-		},
-
-		// working
-		render2D8 : function(origin = "bl"){
-
-			//console.log(Array.prototype.slice.call(arguments));
+			console.log(Array.prototype.slice.call(arguments));
 
 			if (this.artwork2D8 !== undefined && this.artwork2D8.length &&  this.artwork2D8[0].length){
+
+				var i, x, y, arrX, arrY, xTranslated, yTranslated, colorIndex, colorIndexCol, dx, dy;
 
 				debugTime("render2D8 > artwork");
 
@@ -11882,15 +12247,15 @@ $(document).ready ( function(){
 
 				var scrollX = this.scrollX;
 				var scrollY = this.scrollY;
-				var seamlessX = this.seamlessX;
-				var seamlessY = this.seamlessY;
+				var seamlessX = this.params.seamlessX;
+				var seamlessY = this.params.seamlessY;
 				var pixelW = this.pixelW;
 				var pixelH = this.pixelH;
 
+				console.log([seamlessX, seamlessY]);
+
 				var imagedata = ctx.createImageData(ctxW, ctxH);
 	      		var pixels = new Uint32Array(imagedata.data.buffer);
-
-	      		var x, y, arrX, arrY, xTranslated, yTranslated, colorIndex, colorIndexCol, dx, dy;
 
 				var unitW = Math.round(arrW * pixelW);
 				var unitH = Math.round(arrH * pixelH);
@@ -11936,78 +12301,6 @@ $(document).ready ( function(){
 
 		},
 
-		render8 : function(origin = "bl"){
-
-			//console.log(Array.prototype.slice.call(arguments));
-
-			if ( this.artwork8 ){
-
-				debugTime("render8 > artwork");
-
-				var arr8 = this.artwork8;
-				var [arrW, arrH] = arr8.get("wh");
-
-				var ctx = g_artworkContext;
-				var ctxW = ctx.canvas.clientWidth;
-				var ctxH = ctx.canvas.clientHeight;
-				ctx.clearRect(0, 0, ctxW, ctxH);
-
-				var scrollX = this.scrollX;
-				var scrollY = this.scrollY;
-				var seamlessX = this.seamlessX;
-				var seamlessY = this.seamlessY;
-				var pixelW = this.pixelW;
-				var pixelH = this.pixelH;
-
-				var imagedata = ctx.createImageData(ctxW, ctxH);
-	      		var pixels = new Uint32Array(imagedata.data.buffer);
-
-	      		var x, y, arrX, arrY, xTranslated, yTranslated;
-
-				var unitW = Math.round(arrW * pixelW);
-				var unitH = Math.round(arrH * pixelH);
-
-				var drawW = seamlessX ? ctxW : Math.min(unitW + scrollX, ctxW);
-				var drawH = seamlessY ? ctxH : Math.min(unitH + scrollY, ctxH);
-
-				if ( pixelW == 1 && pixelH == 1){
-
-					for (y = 0; y < drawH; ++y) {
-						i = (ctxH - y - 1) * ctxW;
-						arrY = loopNumber(y-scrollY, arrH);
-						for (x = 0; x < drawW; ++x) {
-							arrX = loopNumber(x-scrollX, arrW);
-							pixels[i + x] = this.colors[arr8[arrY*arrW+arrX+2]].color32;
-						}
-					}
-
-				} else {
-
-					for (y = 0; y < drawH; ++y) {
-						yTranslated = Math.floor((y-scrollY)/pixelH);
-						i = (ctxH - y - 1) * ctxW;
-						arrY = loopNumber(yTranslated, arrH);
-						for (x = 0; x < drawW; ++x) {
-							xTranslated = Math.floor((x-scrollX)/pixelW);
-							arrX = loopNumber(xTranslated, arrW);
-							pixels[i + x] = this.colors[arr8[arrY*arrW+arrX+2]].color32;
-						}
-					}
-
-				}
-
-				debugTimeEnd("render8 > artwork");
-
-				ctx.putImageData(imagedata, 0, 0);
-
-			} else {
-
-				console.error("Invalid Artwork8");
-
-			}
-
-		},
-
 		drawDataURL : function (dataurl){
 
 			this.dataurl = dataurl;
@@ -12042,40 +12335,19 @@ $(document).ready ( function(){
 			globalStatusbar.set("artworkSize");
 		},
 
-		resetView : function(render = true){
-
-			this.pixelW = 1;
-			this.pixelH = 1;
-			this.paRatio = 1;
-			this.scrollX = 0;
-			this.scrollY = 0;
-			this.zoom = 0;
-			this.seamlessX = false;
-			this.seamlessY = false;
-
-			artworkToolbar.setItemState("toolbar-artwork-seamless-x", false);
-			artworkToolbar.setItemState("toolbar-artwork-seamless-y", false);
-
-			if (render){
-				this.updateScrollingParameters();
-				this.render8();
-			}
-
-		},
-
 		resetView2D8 : function(render = true){
 
+			var _params = this.params;
+
 			this.pixelW = 1;
 			this.pixelH = 1;
 			this.paRatio = 1;
 			this.scrollX = 0;
 			this.scrollY = 0;
 			this.zoom = 0;
-			this.seamlessX = false;
-			this.seamlessY = false;
 
-			artworkToolbar.setItemState("toolbar-artwork-seamless-x", false);
-			artworkToolbar.setItemState("toolbar-artwork-seamless-y", false);
+			_params.seamlessX = false;
+			_params.seamlessY = false;
 
 			if (render){
 				this.updateScrollingParameters();
@@ -12127,8 +12399,9 @@ $(document).ready ( function(){
 
 			debugTime("art.read.1");
 
-			var ctx = getCtx(25, "temp-canvas", "g_tempCanvas", imageW, imageH, false);
+			var ctx = getCtx(25, "noshow", "g_tempCanvas", imageW, imageH, false);
 			ctx.drawImage(dataurl, 0, 0);
+
 			var image = ctx.getImageData(0, 0, imageW, imageH);
 
 			debugTimeEnd("art.read.1");
@@ -12227,13 +12500,12 @@ $(document).ready ( function(){
 		var html = "";
 		html += "<div id=\""+id+"\" data-trigger=\"spinner\" class=\""+css+"\">";
 			html += "<a data-spin=\"down\" class=\"spinner-down\"></a>";
-			html += "<input type=\"text\" value=\""+val+"\" data-rule=\"quantity\""+ min + max + step + precision +">";
+			html += "<input type=\"text\" value=\""+val+"\""+ min + max + step + precision +">";
 			html += "<a data-spin=\"up\" class=\"spinner-up\"></a>";
 		html += "</div>";
 		return html;
 
 	}
-
 
 	function g(id){
 
@@ -12252,8 +12524,716 @@ $(document).ready ( function(){
 	}
 
 	var app = {
-
+		
+		version: 9.2,
+		tool: "pointer", //"pointer", "line", "fill", "brush", "zoom", "hand", "selection"
 		origin: "bl",
+		frameW: 0,
+		frameH: 0,
+		
+		limits:{
+			minWeaveSize: 2,
+			maxWeaveSize: 16384,
+			maxPatternSize: 16384,
+			maxRepeatSize: 16384,
+			maxShafts: 96,
+			maxArtworkColors: 256,
+			maxTextureSize: 2048
+		},
+
+		project: {
+
+			name: "Untitled Project",
+			author: "",
+			notes: "",
+			setName: function (text){
+				text = text.replace(/[^a-zA-Z0-9_-]+|\s+/gmi, " ");
+				text = text.replace(/ +/g," ");
+				text = text.trim();
+				if ( text !== this.name){
+					this.name = text === "" ? "Untitled Project" : text;
+					globalHistory.needsUpdate = true;
+				}		
+			},
+		
+		},
+
+		ui:{
+
+			scrollbarW: 15,
+			bgHex: "white",
+			frameBgHex: "white",
+			space: 1,
+			shadow: 2,
+			shadowHex: "#666",
+			focusShadowHex: "#000",
+
+			grid:{
+
+                bgl32: rgbaToColor32(232,232,232),
+                bgd32: rgbaToColor32(216,216,216),
+                light32: rgbaToColor32(160,160,160),
+                dark32: rgbaToColor32(64,64,64)
+
+            },
+
+			pending: 6,
+			loaded: function(instanceId){
+				// console.log(["app.ui.loaded", instanceId]);
+				// checkAppLoadingDelay();
+				this.pending--;
+				$("#mo-text").text("Loading Interface"+".".repeat(this.pending));
+				if ( this.pending == 0 ) {
+
+					setLoadingbar("hide");
+					globalHistory.stop();
+					createPaletteLayout();
+					createLayout(2, {render:false});
+					app.tabs.activate("weave");
+					app.config.restore({render:false});
+					var sessionState = store.session(app.stateStorageID);
+					if ( sessionState ){
+						app.setState(1, sessionState);
+					} else {
+						app.generateRandomFabric();
+					}
+					renderAll(1);
+					globalHistory.disableUndo();
+					globalHistory.disableRedo();
+					$("#mo").hide();
+					app.palette.selectChip("a");
+					globalHistory.start();
+					globalHistory.record(9);
+					activateSpinnerCounters();
+					$(".dhxlayout_base_dhx_skyblue").css({"background-color": app.ui.bgHex });
+					$(".frame").css({"background-color": app.ui.frameBgHex });
+					$(document).on("change", ".xcheckbox[data-show-element]", function () {
+						var es = $(this).attr("data-show-element");
+						var show = $(this).prop("checked");
+						var showElements = es.split(",");
+						showElements.forEach(function(e){
+							if ( show ){
+								$("#"+e).show();
+							} else {
+								$("#"+e).hide();
+							}
+						});
+
+					});
+					$(document).on("change", ".xcheckbox[data-hide-element]", function () {
+						var es = $(this).attr("data-hide-element");
+						var hide = $(this).prop("checked");
+						var hideElements = es.split(",");
+						hideElements.forEach(function(e){
+							if ( hide ){
+								$("#"+e).hide();
+							} else {
+								$("#"+e).show();
+							}
+						});
+					});
+
+				}
+			}
+		},
+
+		toolbar: {
+
+			switchTo : function(tab){
+				_toolbar.forEachItem(function(id){
+					if ( id.startsWith("toolbar-app") || id.startsWith("toolbar-"+tab) ){
+						_toolbar.showItem(id);
+					} else {
+						_toolbar.hideItem(id);
+					}
+				});
+			}
+
+		},
+
+		wins: {
+
+			activeModalId: false,
+
+			weaveLibrary: {
+
+				title: "Weave Library",
+				libId: "weave",
+				width: 240,
+				height: 365,
+				top: 120,
+				right: 40,
+				isTabbar: true,
+				tabs:{
+					system: {
+						type: "library",
+						needsUpdate: true,
+						url: "json/library_weave_system.json",
+					}
+				},
+				needsUpdate: true,
+				userButton: "reload",
+				onCreate: function(){},
+				onShow: function(){}
+
+			},
+
+			modelLibrary: {
+
+				title: "Model Library",
+				libId: "model",
+				width: 240,
+				height: 365,
+				top: 150,
+				right: 60,
+				isTabbar: true,
+				tabs:{
+					system: {
+						type: "library",
+						needsUpdate: true,
+						url: "json/library_model_system.json",
+					}
+				},
+				needsUpdate: true,
+				userButton: "reload",
+				onCreate: function(){},
+				onShow: function(){}
+
+			},
+
+			materialLibrary: {
+
+				title: "Material Library",
+				libId: "material",
+				width: 240,
+				height: 365,
+				top: 90,
+				right: 20,
+				isTabbar: true,
+				tabs:{
+					system: {
+						type: "library",
+						needsUpdate: true,
+						url: "json/library_material_system.json",
+					}
+				},
+				needsUpdate: true,
+				userButton: "reload",
+				onCreate: function(){},
+				onShow: function(){}
+
+			},
+
+			autoWeave: {
+
+				title: "Auto Weave",
+				width: 200,
+				height: 400,
+				domId: "auto-weave-win",
+				onShow: function(){
+
+				},
+				primary: function(){
+					autoWeave();
+				}
+			},
+
+			stripeResize: {
+
+				title: "Resize Stripe",
+				width: 180,
+				height: 120,
+				domId: "stripe-resize-modal",
+				onShow: function(){
+
+					var yarnSet = globalPattern.rightClick.yarnSet;
+					var threadNum = globalPattern.rightClick.threadNum;
+					var stripe = globalPattern.stripeAt(yarnSet, threadNum-1);
+					console.log(stripe);
+					var maxStripeSize = app.limits.maxPatternSize - globalPattern[yarnSet].length + stripe.size;
+					var input = $("#stripe-size input");
+					input.val(stripe.size);
+					input.attr("data-min", 1);
+					input.attr("data-max", maxStripeSize);
+					input.attr("data-yarn-set", yarnSet);
+					input.attr("data-thread-num", stripe.start+1);
+
+				},
+				primary: function(){
+
+					var input = $("#stripe-size input");
+					var yarnSet = input.attr("data-yarn-set");
+					var threadNum = input.attr("data-thread-num");
+					var newStripeSize = input.numVal();
+					var stripe = globalPattern.stripeAt(yarnSet, threadNum-1);
+					if (newStripeSize !== stripe.size) {
+						globalPattern.delete(yarnSet, stripe.start, stripe.end);
+						globalPattern.insert(yarnSet, stripe.val, stripe.start, newStripeSize);
+					}
+					// this.onShow();
+				}
+			},
+
+			patternScale: {
+				title: "Pattern Scale",
+				width: 200,
+				height: 170,
+				domId: "pattern-scale-modal",
+				onShow: function(){
+					var sppi = $("#scalePatternWarp input");
+					var sfpi = $("#scalePatternWeft input");
+					sppi.attr("data-max", app.limits.maxPatternSize);
+					sppi.attr("data-min", 1);
+					sfpi.attr("data-max", app.limits.maxPatternSize);
+					sfpi.attr("data-min", 1);
+					sppi.val(globalPattern.size("warp"));
+					sfpi.val(globalPattern.size("weft"));
+				},
+				primary: function(){
+					var [ends, picks] = [globalPattern.warp.length, globalPattern.weft.length];
+					var newWarp = "";
+					var newWeft = "";
+					var newEnds = ev("#scalePatternWarp input");
+					var newPicks = ev("#scalePatternWeft input");
+					var preserveStripes = ev("#scalePatternPreserveStripes");
+					if ( preserveStripes ){
+						var newStripeSize;
+						var warpPatternGroups = getPatternGroupArray(globalPattern.warp);
+						var weftPatternGroups = getPatternGroupArray(globalPattern.weft);
+						$.each(warpPatternGroups, function(index, [alpha, num]) {
+							newStripeSize = Math.max(1, Math.round(num * newEnds / ends));
+							newWarp = newWarp+alpha.repeat(newStripeSize);
+						});
+						$.each(weftPatternGroups, function(index, [alpha, num]) {
+							newStripeSize = Math.max(1, Math.round(num * newPicks / picks));
+							newWeft += alpha.repeat(newStripeSize);
+						});
+					} else {
+						newWarp = globalPattern.warp.scale(newEnds);
+						newWeft = globalPattern.weft.scale(newPicks);
+					}
+					globalPattern.set(7, "warp", newWarp, false);
+					globalPattern.set(8, "weft", newWeft, true);
+					this.onShow();
+				}
+			},
+
+			patternTile: {
+				title: "Pattern Tile",
+				width: 200,
+				height: 170,
+				domId: "pattern-tile-modal",
+				onShow: function(){
+					var wpTiles = $("#tilePatternWarp input");
+					var wfTiles = $("#tilePatternWeft input");
+					wpTiles.val(1);
+					wfTiles.val(1);
+					wpTiles.attr("data-max", Math.floor(app.limits.maxPatternSize / globalPattern.warp.length));
+					wpTiles.attr("data-min", 1);
+					wfTiles.attr("data-max", Math.floor(app.limits.maxPatternSize / globalPattern.weft.length));
+					wfTiles.attr("data-min", 1);
+				},
+				primary: function(){
+					var wpTiles = ev("#tilePatternWarp input");
+					var wfTiles = ev("#tilePatternWeft input");
+					var newWarp = globalPattern.warp.repeat(wpTiles);
+					var newWeft = globalPattern.weft.repeat(wfTiles);
+					globalPattern.set(7, "warp", newWarp, false);
+					globalPattern.set(8, "weft", newWeft, true);
+					this.onShow();
+				}
+			},
+
+			newProject: {
+				title: "New Project",
+				width: 360,
+				height: 300,
+				domId: "project-new-modal",
+				modal: true,
+				onShow: function(){
+					$("#project-new-name").val("Untitled Project");
+					$("#project-new-created-date").val(getDate("short"));
+					app.wins.notify("newProject", "warning", "Starting a new project will clear Weave, Threading, Lifting, Tieup and Patterns.");
+				},
+				primary: function(){
+					globalPattern.set(3, "warp", "a", false);
+					globalPattern.set(4, "weft", "b", false);
+					globalWeave.setGraph(0, "weave", weaveTextToWeave2D8("UD_DU"));
+					app.project.setName(ev("#project-new-name"));
+					app.project.notes = "";
+					$("#project-properties-notes").val("");
+					app.wins.hide("newProject");
+				}
+			},
+
+			patternCode: {
+				title: "Pattern Code",
+				width: 360,
+				height: 300,
+				domId: "pattern-code-modal",
+				modal: false,
+				onShow: function(){
+					$("#pattern-code-warp").val(compress1D(globalPattern.warp));
+					$("#pattern-code-weft").val(compress1D(globalPattern.weft));
+				},
+				primary: function(){
+					globalPattern.set(1, "warp", decompress1D(ev("#pattern-code-warp")));
+					globalPattern.set(2, "weft", decompress1D(ev("#pattern-code-weft")));
+				}
+			},
+
+			openProject: {
+				title: "Open Project",
+				width: 360,
+				height: 300,
+				domId: "project-partial-open-modal",
+				modal: true
+			},
+
+			error: {
+				title: "Error",
+				width: 360,
+				height: 300,
+				domId: "error-win",
+				modal: false
+			},
+
+			create(name, tab = false, callback){
+
+				var _this = this;
+
+				if ( _this[name] == undefined ){ _this[name] = {}; }
+				
+				if ( _this[name].win == undefined ){
+
+					var isModal = getObjProp(_this[name], "modal", false);
+					var title = getObjProp(_this[name], "title", "myTitle");
+					var width = getObjProp(_this[name], "width", 360);
+					var height = getObjProp(_this[name], "height", 300);
+					var domId = getObjProp(_this[name], "domId", false);
+					var isTabbar = getObjProp(_this[name], "isTabbar", false);
+					var userButton = getObjProp(_this[name], "userButton", false);
+					var winW = isTabbar ? width + 6 : width + 4;
+					var winH = isTabbar ? height + 30 + 35 : height + 4 + 30;
+
+					var top = getObjProp(_this[name], "top", 0);
+					var right = getObjProp(_this[name], "right", 0);
+
+					var center = top && right;
+					
+					_this[name].win = dhxWins.createWindow({
+					    id: name+"Win",
+					    caption: title,
+					    top: top,
+					    left: app.frameW-width-right,
+					    width: winW,
+					    height: winH,
+					    move:true,
+					    center: center,
+					    resize:false,
+					    modal: isModal,
+					    header:true
+					});
+
+					_this[name].win.stick();
+					_this[name].win.bringToTop();
+					_this[name].win.button("minmax").hide();
+
+					if ( domId ){
+						_this[name].win.attachObject(domId);
+						$("#"+domId).find(".xclose").click(function(e){
+							if (e.which === 1) {
+								app.wins.hide(name);
+								return false;
+							}
+						});
+
+						if ( typeof _this[name].primary === "function" ){
+							$("#"+domId).find(".xprimary").click(function(e){
+								if (e.which === 1) {
+									_this[name].primary();
+									return false;
+								}
+							});
+						}
+
+					} else if ( isTabbar ){
+
+						if ( _this[name].tabbar == undefined ){
+							
+							_this[name].tabbar = _this[name].win.attachTabbar();
+        					_this[name].tabbar.setArrowsMode("auto");
+
+						}
+
+						var tabExist = _this[name].tabbar.cells(tab);
+
+						if ( !tabExist ){
+							var tabTitle = tab[0].toUpperCase() + tab.slice(1);
+							_this[name].tabbar.addTab(tab, tabTitle);
+						}
+
+						if ( _this[name].tabs[tab].type == "library" ){
+
+							var tabDomId = "library-"+_this[name].libId+"-"+tab;
+							$("<div>", {id: tabDomId, class: "library-tab"}).append($("<ul>", { class: "library-list"})).appendTo("#noshow");
+							var libraryList = $("#" + tabDomId + " .library-list");
+							libraryList.attr({ "data-win": name, "data-tab": tab });
+							_this[name].tabbar.tabs(tab).attachObject(tabDomId);
+							$("#"+tabDomId).css({width: width, height: height});
+
+						}
+
+					}
+
+					_this[name].win.button("close").attachEvent("onClick", function() {
+						_this.hide(name);
+					});
+
+					if ( userButton == "reload"){
+
+						_this[name].win.addUserButton("reload", 0, "Reload", "reload");
+						_this[name].win.button("reload").attachEvent("onClick", function(){
+							var activeTab = _this[name].tabbar.getActiveTab();
+							_this[name].tabs[activeTab].needsUpdate = true;
+							_this.show(name, activeTab);
+						});
+
+					}
+
+					if ( typeof _this[name].onCreate === "function" ){
+						_this[name].onCreate();
+					}
+
+				}
+
+			},
+
+			loadData: function(name, tab = false, callback){
+
+				var _this = this;
+				var file = tab ? _this[name].tabs[tab].url : _this[name].url;
+				var needsUpdate = tab ? _this[name].tabs[tab].needsUpdate : this[name].needsUpdate;
+				if ( needsUpdate ){
+					var jqxhr = $.getJSON( file, function(response) {
+
+						if ( tab ){
+							_this[name].tabs[tab].data = response.data;
+							_this[name].tabs[tab].needsUpdate = false;
+						} else {
+							_this[name].data = response.data;
+							_this[name].needsUpdate = false;
+						}
+						callback(needsUpdate);
+					}).fail(function() {
+						setLoadingbar(0, "loadData", true, "Loading Data Fail!");
+					})
+				} else {
+					callback(needsUpdate);
+				}
+
+			},
+
+			addLibraryItem: function(item){
+				var itemExist = item.list.find("li[data-item-id=\""+item.id+"\"]").length;
+				if ( !itemExist ){
+					var li = $("<li data-item-id=\""+item.id+"\">");
+					li.append($("<div>", {class: "img-thumb"}).css({"background-image": "url(\"" + item.url + "\")", "background-color": item.color}))
+					.append($("<div>", {class: "txt-index"}).text(item.index))
+					.append($("<div>", {class: "txt-title"}).text(item.title))
+					.append($("<div>", {class: "txt-info"}).text(item.info))
+					.appendTo(item.list);
+					var editable = getObjProp(item, "edit", false);
+					if ( editable ){
+						li.append($("<div>", {class: "btn-gear"}))
+					}
+				}
+			},
+
+			render: function(name, tab = false, callback){
+
+				var _this = this;
+				var itemId, itemTitle, itemInfo, itemColor, itemImage, itemImageURL, exist, weave, showInLibrary, editable, li, imgURL;
+
+				_this.create(name, tab);
+
+				if ( !tab ){
+
+					callback();
+
+				} else if ( tab && _this[name].tabs[tab].type == "library" ){
+
+					_this.loadData(name, tab, function(needsUpdate){
+
+						var libraryId = "library-"+_this[name].libId+"-"+tab;
+						var libraryTab = $("#"+libraryId);
+						var libraryList = $("#" + libraryId + " .library-list");
+						var data = _this[name].tabs[tab].data;
+
+						if (needsUpdate){
+							libraryList.html("");
+						}
+
+						var index = 0;
+
+						if ( _this[name].libId == "weave" ){
+							
+							var weave2D8, weaveDataURL;
+							data.forEach(function(v, i) {
+								showInLibrary = getObjProp(v, "show", true);
+								if ( showInLibrary ){									
+									weave2D8 = weaveTextToWeave2D8(v.weave);
+									weaveDataURL = weave2D8ToDataURL(weave2D8, 48, 48, globals.upColor32, 4, 4);
+									_this.addLibraryItem({
+										index: index,
+										list: libraryList,
+										id: v.id,
+										title: v.title,
+										info: weave2D8.length + " \xD7 " + weave2D8[0].length,
+										color: getObjProp(v, "color", "#ffffff"),
+										url: weaveDataURL,
+										edit: getObjProp(v, "editable", false)
+									});
+								}
+							});
+
+						} else if ( _this[name].libId == "material" ){
+
+							data.forEach(function(v, i) {
+								showInLibrary = getObjProp(v, "show", true);
+								if ( showInLibrary ){
+									index++;
+									itemImage = globalModel.textures.url[getObjProp(v, "mapId", "checker")];
+									itemImageURL = "model/textures/" + itemImage;
+									_this.addLibraryItem({
+										index: index,
+										list: libraryList,
+										id: v.name,
+										title: v.title,
+										info: v.info,
+										color: getObjProp(v, "color", "#ffffff"),
+										url: itemImageURL,
+										edit: getObjProp(v, "editable", false)
+									});
+								}
+							});
+
+							popForms.create({
+								htmlButton: ".btn-gear",
+								htmlId: "pop-model-texture",
+								position: "right",
+								css: "xform-small popup",
+								parent: "model",
+								child: "texture2",
+								onReady: function(){
+									// $(document).on("click", "#modelTextureWeaveButton", function(evt){
+									// 	globalModel.createWeaveTexture();
+									// });
+									// $(document).on("click", "#modelTextureImageButton", function(evt){
+									// 	globalModel.createImageTexture();
+									// });
+								},
+								onApply: function(){
+									//globalModel.applyCanvasTexture();
+								},
+							});
+						
+						} else if ( _this[name].libId == "model" ){
+
+							data.forEach(function(v, i) {
+								showInLibrary = getObjProp(v, "show", true);
+								if ( showInLibrary ){
+									index++;
+									itemImage = getObjProp(v, "image", "unavailable.png")
+									itemImageURL = "model/objects/" + itemImage;
+									_this.addLibraryItem({
+										index: index,
+										list: libraryList,
+										id: v.id,
+										title: v.title,
+										info: v.UVMapWmm +"mm \xD7 "+v.UVMapWmm+"mm",
+										color: getObjProp(v, "color", "#ffffff"),
+										url: itemImageURL,
+										edit: getObjProp(v, "editable", false)
+									});
+								}
+							});
+						
+						}
+
+						callback();
+					
+					});
+
+				}
+
+			},
+
+			show: function(name, tab = false){
+
+				var _this = this;
+				_this.render(name, tab, function(){
+					
+					_this[name].win.show();
+					if ( _this[name].win.isParked() ){
+						_this[name].win.park();
+					}
+					
+					if ( tab ){
+						_this[name].tabbar.tabs(tab).setActive();
+					}
+
+					if ( typeof _this[name].onShow === "function" ){
+						_this[name].onShow();
+					}
+
+				});
+
+			},
+
+			hide: function(name){
+
+				var _this = this;
+				if ( _this[name].win !== undefined ){
+					var isModal = _this[name].win.isModal();
+					_this.clearNotify(name);
+					if ( isModal ){
+						var parent = $("#"+_this[name].domId);
+						parent.find(".xprimary").off("click");
+						parent.find(".xsecondary").off("click");
+						parent.find(".xclose").off("click");
+						_this[name].win.detachObject();
+						_this[name].win.close();
+						_this[name].win = undefined;
+					} else {
+						_this[name].win.hide();
+					}
+				}
+
+			},
+
+			notify: function(name, notifyType, notifyMsg){
+				var _this = this;
+				if ( _this[name].win !== undefined ){
+					var parent = $("#"+_this[name].domId+" .xcontent");
+					parent.append("<div class=\"xalert " + notifyType + "\">" + notifyMsg + "</div>");
+					parent.scrollTop(parent[0].scrollHeight);
+				}
+			},
+
+			clearNotify: function(name){
+				var _this = this;
+				if ( _this[name].win !== undefined ){
+					var parent = $("#"+_this[name].domId);
+					parent.find(".xalert").remove();
+				}
+			},
+
+			getTabItemById: function(win, tab, id){
+				return this[win].tabs[tab].data.find(a => a.id == id);
+			}
+
+		},
 
 		colors: {
 			black32: rgbaToColor32(0,0,0),
@@ -12263,10 +13243,6 @@ $(document).ready ( function(){
 			green32: rgbaToColor32(0,255,0),
 			blue32: rgbaToColor32(0,0,255),
 			grey32: rgbaToColor32(127,127,127),
-			BGLight32: rgbaToColor32(255,255,255,64),
-			BGDark32: rgbaToColor32(0,0,0,13),
-			gridLight32: rgbaToColor32(153,153,153,255),
-			gridDark32: rgbaToColor32(51,51,51,255),
 			
 			rgba:{
 				black: {r:0, g:0, b:0, a:1},
@@ -12297,15 +13273,16 @@ $(document).ready ( function(){
 			}
 		},
 
-		generateState : function(){
-			app.palette.setRandom(false, false);
+		generateRandomFabric : function(){
+			app.palette.set("default", null, false, false);
 			autoPattern();
-			globalWeave.setGraph2D8("weave", weaveTextToWeave2D8("UD_DU"));
-			setProjectName(g_projectName, false);
+			globalWeave.setGraph(0, "weave", weaveTextToWeave2D8("UD_DU"));
+			app.project.setName(app.project.name);
 		},
 
-		palette : {
+		palette: {
 
+			chipH: 48,
 			colors : {},
 			codes : [..."abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"],
 			selected : "a",
@@ -12343,12 +13320,32 @@ $(document).ready ( function(){
 
 			},
 
-			setRandom : function(renderWeave = true, history = true){
+			set: function(sourceType = "default", code = null, renderWeave = true, history = true){
 
-				var randomColorArray = ["#000000", "#FFFFFF"].concat(randomColors(50));
-				this.codes.forEach(function(c, i){
-					app.palette.setChip(c, randomColorArray[i], false, false, false, 0, false, false);
-				});
+				if ( sourceType == "random" ){
+
+					var randomColorArray = ["#000000", "#FFFFFF"].concat(randomColors(50));
+					this.codes.forEach(function(c, i){
+						app.palette.setChip(c, randomColorArray[i], false, false, false, 0, false, false);
+					});
+
+				} else if ( sourceType == "default" ){
+
+					//var def = "edcd3ff7e8a18c6900e9bd5cbe9800b59663f67b2bff5100d36c5abc693c8e5b52661f2b862518b72a38b52d58cf2243dc3e42e81725ba88a7d1418ad4a8c3d271b4ae71b4754b9bb3a2d2d50773f27a9d7302380a609700719c516eb6375caf01aed687d1d300255708a68c9bc0e082c775cad400aab34d81a78506680d72732e485439503b18000000837a69ada498d1cfb5aeb7bff0e8c2ffffff";
+					var def = "000000ffffffdd4132ff6f61d36c5a8e5b52fa9a854a342ebc693cf967149f9c99ada498b59663837a69e9bd5cd2c29d8c6900f0ead6be9800f7e8a1b9a023f3e7796162478c944048543982c77506680d08a68c174a4587d1d301aed60a60975772849bc0e000539c2a4b7c2a293eb3a2d2ae71b4d271b485677bba88a7d4a8c3730238c62168b52d58f27a9dce5b78cf2243661f2b9b1b3072262c";
+					var arr = def.match(/.{1,6}/g);
+					this.codes.forEach(function(c, i){
+						app.palette.setChip(c, arr[i], false, false, false, 0, false, false);
+					});
+
+				} else if ( sourceType == "compressed" ){
+
+					var arr = chunk(code.split(","), 6);
+					arr.forEach(function(item){
+						app.palette.setChip(item[0], item[1], item[2], item[3], item[4], item[5], false, false);
+					});
+
+				}
 
 				if ( renderWeave ){
 					globalPattern.render8(6);
@@ -12361,39 +13358,19 @@ $(document).ready ( function(){
 
 			},
 
-			setDefault : function(renderWeave = true, history = true){
-
-				//var def = "edcd3ff7e8a18c6900e9bd5cbe9800b59663f67b2bff5100d36c5abc693c8e5b52661f2b862518b72a38b52d58cf2243dc3e42e81725ba88a7d1418ad4a8c3d271b4ae71b4754b9bb3a2d2d50773f27a9d7302380a609700719c516eb6375caf01aed687d1d300255708a68c9bc0e082c775cad400aab34d81a78506680d72732e485439503b18000000837a69ada498d1cfb5aeb7bff0e8c2ffffff";
-				var def = "000000ffffffdd4132ff6f61d36c5a8e5b52fa9a854a342ebc693cf967149f9c99ada498b59663837a69e9bd5cd2c29d8c6900f0ead6be9800f7e8a1b9a023f3e7796162478c944048543982c77506680d08a68c174a4587d1d301aed60a60975772849bc0e000539c2a4b7c2a293eb3a2d2ae71b4d271b485677bba88a7d4a8c3730238c62168b52d58f27a9dce5b78cf2243661f2b9b1b3072262c";
-				var arr = def.match(/.{1,6}/g);
-				this.codes.forEach(function(c, i){
-					app.palette.setChip(c, "#"+arr[i], false, false, false, 0, false, false);
-				});
-
-				if ( renderWeave ){
-					globalPattern.render8(6);
-					globalWeave.render2D8(8, "weave");
-				}
-
-				if ( history ){
-					globalHistory.record();
-				}
-
-			},
-
 			updateChipArrows : function(){
 
 				var warpColors = globalPattern.warp.filter(Boolean).unique();
 				var weftColors = globalPattern.weft.filter(Boolean).unique();
 
-				$(".palette-chip").find(".warpArrow, .weftArrow").hide();
+				$(".palette-chip").find(".arrow-warp, .arrow-weft").hide();
 
 				warpColors.forEach(function(code) {
-					$("#palette-chip-"+code).find(".warpArrow").show();
+					$("#palette-chip-"+code).find(".arrow-warp").show();
 				});
 
 				weftColors.forEach(function(code) {
-					$("#palette-chip-"+code).find(".weftArrow").show();
+					$("#palette-chip-"+code).find(".arrow-weft").show();
 				});			
 
 			},
@@ -12409,14 +13386,14 @@ $(document).ready ( function(){
 					codeA = code;
 					codeB = this.marked;
 
-					if (g_enableWarp){
+					if (!globalWeave.params.lockWarp){
 						newPattern = globalPattern.warp.replaceAll(codeA, "FLAG");
 						newPattern = newPattern.replaceAll(codeB, codeA);
 						newPattern = newPattern.replaceAll("FLAG", codeB);
 						globalPattern.set(19, "warp", newPattern, false);
 					}
 
-					if (g_enableWeft){
+					if (!globalWeave.params.lockWeft){
 						newPattern = globalPattern.weft.replaceAll(codeA, "FLAG");
 						newPattern = newPattern.replaceAll(codeB, codeA);
 						newPattern = newPattern.replaceAll("FLAG", codeB);
@@ -12425,7 +13402,7 @@ $(document).ready ( function(){
 
 					globalHistory.start();
 					globalHistory.record();
-					renderAll();
+					renderAll(2);
 					
 				}
 
@@ -12439,14 +13416,15 @@ $(document).ready ( function(){
 			markChip : function(code){
 
 				this.clearMarker();
-				$("#palette-chip-"+code).addClass("mark-chip");
+				this.selectChip(code);
+				$("#palette-chip-"+code).addClass("chip-marked");
 				this.marked = code;
 
 			},
 
 			clearMarker : function(){
 				app.palette.marked = false;
-				$(".palette-chip").removeClass("mark-chip");
+				$(".palette-chip").removeClass("chip-marked");
 			},
 
 			clearSelection : function(){
@@ -12489,17 +13467,10 @@ $(document).ready ( function(){
 					var newWeftPattern = globalPattern.weft.replaceElements(sortedCodes, this.codes);
 					globalPattern.set(23, "warp", newWarpPattern, false, 0, false, false);
 					globalPattern.set(23, "weft", newWeftPattern, false, 0, false, false);
-					renderAll();
+					renderAll(3);
 					globalHistory.record(112);
 				}
 
-			},
-
-			setFromCompressed(code){
-				var arr = chunk(code.split(","), 6);
-				arr.forEach(function(item){
-					app.palette.setChip(item[0], item[1], item[2], item[3], item[4], item[5], false, false);
-				});
 			},
 
 			setChip : function(code, hex = false, yarnNumber = false, yarnNumberSystem = false, yarnLuster = false, yarnEccentricity = 0.1, renderWeave = true, history = true){
@@ -12512,6 +13483,7 @@ $(document).ready ( function(){
 				var alpha = code ? 255 : 0;
 
 				var color = tinycolor(hex);
+				hex = color.toHexString();
 
 				var dark = color.saturate(1).darken(app.palette.yarnShading).toString();
 				var light = color.saturate(1).lighten(app.palette.yarnLuster).toString();
@@ -12571,7 +13543,7 @@ $(document).ready ( function(){
 				};
 
 				if ( code !== 0 && code !== "0"){
-					$("#palette-chip-"+code+" .colorBox").css("background-image", "none").css("background-color", hex);
+					$("#palette-chip-"+code+" .color-box").css("background-image", "none").css("background-color", hex);
 				}
 
 				if ( (hex || yarnNumber || yarnNumberSystem) && renderWeave ){
@@ -12581,12 +13553,12 @@ $(document).ready ( function(){
 
 				if ( history ){
 					globalHistory.record(7);
-					globalSimulation.update();
+					//globalSimulation.update();
 				}
 
 			},
 
-			showColorPicker(code){
+			showColorPicker: function(code){
 
 				this.selectChip(code);
 				colorPicker.setColor(this.colors[code].hex);
@@ -12602,56 +13574,106 @@ $(document).ready ( function(){
 				$("#yarneccentricityinput input").val(this.colors[code].eccentricity);
 			},
 
-			hideColorPicker(){
+			hideColorPicker: function(){
 				colorPickerPopup.hide();
 			}
 
 		},
 
 		weave: {
-			needUpdate: true,
-			layout:{
-				needUpdate: true
-			}
+			needsUpdate: true,
+			interface:{
+				needsUpdate: true,
+				fix: function(instanceId = 0, render = true){
+					createWeaveLayout(instanceId, render);
+					this.needsUpdate = false;
+				}
+			},
 		},
 
 		threading: {
-			needUpdate: true
+			needsUpdate: true
 		},
 
 		lifting: {
-			needUpdate: true
+			needsUpdate: true
 		},
 
 		tieup: {
-			needUpdate: true
+			needsUpdate: true
 		},
 
 		warp: {
-			needUpdate: true
+			needsUpdate: true
 		},
 
 		weft: {
-			needUpdate: true
+			needsUpdate: true
 		},
 
 		artwork: {
-			needUpdate: true
+			needsUpdate: true,
+			interface:{
+				needsUpdate: true,
+				fix: function(instanceId = 0, render = true){
+					createArtworkLayout(instanceId, render);
+					this.needsUpdate = false;
+				}
+			}
+		},
+
+		simulation: {
+			needsUpdate: true,
+			interface:{
+				needsUpdate: true,
+				fix: function(instanceId = 0, render = true){
+					createSimulationLayout(instanceId, render);
+					this.needsUpdate = false;
+				}
+			}
 		},
 
 		three: {
-			needUpdate: true
+			needsUpdate: true,
+			interface:{
+				needsUpdate: true,
+				fix: function(instanceId = 0, render = true){
+					globalThree.setInterface(instanceId, render);
+					this.needsUpdate = false;
+				}
+			}
 		},
 
 		model: {
-			needUpdate: true
+			needsUpdate: true,
+			interface:{
+				needsUpdate: true,
+				fix: function(instanceId = 0, render = true){
+					globalModel.setInterface(instanceId, render);
+					this.needsUpdate = false;
+				}
+			}
 		},
 
 		tabs: {
-			active: "weave"
+
+			active: "weave",
+			activate: function(tab){
+				if( app[tab].interface.needsUpdate ){
+					app[tab].interface.fix();
+				}
+				_tabbar.setSizes();
+				this.active = tab;
+			    globalStatusbar.switchTo(tab);
+			    app.toolbar.switchTo(tab);
+			    //app.config.save(1);
+			    g(tab).onTabSelect();
+			}
+
 		},
 
 		mouse: {
+
 			graph : "",
 			isDown : false,
 			which : 0,
@@ -12662,14 +13684,17 @@ $(document).ready ( function(){
 			graphPos : "",
 			currentx : 0,
 			currenty : 0,
+			downx: 0,
+			downy: 0,
+			isDrag: true,
 
-			set : function(graph, colNum, rowNum, state = false, which = 0){
+			set : function(graph, colNum, rowNum, down = false, which = 0){
 				this.graph = graph;
 				this.colNum = colNum;
 				this.rowNum = rowNum;
 				this.endNum = mapEnds(colNum);
 				this.pickNum = mapPicks(rowNum);
-				this.isDown = state;
+				this.isDown = down;
 				this.which = which;
 				this.graphPos = graph +"-"+ colNum +"-"+ rowNum;
 			},
@@ -12682,17 +13707,18 @@ $(document).ready ( function(){
 				this.pickNum = 0;
 				this.isDown = false;
 			}
+
 		},
 
-		storage: {},
+		memory: {},
 
 		renderWeave : function(){
 
-			if ( app.tabs.active  == "weave" ){
+			if ( app.tabs.active == "weave" ){
 
-				if ( app.weave.needUpdate ){
+				if ( app.weave.needsUpdate ){
 					globalWeave.updateScrollingParameters(3);
-					globalWeave.render2D8(60);
+					globalWeave.render2D8(61);
 					updateScrollbar("weave-scrollbar-x");
 					updateScrollbar("weave-scrollbar-y");
 				}
@@ -12706,9 +13732,7 @@ $(document).ready ( function(){
 
 		getState: function(instanceId){
 
-			console.log(["app.getState", instanceId]);
-
-			var weave, threading, lifting, tieup;
+			//console.log(["app.getState", instanceId]);
 
 			var timeStamp = Date.now();
 
@@ -12717,19 +13741,21 @@ $(document).ready ( function(){
 
 			var liftingMode = globalWeave.liftingMode;
 
-			var weave = liftingMode == "weave" && globalWeave.weave2D8 ? convert_2d8_str(globalWeave.weave2D8) : false;
-			var threading = liftingMode.in("pegplan", "treadling", "compound") && globalWeave.threading2D8 ? convert_2d8_str(globalWeave.threading2D8) : false;
-			var lifting = liftingMode.in("pegplan", "treadling", "compound") && globalWeave.lifting2D8 ? convert_2d8_str(globalWeave.lifting2D8) : false;
-			var tieup = liftingMode.in("treadling", "compound") && globalWeave.tieup2D8 ? convert_2d8_str(globalWeave.tieup2D8) : false;
+			if ( liftingMode == "weave" && globalWeave.shafts > app.limits.maxShafts ){
+
+			}
+
+			var threading = liftingMode !== "weave" ? convert_2d8_str(globalWeave.threading2D8) : false;
+			var lifting = liftingMode !== "weave" ? convert_2d8_str(globalWeave.lifting2D8) : false;
+			var tieup = liftingMode !== "weave" ? convert_2d8_str(globalWeave.tieup2D8) : false;
+			var weave = liftingMode == "weave" ? convert_2d8_str(globalWeave.weave2D8) : false;
 			
 			var palette = app.palette.compress();
 
-			var backgroundColor = g_backgroundColor;
-
-			var authorName = g_authorName;
-			var appVersion = g_appVersion;
-			var projectName = g_projectName;
-			var projectNotes = g_projectNotes;
+			var authorName = app.project.author;
+			var appVersion = app.version;
+			var projectName = app.project.name;
+			var projectNotes = app.project.notes;
 
 			var warpSize = g_warpSize;
 			var weftSize = g_weftSize;
@@ -12754,7 +13780,6 @@ $(document).ready ( function(){
 			    "dft": threading,
 			    "lft": lifting,
 			    "tup": tieup,
-			    "bgc": backgroundColor,
 			    "wps": warpSize,
 			    "wfs": weftSize,
 			    "wpp": warpSpace,
@@ -12764,12 +13789,9 @@ $(document).ready ( function(){
 			    "wpd": warpDensity,
 			    "wfd": weftDensity,
 			    "scd": screenDPI,
-			    "clw": [
-					{
-					    "wpt": warpPattern, 
-				        "wft": weftPattern
-					}
-				]
+			    "wpt": warpPattern, 
+				"wft": weftPattern,
+				"lfm": liftingMode
 			};
 
 			var stateValidity = djb2Code(JSON.stringify(stateObj));
@@ -12780,117 +13802,77 @@ $(document).ready ( function(){
 
 		setState: function(instanceId = 0, stateData, options = false){
 
-			// console.log(["app.setState", instanceId]);
+			console.log(["app.setState", instanceId]);
 
 			var stateObj = JSON.parse(stateData);
 
-			var timeStamp = stateObj.tms;
-			var appVersion = stateObj.ver;
-			var authorName = stateObj.ath;
-			var projectName = stateObj.pnm;
-			var projectNotes = stateObj.pnt;
+			var timeStamp = getObjProp(stateObj, "tms", false);
+			var appVersion = getObjProp(stateObj, "ver", false);
+			var authorName = getObjProp(stateObj, "ath", false);
+			var projectName = getObjProp(stateObj, "pnm", false);
+			var projectNotes = getObjProp(stateObj, "pnt", false);
 
-			var palette = stateObj.plt;
-			var weave = stateObj.wve;
-			var threading = stateObj.dft;
-			var lifting = stateObj.lft;
-			var tieup = stateObj.tup;
+			var liftingMode = getObjProp(stateObj, "lfm", "weave");
 
-			var artworkDataURL = stateObj.atw;
+			var importPalette= !options || getObjProp(options, "palette", false);
+			var palette = getObjProp(stateObj, "plt", false);
 
-			var warpSize = stateObj.wpz;
-			var weftSize = stateObj.wfz;
-			var warpSpace = stateObj.wpp;
-			var weftSpace = stateObj.wfp;
-			var warpCount = stateObj.wpc;
-			var weftCount = stateObj.wfc;
-			var warpDensity = stateObj.wpd;
-			var weftDensity = stateObj.wfd;
-			var screenDPI = stateObj.scd;
-			var backgroundColor = stateObj.bgc;
+			var importWarp = !options || getObjProp(options, "warp", false);
+			var warp = getObjProp(stateObj, "wpt", false);
 
-			var warpPattern = stateObj.clw[0].wpt;
-			var weftPattern = stateObj.clw[0].wft;
+			var importWeft = !options || getObjProp(options, "weft", false);
+			var weft = getObjProp(stateObj, "wft", false);
+			
+			var importWeave = !options || getObjProp(options, "weave", false);
+			var weave = getObjProp(stateObj, "wve", false);
 
-			if ( !options || (options.hasOwnProperty("palette") && options.palette) ) {
-				app.palette.setFromCompressed(palette);
+			var importThreading = !options || getObjProp(options, "threading", false);
+			var threading = getObjProp(stateObj, "dft", false);
+
+			var importLifting = !options || getObjProp(options, "lifting", false);
+			var lifting = getObjProp(stateObj, "lft", false);
+
+			var importTieup = !options || getObjProp(options, "tieup", false);
+			var tieup = getObjProp(stateObj, "tup", false);
+
+			var importArtwork = !options || getObjProp(options, "artwork", false);
+			var artwork = getObjProp(stateObj, "atw", false);
+
+			if ( palette && importPalette ) {
+				app.palette.set("compressed", palette, false, false);
 			}
 
-			var setPattern = false;
-
-			if ( !options || (options.hasOwnProperty("warp") && options.warp) ) {
-				setPattern = true;
-				globalPattern.set(23, "warp", decompress1D(warpPattern), false, 0, false, false);
+			if ( warp && importWarp ) {
+				globalPattern.set(23, "warp", decompress1D(warp), false, 0, false, false);
 			}
 
-			if ( !options || (options.hasOwnProperty("weft") && options.weft) ) {
-				setPattern = true;
-				globalPattern.set(24, "weft", decompress1D(weftPattern), false, 0, false, false);
+			if ( weft && importWeft) {
+				globalPattern.set(23, "weft", decompress1D(weft), false, 0, false, false);
 			}
 
-			if ( !options || (options.hasOwnProperty("weave") && options.weave) ) {
-
-				if ( weave ){
-					globalWeave.setGraph2D8("weave", convert_str_2d8(weave), 0, 0, false, false);
+			if ( importWeave ){
+				setLiftingMode(liftingMode, false);
+				if ( liftingMode == "weave" ){
+					globalWeave.setGraph(1, "weave", convert_str_2d8(weave), {render: false});
 				} else {
-
-					if ( threading ){
-						globalWeave.setGraph2D8("threading", convert_str_2d8(threading), 0, 0, false, false);
-					}
-
-					if ( lifting ){
-						globalWeave.setGraph2D8("lifting", convert_str_2d8(lifting), 0, 0, false, false);
-					}
-
-					if ( tieup ){
-						globalWeave.setGraph2D8("tieup", convert_str_2d8(tieup), 0, 0, false, false);
-					} else {
-						globalWeave.setStraightTieup(Math.max(globalWeave.threading2D8[0].length, globalWeave.lifting2D8.length));
-					}
-
-					globalWeave.setWeaveFromParts(false, false, false, false, false);
-
+					globalWeave.setGraph(3, "threading", convert_str_2d8(threading), {propagate: false});
+					globalWeave.setGraph(4, "lifting", convert_str_2d8(lifting), {propagate: false});
+					globalWeave.setGraph(5, "tieup", convert_str_2d8(tieup), {propagate: false});
+					globalWeave.setWeaveFromParts(false, false, false, true);
 				}
-
-				globalWeave.setGraph2D8("weave");
-
-			}
-
-			if ( setPattern ){
-				globalPattern.render8(2);
-			}
-
-			/*
-
-			if (importArtwork) {
-				globalArtwork.drawDataURL(artworkDataURL);
-			}
-
-			*/
-
-			if ( !options || (options.hasOwnProperty("settings") && options.settings) ) {
-
-			/*
-
-				setSimulationParameters(warpSize, weftSize, warpSpace, weftSpace, warpCount, weftCount, warpDensity, weftDensity, screenDPI, 1, 1);
-				g_projectNotes = projectNotes;
-				$("#project-properties-notes").val(projectNotes);	
-
-				if( projectName === "" ){
-					
-					setProjectName("Untitled Project");
-					
-				} else {
-
-					setProjectName(projectName, false);
 				
-				}
-
-			*/
-
 			}
 
+		},
 
+		saveFile: function(content){
+			if ( window.requestFileSystem || window.webkitRequestFileSystem ) {
+				var file = new File([content], "project.txt", {type: "text/plain;charset=utf-8"});
+				saveAs(file);
+			} else {
+				//showModalWindow("Downlaod Project", "project-code-save-modal");
+				//$("#project-code-save-textarea").val(app.getState(4));
+			}
 		},
 
 		validateState: function(state) {
@@ -12905,76 +13887,78 @@ $(document).ready ( function(){
 			return isValid;
 		},
 
-		saveConfigurations: function(instanceId){
+		config:{
 
-			console.log(["saveConfigurations", instanceId]);
+			save: function(instanceId){
 
-			var timeStamp = Date.now();
-			var pointPlusGrid = g_pointPlusGrid;
-			var showGrid = g_showGrid;
+				console.log(["config.save", instanceId]);
 
-			var seamlessWeave = globalWeave.seamlessWeave;
-			var seamlessThreading = globalWeave.seamlessThreading;
-			var seamlessLifting = globalWeave.seamlessLifting;
-			var seamlessWarp = globalPattern.seamlessWarp;
-			var seamlessWeft = globalPattern.seamlessWeft;
+				var timeStamp = Date.now();
+				var pointPlusGrid = g_pointPlusGrid;
+				var showGrid = g_showGrid;
 
-			var graphDrawStyle = globalWeave.drawStyle;
-			var liftingMode = globalWeave.liftingMode;
-			var activeTab = app.tabs.active;
+				var seamlessWeave = globalWeave.params.seamlessWeave;
+				var seamlessThreading = globalWeave.params.seamlessThreading;
+				var seamlessLifting = globalWeave.params.seamlessLifting;
+				var seamlessWarp = globalWeave.params.seamlessWarp;
+				var seamlessWeft = globalWeave.params.seamlessWeft;
 
-			var config = {
-			    tms: timeStamp, 
-			    ppg: pointPlusGrid,
-			    sgr: showGrid,
-			    slw: seamlessWeave,
-			    sld: seamlessThreading,
-			    sll: seamlessLifting,
-			    slp: seamlessWarp,
-			    slt: seamlessWeft,
-			    gds: graphDrawStyle,
-			    atb: activeTab,
-			    lfm: liftingMode
-			};
+				var graphDrawStyle = globalWeave.drawStyle;
+				var activeTab = app.tabs.active;
 
-			//console.log(config);
+				var config = {
+				    tms: timeStamp, 
+				    ppg: pointPlusGrid,
+				    sgr: showGrid,
+				    slw: seamlessWeave,
+				    sld: seamlessThreading,
+				    sll: seamlessLifting,
+				    slp: seamlessWarp,
+				    slt: seamlessWeft,
+				    gds: graphDrawStyle,
+				    atb: activeTab
+				};
 
-			localStorage[app.configStorageID] = JSON.stringify(config);
+				localStorage[app.configStorageID] = JSON.stringify(config);
 
-		},
+			},
 
-		restoreConfigurations: function(configs, render = true){
+			restore: function(options){
 
-			configs = configs ? configs : localStorage[app.configStorageID];
+				console.log(["config.restore"]);
 
-			if ( configs ){
+				var configs = getObjProp(options, "configs", localStorage[app.configStorageID]);
+				var doRender = getObjProp(options, "render", true);
 
-				var config = JSON.parse(configs);
-				var pointPlusGrid = config.ppg;
-				var showGrid = config.sgr;
-				var seamlessWeave = config.slw;
-				var seamlessThreading = config.sld;
-				var seamlessLifting = config.sll;
-				var seamlessWarp = config.slp;
-				var seamlessWeft = config.slt;
-				var liftingMode = config.lfm;
-				var graphDrawStyle = config.gds;
-				var activeTab = config.atb;
+				if ( configs ){
 
-				globalWeave.setProps(10,{
-					pointPlusGrid: config.ppg,
-					showGrid: config.sgr,
-					seamlessWeave: config.slw,
-					seamlessThreading: config.sld,
-					seamlessLifting: config.sll,
-					seamlessWarp: config.slp,
-					seamlessWeft: config.slt,
-					graphDrawStyle: config.gds,
-					render: false
-				});
+					var config = JSON.parse(configs);
+					var pointPlusGrid = config.ppg;
+					var showGrid = config.sgr;
+					var seamlessWeave = config.slw;
+					var seamlessThreading = config.sld;
+					var seamlessLifting = config.sll;
+					var seamlessWarp = config.slp;
+					var seamlessWeft = config.slt;
+					var graphDrawStyle = config.gds;
+					var activeTab = config.atb;
 
-				setLiftingMode(liftingMode);
-				mainTabbar.tabs(activeTab).setActive();
+					globalWeave.setProps(10,{
+						pointPlusGrid: config.ppg,
+						showGrid: config.sgr,
+						seamlessWeave: config.slw,
+						seamlessThreading: config.sld,
+						seamlessLifting: config.sll,
+						seamlessWarp: config.slp,
+						seamlessWeft: config.slt,
+						graphDrawStyle: config.gds,
+						render: doRender
+					});
+
+					_tabbar.tabs(activeTab).setActive();
+					app.tabs.activate(activeTab);
+
+				}
 
 			}
 
@@ -12989,9 +13973,11 @@ $(document).ready ( function(){
 		weave2D : [[]],
 
 		weave8 : false,
+
 		ends : 0,
 		picks : 0,
 		shafts : 0,
+
 		threading1D : false,
 		threading2D8 : false,
 		tieup2D8 : false,
@@ -12999,11 +13985,6 @@ $(document).ready ( function(){
 		treadling1D : false,
 
 		drawStyle : "graph", // "graph", "color", "yarn"
-		
-		seamless : false,
-		seamlessWeave : false,
-		seamlessThreading : false, 
-		seamlessLifting : false,
 		
 		viewW : 0,
 		viewH : 0,
@@ -13017,20 +13998,87 @@ $(document).ready ( function(){
 		maxScrollX : 0,
 		maxScrollY : 0,
 
-		frameW : 0,
-		frameH : 0,
-
 		minPPG : Math.max(1, Math.floor(1 * g_pixelRatio)),
 		maxPPG : Math.floor(16 * g_pixelRatio),
 
 		autoTrim : true,
 
-		liftingMode : "weave", // "weave", "pegplan", "treadling", "compound"
+		liftingMode : "weave", // "weave", "pegplan", "treadling", "compound",
+
+		// Weave
+		params: {
+
+			graphShift: [
+				["select", false, "weaveGraphShiftTarget", "graphShiftTarget", [["weave", "Weave"], ["threading", "Threading"], ["lifting", "Lifting"], ["tieup", "Tieup"]], { config:"1/1", active:true}],
+			],
+
+			autoPattern: [
+
+				["header", "Auto Pattern"],
+				["number", "Pattern Size", "weaveAutoPatternSize", "autoPatternSize", 120, { min:1, max:16384 }],
+				["number", "Pattern Colors", "weaveAutoPatternColors", "autoPatternColors", 3, { min:1, max:54 }],
+				["select", "Type", "weaveAutoPatternType", "autoPatternType", [["balanced", "Balanced"], ["unbalanced", "Unbalanced"], ["warpstripes", "Warp Stripes"], ["weftstripes", "Weft Stripes"], ["random", "Random"]], { config:"2/3"}],
+				["select", "Style", "weaveAutoPatternStyle", "autoPatternStyle", [["gingham", "Gingham"], ["madras", "Madras"], ["tartan", "Tartan"], ["garbage", "Garbage"], ["random", "Random"]], { config:"2/3"}],
+				["check", "Even Pattern", "weaveAutoPatternEven", "autoPatternEven", 1],
+				["check", "Lock Colors", "weaveAutoPatternLockColors", "autoPatternLockColors", 0, { active: true }],
+				["text", false, "weaveAutoPatternLockedColors", "autoPatternLockedColors", 1, { config:"1/1", hide:true }],
+				["control", "Generate"]
+
+			],
+
+			autoColorway: [
+
+				["header", "Auto Colorway"],
+				["check", "Share Colors", "weaveAutoColorwayShareColors", "autoColorwayShareColors", 1, { active: true }],
+				["check", "Link Colors", "weaveAutoColorwayLinkColors", "autoColorwayLinkColors", 1, { active: true }],
+				["check", "Lock Colors", "weaveAutoColorwayLockColors", "autoColorwayLockColors", 0, { active: true }],
+				["text", false, "weaveAutoColorwayLockedColors", "autoColorwayLockedColors", 1, { config:"1/1", hide:true }],
+				["control", "Generate"]
+
+			],
+
+			viewSettings: [
+
+				["header", "Seamless"],
+				["check", "Weave", "weaveSeamlessWeave", "seamlessWeave", 0, { active: true }],
+				["check", "Warp", "weaveSeamlessWarp", "seamlessWarp", 0, { active: true }],
+				["check", "Weft", "weaveSeamlessWeft", "seamlessWeft", 0, { active: true }],
+				["check", "Threading", "weaveSeamlessThreading", "seamlessThreading", 0, { active: true }],
+				["check", "Lifting", "weaveSeamlessLifting", "seamlessLifting", 0, { active: true }],
+				["header", "View"],
+				["select", "Repeat Opacity", "weaveRepeatOpacity", "repeatOpacity", [[100, "100%"], [75, "75%"], [50, "50%"], [25, "25%"]], { active: true}],
+				["select", "Repeat Calc", "weaveRepeatCalc", "repeatCalc", [["lcm", "LCM"], ["weave", "Weave"], ["pattern", "Pattern"]], { config:"1/2", active: true}],
+
+			],
+
+			locks: [
+
+				["header", "Auto Locks"],
+				["check", "Threading", "weaveLockThreading", "lockThreading", 1, { active: true }],
+				["check", "Treadling", "weaveLockTreadling", "lockTreadling", 1, { active: true }],
+				["check", "Warp Pattern", "weaveLockWarp", "lockWarp", 0],
+				["check", "Weft Pattern", "weaveLockWeft", "lockWeft", 0],
+
+				["header", "Manual Locks"],
+
+				["check", "Warp = Weft", "weaveLockWarpToWeft", "lockWarpToWeft", 0, { active: true }],
+				["check", "Shaft = Treadle", "weaveLockShaftsToTreadles", "lockShaftsToTreadles", 0, { active: true }]
+
+			],
+
+			palette: [
+
+				["header", "Color Palette"],
+				["button", false, "weaveDefaultPalette", null, "System Default", { config:"1/1"}],
+				["button", false, "weaveRandomPalette", null, "Generate Random", { config:"1/1"}],
+				["button", false, "weaveSortPalette", null, "Sort by HUE", { config:"1/1"}],
+				["button", false, "weaveSetPaletteYarnNumber", null, "Set All Yarn Numbers", { config:"1/1"}],
+
+			]
+
+		},
 
 		onTabSelect : function(){
-
-			createWeaveLayout(22);
-	    	globalStatusbar.set("weaveIntersection", "-", "-");
 
 		},
 
@@ -13039,7 +14087,7 @@ $(document).ready ( function(){
 		},
 
 		clear : function(){
-			this.setGraph2D8("weave", newArray2D8(20, 2, 2));
+			this.setGraph(0, "weave", newArray2D8(20, app.limits.minWeaveSize, app.limits.minWeaveSize));
 		},
 
 		// Weave Scrollbars
@@ -13079,24 +14127,11 @@ $(document).ready ( function(){
 		},
 
 		setThreading1D : function(){
-			console.log("setThreading1D");
-			var x;
-			var threadingW = this.threading2D8.length;
-			this.threading1D = [];
-			for (x = 0; x < threadingW; x++) {
-				this.threading1D.push(this.threading2D8[x].indexOf(1)+1);				
-			}
+			this.threading1D = threading2D8_threading1D(this.threading2D8);
 		},
 
 		setTreadling1D : function(){
-			var x, treadleLift;
-			var treadlingH = this.lifting2D8[0].length;
-			var treadlingRRFV = this.lifting2D8.rotate2D8("r").flip2D8("y");
-			this.treadling1D = [];
-			for (x = 0; x < treadlingH; x++) {
-				treadleLift = treadlingRRFV[x].indexOf(1)+1;
-				this.treadling1D.push(treadleLift);				
-			}
+			this.treadling1D = treadling2D8_treadling1D(this.treadling2D8);
 		},
 
 		getGraph : function (graph = "weave", startEnd = false, startPick = false, lastEnd = false, lastPick = false){
@@ -13104,12 +14139,12 @@ $(document).ready ( function(){
 			var seamlessX = false;
 			var seamlessY = false;
 			if ( graph == "weave" ){
-				seamlessX = this.seamlessWeave;
-				seamlessY = this.seamlessWeave;
+				seamlessX = this.params.seamlessWeave;
+				seamlessY = this.params.seamlessWeave;
 			} else if ( graph == "threading" ){
-				seamlessX = this.seamlessThreading;
+				seamlessX = this.params.seamlessThreading;
 			}  else if ( graph == "lifting" ){
-				seamlessY = this.seamlessLifting;
+				seamlessY = this.params.seamlessLifting;
 			}
 
 			var arr = this[graph+"2D"].clone();
@@ -13129,9 +14164,8 @@ $(document).ready ( function(){
 
 			} else if ( startEnd && startPick && !lastEnd && !lastPick ){
 
-
-				startEnd = globalWeave.seamless && ["weave", "threading"].includes(graph) ? mapNumber(startEnd, 1, arrW) : startEnd;
-				startPick = globalWeave.seamless && ["weave", "lifting"].includes(graph) ? mapNumber(startPick, 1, arrH) : startPick;
+				startEnd = globalWeave.params.seamlessWeave && ["weave", "threading"].includes(graph) ? mapNumber(startEnd, 1, arrW) : startEnd;
+				startPick = globalWeave.params.seamlessWeave && ["weave", "lifting"].includes(graph) ? mapNumber(startPick, 1, arrH) : startPick;
 
 				if ( arr[startEnd-1] !== undefined && arr[startPick-1] !== undefined ){
 					return arr[startEnd-1][startPick-1];
@@ -13166,12 +14200,12 @@ $(document).ready ( function(){
 			var seamlessX = false;
 			var seamlessY = false;
 			if ( graph == "weave" ){
-				seamlessX = this.seamlessWeave;
-				seamlessY = this.seamlessWeave;
+				seamlessX = this.params.seamlessWeave;
+				seamlessY = this.params.seamlessWeave;
 			} else if ( graph == "threading" ){
-				seamlessX = this.seamlessThreading;
+				seamlessX = this.params.seamlessThreading;
 			}  else if ( graph == "lifting" ){
-				seamlessY = this.seamlessLifting;
+				seamlessY = this.params.seamlessLifting;
 			}
 
 			var arr = this[graph+"2D8"];
@@ -13239,33 +14273,35 @@ $(document).ready ( function(){
 
 		},
 
-		render2D8 : function(instanceId = 0, graph = "all"){
+		// Weave
+		render2D8: function(instanceId = 0, graph = "all"){
 
-			debug("render2D8 Instance", instanceId);
+			//console.log(["render2D8 Instance", instanceId, graph]);
+			//debug("render2D8 Instance", instanceId);
 
-			//console.log(["render2D8 Instance", instanceId]);
+			var renderWeave = graph == "weave" || graph == "all";
+			var renderThreading = globalWeave.liftingMode !== "weave" && (graph == "threading" || graph == "all");
+			var renderLifting = globalWeave.liftingMode !== "weave" && (graph == "lifting" || graph == "all");
+			var renderTieup = globalWeave.liftingMode !== "weave" && (graph == "tieup" || graph == "all");
 
-			if ((graph == "lifting" || graph == "all" ) && globalWeave.liftingMode !== "weave"){
-				this.renderGraph2D8(g_liftingContext, this.lifting2D8, "bl", globalTieup.scrollX, globalWeave.scrollY, false, globalWeave.seamlessLifting);
+			if ( renderWeave ){
+				this.renderGraph2D8(g_weaveContext, this.weave2D8, "bl", globalWeave.scrollX, globalWeave.scrollY, globalWeave.params.seamlessWeave, globalWeave.params.seamlessWeave, this.drawStyle);
 			}
-
-			if ((graph == "threading" || graph == "all" ) && globalWeave.liftingMode !== "weave"){
-				this.renderGraph2D8(g_threadingContext, this.threading2D8, "bl", globalWeave.scrollX, globalTieup.scrollY, globalWeave.seamlessThreading, false);
+			if ( renderLifting ){
+				this.renderGraph2D8(g_liftingContext, this.lifting2D8, "bl", globalTieup.scrollX, globalWeave.scrollY, false, globalWeave.params.seamlessLifting);
 			}
-
-			if ((graph == "tieup" || graph == "all" ) && globalWeave.liftingMode == "treadling"){
+			if ( renderThreading ){
+				this.renderGraph2D8(g_threadingContext, this.threading2D8, "bl", globalWeave.scrollX, globalTieup.scrollY, globalWeave.params.seamlessThreading, false);
+			}
+			if ( renderTieup){
 				this.renderGraph2D8(g_tieupContext, this.tieup2D8, "bl", globalTieup.scrollX, globalTieup.scrollY, false, false);
-			}
-
-			if (graph == "weave" || graph == "all"){
-				this.renderGraph2D8(g_weaveContext, this.weave2D8, "bl", globalWeave.scrollX, globalWeave.scrollY, globalWeave.seamlessWeave, globalWeave.seamlessWeave, this.drawStyle);
 			}
 
 		},
 
-		renderGraph2D8 : function(ctx, arr2D8, origin = "tl", scrollX = 0, scrollY = 0, seamlessX = false, seamlessY = false, drawStyle = "graph"){
+		renderGraph2D8: function(ctx, arr2D8, origin = "tl", scrollX = 0, scrollY = 0, seamlessX = false, seamlessY = false, drawStyle = "graph"){
 
-			// console.log(["renderGraph2D8", ctx]);
+			//console.log(["renderGraph2D8", ctx.canvas.id]);
 			var graphId = getGraphId(ctx.canvas.id);
 			debugTime("renderGraph2D8 > " + graphId);
 
@@ -13283,8 +14319,18 @@ $(document).ready ( function(){
 				arrH = arr2D8[0].length;
 			}
 
-			var warpRepeat = drawStyle == "graph" ? arrW : [arrW, globalPattern.warp.length].lcm();
-			var weftRepeat = drawStyle == "graph" ? arrH : [arrH, globalPattern.weft.length].lcm();
+			var warpRepeat, weftRepeat;
+			var repeatCalc = globalWeave.params.repeatCalc;
+			if ( repeatCalc == "weave" || drawStyle == "graph" ){
+				warpRepeat = arrW;
+				weftRepeat = arrH;
+			} else if ( repeatCalc == "pattern" ){
+				warpRepeat = globalPattern.warp.length;
+				weftRepeat = globalPattern.weft.length;
+			} else if ( repeatCalc == "lcm" ){
+				warpRepeat = [arrW, globalPattern.warp.length].lcm();
+				weftRepeat = [arrH, globalPattern.weft.length].lcm();
+			}
 
 			var drawAreaW = seamlessX && arrW ? ctxW : Math.min(ctxW, warpRepeat * g_pointPlusGrid + scrollX);
 			var drawAreaH = seamlessY && arrH ? ctxH : Math.min(ctxH, weftRepeat * g_pointPlusGrid + scrollY);
@@ -13304,14 +14350,14 @@ $(document).ready ( function(){
 					i = (ctxH - y - 1) * ctxW;
 					for (x = 0; x < ctxW; ++x) {
 						xTranslated = Math.floor((x-scrollX)/pgW);
-						pixels[i + x] = (xTranslated+yTranslated) % 2 ? app.colors.BGLight32 : app.colors.BGDark32;
+						pixels[i + x] = (xTranslated+yTranslated) % 2 ? app.ui.grid.bgl32 : app.ui.grid.bgd32;
 					}
 				}			
 			}
 
-			// Draw Grid at Bottom
+			// Draw Grid at Back
 			if ( g_showGrid && g_pointPlusGrid >= g_showGridMinPointPlusGrid && drawStyle !== "graph" ){
-				drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, app.colors.gridLight32, app.colors.gridDark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
+				drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, app.ui.grid.light32, app.ui.grid.dark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
 			}
 
 			// if Pattern is empty then draw as graph
@@ -13491,13 +14537,14 @@ $(document).ready ( function(){
 
 			} else {
 
+				console.log(arr2D8)
 				console.error("renderGraph2D8 : Invalid " + graphId);
 
 			}
 
 			// Draw Grid at Top
 			if ( g_showGrid && g_pointPlusGrid >= g_showGridMinPointPlusGrid && drawStyle == "graph" ){					
-				drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, app.colors.gridLight32, app.colors.gridDark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
+				drawGridOnBuffer(app.origin, pixels, g_pointPlusGrid, g_pointPlusGrid, g_gridMinor, g_gridMinor, g_gridMajor, g_gridMajor, app.ui.grid.light32, app.ui.grid.dark32, scrollX, scrollY, ctxW, ctxH, g_gridThickness);
 			}
 
 			ctx.putImageData(imagedata, 0, 0);
@@ -13518,17 +14565,17 @@ $(document).ready ( function(){
 				pointPlusGrid = limitNumber(pointPlusGrid, globalWeave.minPPG, globalWeave.maxPPG);
 
 				if ( pointPlusGrid >= globalWeave.maxPPG ){
-					weaveToolbar.disableItem("toolbar-weave-zoom-in");
+					_toolbar.disableItem("toolbar-weave-zoom-in");
 				} else {
-					weaveToolbar.enableItem("toolbar-weave-zoom-in");
+					_toolbar.enableItem("toolbar-weave-zoom-in");
 				}
 
 				if ( pointPlusGrid <= globalWeave.minPPG ){
-					weaveToolbar.disableItem("toolbar-weave-zoom-out");
-					weaveToolbar.disableItem("toolbar-weave-zoom-reset");
+					_toolbar.disableItem("toolbar-weave-zoom-out");
+					_toolbar.disableItem("toolbar-weave-zoom-reset");
 				} else {
-					weaveToolbar.enableItem("toolbar-weave-zoom-out");
-					weaveToolbar.enableItem("toolbar-weave-zoom-reset");
+					_toolbar.enableItem("toolbar-weave-zoom-out");
+					_toolbar.enableItem("toolbar-weave-zoom-reset");
 				}
 
 				g_showGridPossible = pointPlusGrid >= g_showGridMinPointPlusGrid;
@@ -13536,12 +14583,12 @@ $(document).ready ( function(){
 				var pointW = pointPlusGrid - gridThickness;
 				
 				if ( g_showGridPossible ){
-					weaveToolbar.enableItem("toolbar-weave-grid-show");
+					_toolbar.enableItem("toolbar-weave-grid");
 				} else {
-					weaveToolbar.disableItem("toolbar-weave-grid-show");
+					_toolbar.disableItem("toolbar-weave-grid");
 				}
 
-				weaveToolbar.setItemState("toolbar-weave-grid-show", showGrid);
+				_toolbar.setItemState("toolbar-weave-grid", showGrid);
 
 				g_showGrid = showGrid;
 				g_pointW = pointW;
@@ -13570,34 +14617,29 @@ $(document).ready ( function(){
 			}
 
 			if ( propObj.hasOwnProperty("seamlessWeave") ){
-				globalWeave.seamlessWeave = propObj.seamlessWeave;
-				layoutMenu.setCheckboxState("view-seamless-weave", propObj.seamlessWeave);
+				globalWeave.params.seamlessWeave = propObj.seamlessWeave;
 			}
 
 			if ( propObj.hasOwnProperty("seamlessThreading") ){
-				globalWeave.seamlessThreading = propObj.seamlessThreading;
-				layoutMenu.setCheckboxState("view-seamless-threading", propObj.seamlessThreading);
+				globalWeave.params.seamlessThreading = propObj.seamlessThreading;
 			}
 
 			if ( propObj.hasOwnProperty("seamlessLifting") ){
-				globalWeave.seamlessLifting = propObj.seamlessLifting;
-				layoutMenu.setCheckboxState("view-seamless-lifting", propObj.seamlessLifting);
+				globalWeave.params.seamlessLifting = propObj.seamlessLifting;
 			}
 
 			if ( propObj.hasOwnProperty("seamlessWarp") ){
-				globalPattern.seamlessWarp = propObj.seamlessWarp;
-				layoutMenu.setCheckboxState("view-seamless-warp", propObj.seamlessWarp);
+				globalWeave.params.seamlessWarp = propObj.seamlessWarp;
 			}
 
 			if ( propObj.hasOwnProperty("seamlessWeft") ){
-				globalPattern.seamlessWeft = propObj.seamlessWeft;
-				layoutMenu.setCheckboxState("view-seamless-weft", propObj.seamlessWeft);
+				globalWeave.params.seamlessWeft = propObj.seamlessWeft;
 			}
 
 			if ( propObj.hasOwnProperty("graphDrawStyle") ){
 
 				globalWeave.drawStyle = propObj.graphDrawStyle;
-				setToolbarDropDown(weaveToolbar, "toolbar-weave-draw-style", "toolbar-weave-draw-style-"+propObj.graphDrawStyle);
+				setToolbarDropDown(_toolbar, "toolbar-weave-draw-style", "toolbar-weave-draw-style-"+propObj.graphDrawStyle);
 			
 			}
 
@@ -13605,22 +14647,23 @@ $(document).ready ( function(){
 
 				if (globalWeave.liftingMode !== propObj.liftingMode){
 					globalWeave.liftingMode = propObj.liftingMode;
-					setToolbarDropDown(weaveToolbar, "toolbar-lifting-mode", "toolbar-lifting-mode-"+propObj.liftingMode);
-					app.weave.layout.needUpdate = true;
+					setToolbarDropDown(_toolbar, "toolbar-weave-lifting-mode", "toolbar-weave-lifting-mode-"+propObj.liftingMode);
+					app.weave.interface.needsUpdate = true;
 				}
 
 			}
 
-			app.saveConfigurations(10);
+			app.config.save(10);
 
-			var doRender = !propObj.hasOwnProperty("render") || propObj;
+			var doRender = getObjProp(propObj, "render", true);
 
-			if ( app.weave.layout.needUpdate ){
-				createWeaveLayout(15, false );
+			if ( app.weave.interface.needsUpdate ){
+				app.weave.interface.fix(4, false );
+
 			}
 
 			if ( doRender ){
-				renderAll();
+				renderAll(4);
 			}
 			
 		},
@@ -13639,17 +14682,17 @@ $(document).ready ( function(){
 				pointPlusGrid = limitNumber(pointPlusGrid, globalWeave.minPPG, globalWeave.maxPPG);
 
 				if ( pointPlusGrid >= globalWeave.maxPPG ){
-					weaveToolbar.disableItem("toolbar-weave-zoom-in");
+					_toolbar.disableItem("toolbar-weave-zoom-in");
 				} else {
-					weaveToolbar.enableItem("toolbar-weave-zoom-in");
+					_toolbar.enableItem("toolbar-weave-zoom-in");
 				}
 
 				if ( pointPlusGrid <= globalWeave.minPPG ){
-					weaveToolbar.disableItem("toolbar-weave-zoom-out");
-					weaveToolbar.disableItem("toolbar-weave-zoom-reset");
+					_toolbar.disableItem("toolbar-weave-zoom-out");
+					_toolbar.disableItem("toolbar-weave-zoom-reset");
 				} else {
-					weaveToolbar.enableItem("toolbar-weave-zoom-out");
-					weaveToolbar.enableItem("toolbar-weave-zoom-reset");
+					_toolbar.enableItem("toolbar-weave-zoom-out");
+					_toolbar.enableItem("toolbar-weave-zoom-reset");
 				}
 
 				g_showGridPossible = pointPlusGrid >= g_showGridMinPointPlusGrid;
@@ -13657,12 +14700,12 @@ $(document).ready ( function(){
 				var pointW = pointPlusGrid - gridThickness;
 				
 				if ( g_showGridPossible ){
-					weaveToolbar.enableItem("toolbar-weave-grid-show");
+					_toolbar.enableItem("toolbar-weave-grid");
 				} else {
-					weaveToolbar.disableItem("toolbar-weave-grid-show");
+					_toolbar.disableItem("toolbar-weave-grid");
 				}
 
-				weaveToolbar.setItemState("toolbar-weave-grid-show", showGrid);
+				_toolbar.setItemState("toolbar-weave-grid", showGrid);
 
 				g_showGrid = showGrid;
 				g_pointW = pointW;
@@ -13687,36 +14730,11 @@ $(document).ready ( function(){
 
 			}
 
-			if ( prop == "seamlessWeave" ){
-				globalWeave.seamlessWeave = value;
-				layoutMenu.setCheckboxState("view-seamless-weave", value);
-			}
-
-			if ( prop == "seamlessThreading" ){
-				globalWeave.seamlessThreading = value;
-				layoutMenu.setCheckboxState("view-seamless-threading", value);
-			}
-
-			if ( prop == "seamlessLifting" ){
-				globalWeave.seamlessLifting = value;
-				layoutMenu.setCheckboxState("view-seamless-lifting", value);
-			}
-
-			if ( prop == "seamlessWarp" ){
-				globalPattern.seamlessWarp = value;
-				layoutMenu.setCheckboxState("view-seamless-warp", value);
-			}
-
-			if ( prop == "seamlessWeft" ){
-				globalPattern.seamlessWeft = value;
-				layoutMenu.setCheckboxState("view-seamless-weft", value);
-			}
-
 			if ( prop == "graphDrawStyle" ){
 
 				var graphDrawStyle = value;
 				globalWeave.drawStyle = graphDrawStyle;
-				setToolbarDropDown(weaveToolbar, "toolbar-weave-draw-style", "toolbar-weave-draw-style-"+graphDrawStyle);
+				setToolbarDropDown(_toolbar, "toolbar-weave-draw-style", "toolbar-weave-draw-style-"+graphDrawStyle);
 			
 			}
 
@@ -13724,17 +14742,17 @@ $(document).ready ( function(){
 
 				if (globalWeave.liftingMode !== mode){
 					globalWeave.liftingMode = mode;
-					setToolbarDropDown(weaveToolbar, "toolbar-lifting-mode", "toolbar-lifting-mode-"+mode);
+					setToolbarDropDown(_toolbar, "toolbar-weave-lifting-mode", "toolbar-weave-lifting-mode-"+mode);
 					
-					createWeaveLayout(15, render);
+					createWeaveLayout(3, render);
 				}
 
 			}
 
-			app.saveConfigurations(10);
+			app.config.save(10);
 
 			if ( render ){
-				renderAll();
+				renderAll(5);
 			}
 			
 		},
@@ -13807,17 +14825,6 @@ $(document).ready ( function(){
 			}
 		},
 
-		lockThreading : function(state){
-
-			g_LockThreading = state;
-			if(state){
-				weaveToolbar.setItemState("toolbar-weave-lock-shafts", true);
-			} else {
-				weaveToolbar.setItemState("toolbar-weave-lock-shafts", false);
-			}
-
-		},
-
 		setGraphPoint2D8 : function(graph, colNum = 0, rowNum = 0, state = true, render = true, commit = true){
 
 			//console.log([graph, colNum, rowNum]);
@@ -13827,12 +14834,12 @@ $(document).ready ( function(){
 			var seamlessX = false;
 			var seamlessY = false;
 			if ( graph == "weave" ){
-				seamlessX = this.seamlessWeave;
-				seamlessY = this.seamlessWeave;
+				seamlessX = this.params.seamlessWeave;
+				seamlessY = this.params.seamlessWeave;
 			} else if ( graph == "threading" ){
-				seamlessX = this.seamlessThreading;
+				seamlessX = this.params.seamlessThreading;
 			}  else if ( graph == "lifting" ){
-				seamlessY = this.seamlessLifting;
+				seamlessY = this.params.seamlessLifting;
 			}
 
 			if ( (colNum > 0 || seamlessX ) && (rowNum > 0 || seamlessY) ){
@@ -13910,17 +14917,21 @@ $(document).ready ( function(){
 
 		},
 
-		setGraph2D8 : function(graph, tile2D8 = false, colNum = 0, rowNum = 0, render = true, propagate = true, doAutoTrim = true){
+		setGraph: function(instanceId, graph, tile2D8 = false, options){
 
-			console.log(["setGraph2D8", graph, colNum, rowNum]);
+			console.log(["setGraph", ...arguments]);
+
+			var colNum = getObjProp(options, "col", 0);
+			var rowNum = getObjProp(options, "row", 0);
+			var render = getObjProp(options, "render", true);
+			var doAutoTrim = getObjProp(options, "trim", true);
+			var propagate = getObjProp(options, "propagate", true);
 
 			var canvas = this[graph+"2D8"];
 
 			if ( canvas == undefined || !canvas.length || canvas[0] == undefined || !canvas[0].length ){
-
 				canvas = newArray2D8(102, 1, 1);
 				this[graph+"2D8"] = canvas;
-
 			}
 
 			var canvasW = canvas.length;
@@ -13929,12 +14940,12 @@ $(document).ready ( function(){
 			var seamlessX = false;
 			var seamlessY = false;
 			if ( graph == "weave" ){
-				seamlessX = this.seamlessWeave;
-				seamlessY = this.seamlessWeave;
+				seamlessX = this.params.seamlessWeave;
+				seamlessY = this.params.seamlessWeave;
 			} else if ( graph == "threading" ){
-				seamlessX = this.seamlessThreading;
+				seamlessX = this.params.seamlessThreading;
 			}  else if ( graph == "lifting" ){
-				seamlessY = this.seamlessLifting;
+				seamlessY = this.params.seamlessLifting;
 			}
 
 			if (!tile2D8){
@@ -13975,16 +14986,12 @@ $(document).ready ( function(){
 			} 
 
 			if ( globalWeave.autoTrim && doAutoTrim){
-
 				var trimR = !seamlessX ? "r" : "";
 				var trimT = !seamlessY ? "t" : "";
 				var trimSides = trimR + trimT;
 				result = trimWeave2D8(2, tile2D8, trimSides);
-			
 			} else {
-				
 				result = tile2D8;
-			
 			}
 
 			var sw = result.length;
@@ -13992,37 +14999,31 @@ $(document).ready ( function(){
 			this[graph+"2D8"] = result;
 			
 			if ( graph == "weave"){
-
-				// console.log(["resultWH", sw, sh]);
 				this.ends = sw;
 				this.picks = sh;
-
-
-
-
 			} else if ( graph == "threading" ){
-
 				this.setThreading1D();
-
+			} else if ( graph == "lifting" && globalWeave.liftingMode == "treadling" ){
+				this.setTreadling1D();
 			}
 
 			if ( propagate ){
 
-				if ( graph == "lifting" && globalWeave.liftingMode == "treadling" && g_LockThreadingToTreadling){
+				if ( graph == "lifting" && globalWeave.liftingMode == "treadling" && globalWeave.params.lockShaftsToTreadles){
 
 					var newThreading = this.lifting2D8.clone2D8().rotate2D8("r").flip2D8("y");
-					this.setGraph2D8("threading", newThreading, 0, 0, true, false);
+					this.setGraph(0, "threading", newThreading, {propagate: false});
 
-				} else if ( graph == "threading" && globalWeave.liftingMode == "treadling" && g_LockThreadingToTreadling){
+				} else if ( graph == "threading" && globalWeave.liftingMode == "treadling" && globalWeave.params.lockShaftsToTreadles){
 
 					var newTreadling = this.threading2D8.clone2D8().rotate2D8("l").flip2D8("x");
-					this.setGraph2D8("lifting", newTreadling, 0, 0, true, false);
+					this.setGraph(0, "lifting", newTreadling, {propagate: false});
 
 				}
 
 				if ( graph == "weave" && globalWeave.liftingMode !== "weave"){
 					
-					this.setPartsFromWeave();
+					this.setPartsFromWeave(2);
 					this.render2D8(111, "threading");
 					this.render2D8(111, "lifting");
 					this.render2D8(111, "tieup");
@@ -14037,23 +15038,20 @@ $(document).ready ( function(){
 
 			if ( render ){
 
-				debugTime("setGraph2D8Render");
+				debugTime("setGraphRender");
 
-				globalStatusbar.set("weaveSize", this.ends, this.picks);
-
-				var weaveProps = getWeaveProps(this.weave2D8, 256);
-				if ( weaveProps.inLimit ){
-					globalStatusbar.set("shaftCount", weaveProps.shafts);
-				} else {
-					globalStatusbar.set("shaftCount", "Shafts > 256");
+				if ( graph == "weave" && this.weave2D8 && this.weave2D8[0] ){
+					globalStatusbar.set("weaveSize", this.ends, this.picks);
+					var weaveProps = getWeaveProps(this.weave2D8);
+					globalWeave.shafts = weaveProps.inLimit ? weaveProps.shafts : app.limits.maxShafts+1;
+					globalStatusbar.set("shafts");
 				}
 
 				globalTieup.updateScrollingParameters(3);
 				this.updateScrollingParameters();
 				this.render2D8(17, graph);
 				
-				globalSimulation.update();
-				debugTimeEnd("setGraph2D8Render");
+				debugTimeEnd("setGraphRender");
 			}
 
 			if ( propagate ){
@@ -14081,9 +15079,9 @@ $(document).ready ( function(){
 			if ( colNum && rowNum ){
 				if ( globalWeave.liftingMode == "treadling"){
 					var emptyWeave = newArray2D(liftingW, data[0].length, 1);
-					lifting2D8 = paste2D_old(emptyWeave, lifting2D8, 0, rowNum-1, false, globalWeave.seamlessLifting, 1);
+					lifting2D8 = paste2D_old(emptyWeave, lifting2D8, 0, rowNum-1, false, globalWeave.params.seamlessLifting, 1);
 				}
-				lifting2D8 = paste2D_old(data, lifting2D8, colNum-1, rowNum-1, false, globalWeave.seamlessLifting, 1);
+				lifting2D8 = paste2D_old(data, lifting2D8, colNum-1, rowNum-1, false, globalWeave.params.seamlessLifting, 1);
 			} else {
 				lifting2D8 = data;
 			}
@@ -14146,12 +15144,33 @@ $(document).ready ( function(){
 
 			}
 
+			this.setGraph(0, "weave", weave2D8, {render: render, propagate: false});
 
-			console.log(globalWeave.liftingMode);
+		},
 
-			console.log(weave2D8);
+		createWeaveFromParts: function(threading, lifting, tieup){
 
-			this.setGraph2D8("weave", weave2D8, 0, 0,  render, false);
+			if ( threading.is2DArray() ){
+
+
+
+			}
+
+
+
+
+
+			if ( tieup ){
+
+
+
+
+
+
+			}
+
+
+
 
 		},
 
@@ -14204,6 +15223,8 @@ $(document).ready ( function(){
 			}
 		},
 
+
+
 		setShaft : function ( shaftNum, endArray, render = true){
 			for ( var x = 0; x < this.ends; x++) {
 				if(this.threading2D8[x][shaftNum-1] == 1){
@@ -14255,9 +15276,9 @@ $(document).ready ( function(){
 
 		},
 
-		setPartsFromWeave : function(weave2D8 = false, render = false){
+		setPartsFromWeave : function(instanceId, weave2D8 = false, render = false){
 
-			// console.log("setPartsFromWeave");
+			console.log(["setPartsFromWeave", instanceId]);
 
 			if (!weave2D8){
 				weave2D8 = this.weave2D8;
@@ -14419,6 +15440,9 @@ $(document).ready ( function(){
 
 	var globalTieup = {
 
+		treadles: 0,
+		shafts: 0,
+
 		viewW : 0,
 		viewH : 0,
 		contentW : 0,
@@ -14458,9 +15482,6 @@ $(document).ready ( function(){
 
 		created: false,
 
-		frameW : 0,
-		frameH : 0,
-
 		viewW : 0,
 		viewH : 0,
 		contentW : 0,
@@ -14488,7 +15509,7 @@ $(document).ready ( function(){
 
 		seamless : true,
 
-		needUpdate: true,
+		needsUpdate: true,
 
 		drawStyle : "flat",
 
@@ -14497,10 +15518,10 @@ $(document).ready ( function(){
 		warpNodePosJitter : 0.05, // 0.03
 		weftNodePosJitter : 0.05, // 0.5
 
-		textureWpx : 0,
-		textureHpx : 0,
-		textureWmm : 0,
-		textureHmm : 0,
+		weaveWpx: 0,
+		weaveHpx: 0,
+		weaveWmm: 0,
+		weaveHmm: 0,
 
 		warpWiggleFrequency : 0.5,
 		weftWiggleFrequency : 0.2,
@@ -14520,27 +15541,28 @@ $(document).ready ( function(){
 		multicount : false,
 		downscale : false,
 
+		// Simulation
 		params : {
 
 			structure: [
 
-				  ["select", "Mode", "simulationMode", "mode", "1/2", [["quick0", "Quick-0"], ["quick", "Quick"], ["scaled", "Scaled"]]],
-				  ["select", "Draw", "simulationDrawMethod", "drawMethod", "1/2", [["3d", "3D"], ["flat", "Flat"]]],
-				  ["check", "Multi-Count", "simulationMultiCount", "multiCount", "2/5", 0],
-				  ["select", "Algorithm", "simulationAlgorithm", "algorithm", "1/2", [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"]]],
-				  ["check", "Downscale", "simulationDownscale", "downscale", "2/5", 0],
-				  ["number", "Warp Size", "simulationWarpSize", "warpSize", "2/5", 2, 1, 16],
-				  ["number", "Weft Size", "simulationWeftSize", "weftSize", "2/5", 2, 1, 16],
-				  ["number", "Warp Space", "simulationWarpSpace", "warpSpace", "2/5", 1, 0, 16],
-				  ["number", "Weft Space", "simulationWeftspace", "weftSpace", "2/5", 1, 0, 16],
-				  ["number", "Warp Number", "simulationWarpNumber", "warpNumber", "2/5", 20, 1, 300],
-				  ["number", "Weft Number", "simulationWeftNumber", "weftNumber", "2/5", 20, 1, 300],
-				  ["number", "Warp Density", "simulationWarpDensity", "warpDensity", "2/5", 55, 10, 300],
-				  ["number", "Weft Density", "simulationWeftDensity", "weftDensity", "2/5", 55, 10, 300],
-				  ["number", "Screen DPI", "simulationScreenDPI", "screenDPI", "2/5", 110, 72, 480, 1, 2],
-				  ["number", "Smoothing", "simulationSmoothing", "smoothing", "2/5", 3, 1, 16],
-				  ["number", "Reed Fill", "simulationReedFill", "reedFill", "2/5", 1, 1, 8],
-				  ["select", "Background", "simulationBackgroundColor", "backgroundColor", "1/2", [["black", "Black"], ["white", "White"], ["grey", "Grey"]]],
+				  ["select", "Mode", "simulationMode", "mode", [["quick0", "Quick-0"], ["quick", "Quick"], ["scaled", "Scaled"]], { config:"1/2" }],
+				  ["select", "Draw", "simulationDrawMethod", "drawMethod", [["3d", "3D"], ["flat", "Flat"]], { config:"1/2" }],
+				  ["check", "Multi-Count", "simulationMultiCount", "multiCount", 0],
+				  ["select", "Algorithm", "simulationAlgorithm", "algorithm", [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"]], { config:"1/2" }],
+				  ["check", "Downscale", "simulationDownscale", "downscale", 0],
+				  ["number", "Warp Size", "simulationWarpSize", "warpSize", 2, { min:1, max:16 }],
+				  ["number", "Weft Size", "simulationWeftSize", "weftSize", 2, { min:1, max:16 }],
+				  ["number", "Warp Space", "simulationWarpSpace", "warpSpace", 0, { min:0, max:16 }],
+				  ["number", "Weft Space", "simulationWeftspace", "weftSpace", 0, { min:0, max:16 }],
+				  ["number", "Warp Number", "simulationWarpNumber", "warpNumber", 20, { min:1, max:300 }],
+				  ["number", "Weft Number", "simulationWeftNumber", "weftNumber", 20, { min:1, max:300 }],
+				  ["number", "Warp Density", "simulationWarpDensity", "warpDensity", 55, { min:10, max:300 }],
+				  ["number", "Weft Density", "simulationWeftDensity", "weftDensity", 55, { min:10, max:300 }],
+				  ["number", "Screen DPI", "simulationScreenDPI", "screenDPI", 110, { min:72, max:480 }],
+				  ["number", "Smoothing", "simulationSmoothing", "smoothing", 3, { min:1, max:16 }],
+				  ["number", "Reed Fill", "simulationReedFill", "reedFill", 1, { min:1, max:8 }],
+				  ["select", "Background", "simulationBackgroundColor", "backgroundColor", [["black", "Black"], ["white", "White"], ["grey", "Grey"]], { config:"1/2" }],
 				  
 				  ["control", "Save"]
 
@@ -14548,19 +15570,21 @@ $(document).ready ( function(){
 
 			yarn: [
 				
-				["check", "Yarn Imperfections", "simulationRenderYarnImperfections", "renderYarnImperfections", "2/5", 0],
+				["check", "Yarn Imperfections", "simulationRenderYarnImperfections", "renderYarnImperfections", 0],
 
-				["number", "Warp Thins", "simulationWarpThins", "warpThins", "2/5", 10, 0, 500],
-				["number", "Warp Thicks", "simulationWarpThicks", "warpThicks", "2/5", 40, 0, 500],
-				["number", "Warp Neps", "simulationWarpNeps", "warpNeps", "2/5", 80, 0, 500],
-				["number", "Warp Thickness Jitter", "simulationWarpThicknessJitter", "warpThicknessJitter", "2/5", 0.01, 0, 1, 0.01, 2],
-				["number", "Warp Node Thickness Jitter", "simulationWarpNodeThicknessJitter", "warpNodeThicknessJitter", "2/5", 0.03, 0, 1, 0.01, 2],
+				["number", "Warp Thins", "simulationWarpThins", "warpThins", 10, { min:1, max:500 }],
+				["number", "Warp Thicks", "simulationWarpThicks", "warpThicks", 40, { min:1, max:500 }],
+				["number", "Warp Neps", "simulationWarpNeps", "warpNeps", 80, { min:1, max:500 }],
 
-				["number", "Weft Thins", "simulationWeftThins", "weftThins", "2/5", 10, 0, 500],
-				["number", "Weft Thicks", "simulationWeftThicks", "weftThicks", "2/5", 40, 0, 500],
-				["number", "Weft Neps", "simulationWeftNeps", "weftNeps", "2/5", 80, 0, 500],
-				["number", "Weft Thickness Jitter", "simulationWeftThicknessJitter", "weftThicknessJitter", "2/5", 0.01, 0, 1, 0.01, 2],
-				["number", "Weft Node Thickness Jitter", "simulationWeftNodeThicknessJitter", "weftNodeThicknessJitter", "2/5", 0.05, 0, 1, 0.01, 2],
+				["number", "Warp Thickness Jitter", "simulationWarpThicknessJitter", "warpThicknessJitter", 0.01, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Warp Node Thickness Jitter", "simulationWarpNodeThicknessJitter", "warpNodeThicknessJitter", 0.03, { min:0, max:1, step:0.01, precision:2}],
+
+				["number", "Weft Thins", "simulationWeftThins", "weftThins", 10, { min:0, max:500 }],
+				["number", "Weft Thicks", "simulationWeftThicks", "weftThicks", 40, { min:0, max:500 }],
+				["number", "Weft Neps", "simulationWeftNeps", "weftNeps", 80, { min:0, max:500 }],
+
+				["number", "Weft Thickness Jitter", "simulationWeftThicknessJitter", "weftThicknessJitter", 0.01, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Weft Node Thickness Jitter", "simulationWeftNodeThicknessJitter", "weftNodeThicknessJitter", 0.05, { min:0, max:1, step:0.01, precision:2}],
 
 				["control", "Save"]
 
@@ -14568,26 +15592,27 @@ $(document).ready ( function(){
 
 			behaviour: [
 
-				["check", "Fabric Imperfections", "simulationRenderFabricImperfections", "renderFabricImperfections", "2/5", 0],
+				["check", "Fabric Imperfections", "simulationRenderFabricImperfections", "renderFabricImperfections", 0],
 
-				["number", "Warp Pos Jitter", "simulationWarpPosJitter", "warpPosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
-				["number", "Weft Pos Jitter", "simulationWeftPosJitter", "weftPosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
-				["number", "Wp Node Pos Jitter", "simulationWarpNodePosJitter", "warpNodePosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
-				["number", "Wf Node Pos Jitter", "simulationWeftNodePosJitter", "weftNodePosJitter", "2/5", 0.03, 0, 1, 0.01, 2],
+				["number", "Warp Pos Jitter", "simulationWarpPosJitter", "warpPosJitter", 0.03, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Weft Pos Jitter", "simulationWeftPosJitter", "weftPosJitter", 0.03, { min:0, max:1, step:0.01, precision:2}],
 
-				["number", "Wp Wiggle Freq", "simulationWarpWiggleFrequency", "warpWiggleFrequency", "2/5", 0.5, 0, 1, 0.1, 2],
-				["number", "Wp Wiggle Range", "simulationWarpWiggleRange", "warpWiggleRange", "2/5", 0.1, 0, 1, 0.01, 2],
-				["number", "Wp Wiggle Inc", "simulationWarpWiggleInc", "wrpWiggleInc", "2/5", 0.01, 0, 1, 0.005, 3],
+				["number", "Wp Node Pos Jitter", "simulationWarpNodePosJitter", "warpNodePosJitter", 0.03, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Wf Node Pos Jitter", "simulationWeftNodePosJitter", "weftNodePosJitter", 0.03, { min:0, max:1, step:0.01, precision:2}],
 
-				["number", "Wf Wiggle Freq", "simulationWeftWiggleFrequency", "weftWiggleFrequency", "2/5", 0.2, 0, 1, 0.1, 2],
-				["number", "Wf Wiggle Range", "simulationWeftWiggleRange", "weftWiggleRange", "2/5", 0.1, 0, 1, 0.01, 2],
-				["number", "Wf Wiggle Inc", "simulationWeftWiggleInc", "weftWiggleInc", "2/5", 0.01, 0, 1, 0.005, 3],
+				["number", "Wp Wiggle Freq", "simulationWarpWiggleFrequency", "warpWiggleFrequency", 0.5, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Wp Wiggle Range", "simulationWarpWiggleRange", "warpWiggleRange", 0.1, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Wp Wiggle Inc", "simulationWarpWiggleInc", "wrpWiggleInc", 0.01, { min:0, max:1, step:0.005, precision:3}],
 
-				["number", "Wp Float Lift%", "simulationWarpFloatLiftPercent", "warpFloatLiftPercent", "2/5", 100, 0, 100],
-				["number", "Wf Float Lift%", "simulationWeftFloatLiftPercent", "weftFloatLiftPercent", "2/5", 100, 0, 100],
+				["number", "Wf Wiggle Freq", "simulationWeftWiggleFrequency", "weftWiggleFrequency", 0.2, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Wf Wiggle Range", "simulationWeftWiggleRange", "weftWiggleRange", 0.1, { min:0, max:1, step:0.01, precision:2}],
+				["number", "Wf Wiggle Inc", "simulationWeftWiggleInc", "weftWiggleInc", 0.01, { min:0, max:1, step:0.005, precision:3}],
 
-				["number", "Wp Deflection%", "simulationWarpFloatDeflectionPercent", "warpFloatDeflectionPercent", "2/5", 100, 0, 100],
-				["number", "Wf Deflection%", "simulationWeftFloatDeflectionPercent", "weftFloatDeflectionPercent", "2/5", 100, 0, 100],
+				["number", "Wp Float Lift%", "simulationWarpFloatLiftPercent", "warpFloatLiftPercent", 100, { min:0, max:100 }],
+				["number", "Wf Float Lift%", "simulationWeftFloatLiftPercent", "weftFloatLiftPercent", 100, { min:0, max:100 }],
+
+				["number", "Wp Deflection%", "simulationWarpFloatDeflectionPercent", "warpFloatDeflectionPercent", 100, { min:0, max:100 }],
+				["number", "Wf Deflection%", "simulationWeftFloatDeflectionPercent", "weftFloatDeflectionPercent", 100, { min:0, max:100 }],
 
 				["control", "Save"]
 
@@ -14597,8 +15622,8 @@ $(document).ready ( function(){
 
 		update : function(){
 
-			this.needUpdate = true;
-			globalModel.fabric.needUpdate = true;
+			this.needsUpdate = true;
+			globalModel.fabric.needsUpdate = true;
 			if ( app.tabs.active == "simulation" ){
 				this.render();
 			}
@@ -14607,7 +15632,7 @@ $(document).ready ( function(){
 
 		onTabSelect : function(){
 
-			if ( this.needUpdate && this.params.mode == "quick" ){
+			if ( this.needsUpdate && this.params.mode == "quick" ){
 				this.render();
 			}
 
@@ -14733,14 +15758,15 @@ $(document).ready ( function(){
 
 		},
 
-		render : function(){
+		// Simulation
+		render: function(){
 
 				setLoadingbar(0, "renderSimulation", true, "Rendering Simulation");
 				var ctxW = Math.floor(g_simulationCanvas.clientWidth * g_pixelRatio);
 				var ctxH = Math.floor(g_simulationCanvas.clientHeight * g_pixelRatio);
 				this.renderTo(g_simulationContext, ctxW, ctxH, globalWeave.weave2D8, "bl", this.scrollX, this.scrollY, function(){
 					setLoadingbar("hide");
-					globalSimulation.needUpdate = false;
+					globalSimulation.needsUpdate = false;
 					globalSimulation.created = true;
 				});
 				
@@ -14836,13 +15862,13 @@ $(document).ready ( function(){
 
 				}
 
-				this.textureWmm = Math.round(warpRepeat / warpDensity * 25.4);
-                this.textureHmm = Math.round(weftRepeat / weftDensity * 25.4);
+				this.weaveWmm = Math.round(warpRepeat / warpDensity * 25.4);
+                this.weaveHmm = Math.round(weftRepeat / weftDensity * 25.4);
 
 	      		var warpColors = globalPattern.colors("warp");
 				var weftColors = globalPattern.colors("weft");
 
-				g_simulationDrawContext = getCtx(10, "buffer-canvas", "g_simulationDrawCanvas", drawW, drawH, false);
+				g_simulationDrawContext = getCtx(10, "noshow", "g_simulationDrawCanvas", drawW, drawH, false);
 				g_simulationDrawCanvas.width = drawW;
 				g_simulationDrawCanvas.height = drawH;
 
@@ -16066,8 +17092,8 @@ $(document).ready ( function(){
 			if ( set == "weft"){
 				startIndex = Math.max(start, end);
 				endIndex = Math.min(start, end);
-				startIndex = g_patternLimit - startIndex - 1;
-				endIndex = g_patternLimit - endIndex - 1;
+				startIndex = app.limits.maxPatternSize - startIndex - 1;
+				endIndex = app.limits.maxPatternSize - endIndex - 1;
 			}
 			
 			for (var n = startIndex; n <= endIndex; n++) {
@@ -16115,7 +17141,7 @@ $(document).ready ( function(){
 
 	function selectionLineOnBuffer(pixels, sx, sy, lx, ly, ctxW, ctxH, thick, selectionColor32){
 
-		var x, y;
+		var i, x, y;
 
 		[sx, lx] = sx > lx ? [lx, sx] : [sx, lx];
 		[sy, ly] = sy > ly ? [ly, sy] : [sy, ly];
@@ -16283,7 +17309,8 @@ $(document).ready ( function(){
 			$.doTimeout("selectionAnimation");
 		},
 
-		render : function(){
+		// Selection
+		render: function(){
 
 			var ctx = g_weaveLayer1Context;
 			var ctxW = Math.floor(ctx.canvas.clientWidth * g_pixelRatio);
@@ -16978,8 +18005,14 @@ $(document).ready ( function(){
 
 		var [w, h, t, l, b, r] = globalPositions[element];
 
-    	var ex = origin == "tr" || origin == "br" ? w - clientx + l - 1 - offsetx : clientx - l - offsetx;
+		var ex = origin == "tr" || origin == "br" ? w - clientx + l - 1 - offsetx : clientx - l - offsetx;
     	var ey = origin == "bl" || origin == "br" ? h - clienty + t - 1 - offsety : clienty - t - offsety;
+
+		debug("Client Mouse", clientx+", "+clienty, "system");
+		debug("Element Mouse", element, "system");
+		debug("Element Mouse", ex+", "+ey, "system");
+		debug("Element Size", w+" x "+h, "system");
+		debug("Element Position", t+" "+l+" "+b+" "+r, "system");
 
     	var col = Math.ceil((ex + 1)/pointw * g_pixelRatio);
     	var row = Math.ceil((ey + 1)/pointh * g_pixelRatio);
@@ -17041,67 +18074,70 @@ $(document).ready ( function(){
 
 		debug("graphID", graph);
 		debug("target", target || "-");
-		debug("document.mouseX/mouseY", mousex +"/"+ mousey);
+		// debug("Client Mouse", mousex +", "+ mousey);
 
 		//if ( app.mouse.graph == "weave" || (graph == "weave" && !app.mouse.graph) ){;
 
-		if ( graph == "weave" || app.storage.weavePainting ){
+		if ( graph == "weave" || app.memory.weavePainting ){
 
 			mouse = getMouseFromClientXY("weave", mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 
+			globalStatusbar.set("weave-icon", "weave-36.png");
 			globalStatusbar.set("weaveIntersection", mouse.col, mouse.row);
+			globalStatusbar.set("weaveSize", globalWeave.ends, globalWeave.picks);
+			globalStatusbar.set("shafts");
 
-			if (g_graphTool == "hand" && app.storage.hand && app.storage.handTarget == "weave"){
-				var newScrollX = app.storage.handscrollx + mousex - app.storage.handsx;
-				var newScrollY = app.storage.handscrolly - mousey + app.storage.handsy;
+			if (app.tool == "hand" && app.memory.hand && app.memory.handTarget == "weave"){
+				var newScrollX = app.memory.handscrollx + mousex - app.memory.handsx;
+				var newScrollY = app.memory.handscrolly - mousey + app.memory.handsy;
 				globalWeave.setScrollXY(newScrollX, newScrollY);
 			}
 
-			if (g_graphTool == "selection" && globalSelection.started && !globalSelection.confirmed){
+			if (app.tool == "selection" && globalSelection.started && !globalSelection.confirmed){
 				globalSelection.lastCol = mouse.col;
 				globalSelection.lastRow = mouse.row;
 			}
 
-			if (g_graphTool == "selection" && globalSelection.moveTargetBox && globalSelection.paste_action_step == 0){
+			if (app.tool == "selection" && globalSelection.moveTargetBox && globalSelection.paste_action_step == 0){
 			
 				globalSelection.pasteStartCol = mouse.col;
 				globalSelection.pasteStartRow = mouse.row;
 			
-			} else if ( g_graphTool == "selection" && globalSelection.moveTargetBox && globalSelection.paste_action_step == 1){
+			} else if ( app.tool == "selection" && globalSelection.moveTargetBox && globalSelection.paste_action_step == 1){
 
 				globalSelection.pasteLastCol = mouse.col;
 				globalSelection.pasteLastRow = mouse.row;
 
 			}
 
-			//if (app.mouse.isDown && app.mouse.which !== 2 && app.mouse.graph == "weave" && g_graphTool == "brush") {
+			//if (app.mouse.isDown && app.mouse.which !== 2 && app.mouse.graph == "weave" && app.tool == "brush") {
 
-			if ( app.storage.weavePainting ){
+			if ( app.memory.weavePainting ){
 				g_graphBrushState = app.mouse.which === 1 ? 1 : 0;
 				graphLine2D8("weave", mouse.col, mouse.row, app.mouse.colNum, app.mouse.rowNum, g_graphBrushState, true, false, true); 
 				app.mouse.colNum = mouse.col;
 				app.mouse.rowNum = mouse.row;
 			}
 
-			if (app.mouse.graph == "weave" && app.mouse.which !== 2 && g_graphTool == "line" && g_graphLineStarted && (app.storage.lineX1 !== mouse.col || app.storage.lineY1 !== mouse.row) ) {
+			if (app.mouse.graph == "weave" && app.mouse.which !== 2 && app.tool == "line" && g_graphLineStarted && (app.memory.lineX1 !== mouse.col || app.memory.lineY1 !== mouse.row) ) {
 				globalWeave.render2D8(39, "weave");
 				if ( app.mouse.isDown){
-					app.storage.lineX0 = mouse.col;
-					app.storage.lineY0 = mouse.row;
-					app.storage.lineX1 = mouse.col;
-					app.storage.lineY1 = mouse.row;
-					globalWeave.setGraphPoint2D8("weave", app.storage.lineX0, app.storage.lineY0, app.mouse.which === 1 ? 1 : 0, true, false);
+					app.memory.lineX0 = mouse.col;
+					app.memory.lineY0 = mouse.row;
+					app.memory.lineX1 = mouse.col;
+					app.memory.lineY1 = mouse.row;
+					globalWeave.setGraphPoint2D8("weave", app.memory.lineX0, app.memory.lineY0, app.mouse.which === 1 ? 1 : 0, true, false);
 				} else {
-					debug("linePos", app.storage.lineX0 +", "+ app.storage.lineY0 +", "+ mouse.col +", "+ mouse.row);
-					app.storage.lineMouseCurrentCol = mouse.col;
-					app.storage.lineMouseCurrentRow = mouse.row;
+					debug("linePos", app.memory.lineX0 +", "+ app.memory.lineY0 +", "+ mouse.col +", "+ mouse.row);
+					app.memory.lineMouseCurrentCol = mouse.col;
+					app.memory.lineMouseCurrentRow = mouse.row;
 					if ( hotkeys.shift ){
-						[app.storage.lineX1, app.storage.lineY1] = lineSnapToStraightCoordinates(app.storage.lineX0, app.storage.lineY0, mouse.col, mouse.row);
+						[app.memory.lineX1, app.memory.lineY1] = lineSnapToStraightCoordinates(app.memory.lineX0, app.memory.lineY0, mouse.col, mouse.row);
 					} else {
-						app.storage.lineX1 = mouse.col;
-						app.storage.lineY1 = mouse.row;
+						app.memory.lineX1 = mouse.col;
+						app.memory.lineY1 = mouse.row;
 					}
-					graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
+					graphLine2D8("weave", app.memory.lineX0, app.memory.lineY0, app.memory.lineX1, app.memory.lineY1, app.memory.lineState, true, false);
 				}
 
 			}
@@ -17109,18 +18145,18 @@ $(document).ready ( function(){
 		}
 
 		// Patterns --------
-		if ( graph.in("warp","weft") || app.storage.patternPainting ){
+		if ( graph.in("warp","weft") || app.memory.patternPainting ){
 
 			var pasteMethod;
 
-			var yarnSet = app.storage.patternPainting ? app.storage.patternDrawSet : graph;
+			var yarnSet = app.memory.patternPainting ? app.memory.patternDrawSet : graph;
 			var mouse = getMouseFromClientXY(yarnSet, mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalWeave.scrollY);
 
 			var isWarp = yarnSet == "warp";
 			var isWeft = yarnSet == "weft";
 
 			var pattern = globalPattern[yarnSet];
-			var seamless = isWarp ? globalPattern.seamlessWarp : globalPattern.seamlessWeft;
+			var seamless = isWarp ? globalWeave.params.seamlessWarp : globalWeave.params.seamlessWeft;
 
 			var colNum = mouse.col;
 			var rowNum = mouse.row;
@@ -17135,11 +18171,20 @@ $(document).ready ( function(){
 
 			globalStatusbar.set("patternThread", threadTitle, seamlessThreadNum);
 
-			if ( app.storage.patternPainting ) {
+			if ( app.memory.patternPainting ) {
 
-				var patternStartNum = app.storage.patternPaintingStartNum;
+				var patternStartNum = app.memory.patternPaintingStartNum;
 				var pasteW = Math.abs(rowColNum - patternStartNum) + 1; 
 				var pasteIndex = rowColNum <= patternStartNum ? rowColNum - 1 : rowColNum - pasteW;
+
+				if ( pasteIndex < 0 ){
+					pasteW += pasteIndex;
+					pasteIndex = 0;
+				}
+
+				debug("pasteIndex", pasteIndex);
+				debug("pasteW", pasteW);
+				
 				var code = app.palette.selected;
 				var pasteArr = [code].repeat(pasteW);
 
@@ -17151,9 +18196,14 @@ $(document).ready ( function(){
 					pasteMethod = "extend";
 				}
 
-				var newPattern = paste1D(pasteArr, app.storage.patternDrawCopy, pasteIndex, pasteMethod, "a");
+				var newPattern = paste1D(pasteArr, app.memory.patternDrawCopy, pasteIndex, pasteMethod, "a");
 				debug("newPattern", newPattern);
 				globalPattern.set(43, yarnSet, newPattern, true, 0, false, false);
+
+				if ( globalWeave.params.lockWarpToWeft ){
+					var otherYarnSet = yarnSet == "warp" ? "weft" : "warp";
+					globalPattern.set(43, otherYarnSet, newPattern, true, 0, false, false);
+				}
 
 			}
 
@@ -17174,7 +18224,11 @@ $(document).ready ( function(){
 		if ( graph == "tieup" ){
 
 			mouse = getMouseFromClientXY(graph, mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalTieup.scrollX, globalTieup.scrollY);
-			globalStatusbar.set("tieupIntersection", mouse.col, mouse.row);
+
+			globalStatusbar.set("weave-icon", "tieup-36.png");
+			globalStatusbar.set("weaveIntersection", mouse.col, mouse.row);
+			globalStatusbar.set("weaveSize", globalTieup.treadles, globalTieup.shafts);
+			globalStatusbar.set("shafts");
 
 		}
 
@@ -17182,7 +18236,8 @@ $(document).ready ( function(){
 		if ( graph == "threading" ){
 
 			mouse = getMouseFromClientXY(graph, mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalWeave.scrollX, globalTieup.scrollY);
-			globalStatusbar.set("threadingIntersection", mouse.col, mouse.row);
+			globalStatusbar.set("weaveIntersection", mouse.col, mouse.row);
+			globalStatusbar.set("weave-icon", "threading-36.png");
 
 		}
 
@@ -17190,7 +18245,8 @@ $(document).ready ( function(){
 		if ( graph == "lifting" ){
 
 			mouse = getMouseFromClientXY(graph, mousex, mousey, g_pointPlusGrid, g_pointPlusGrid, globalTieup.scrollX, globalWeave.scrollY);
-			globalStatusbar.set("liftingIntersection", mouse.col, mouse.row);
+			globalStatusbar.set("weaveIntersection", mouse.col, mouse.row);
+			globalStatusbar.set("weave-icon", "lifting-36.png");
 
 		}
 
@@ -17207,8 +18263,8 @@ $(document).ready ( function(){
 
 			mouse = getMouseFromClientXY(graph, mousex, mousey, globalArtwork.pixelW, globalArtwork.pixelW, globalArtwork.scrollX, globalArtwork.scrollY, globalArtwork.width, globalArtwork.height);
 			
-			var aX = globalArtwork.seamlessX ? mouse.end-1 : mouse.col-1;
-			var aY = globalArtwork.seamlessY ? mouse.pick-1 : mouse.row-1;
+			var aX = globalArtwork.params.seamlessX ? mouse.end-1 : mouse.col-1;
+			var aY = globalArtwork.params.seamlessY ? mouse.pick-1 : mouse.row-1;
 			[aX, aY] = isBetween(aX, 0, globalArtwork.width-1) && isBetween(aY, 0, globalArtwork.height-1) ? [aX, aY] : ["-", "-"];
 			globalStatusbar.set("artworkIntersection", aX, aY);
 
@@ -17230,42 +18286,42 @@ $(document).ready ( function(){
 
 		}
 
-		// ThreeD --------
+		// Three --------
 		if ( graph == "three" ){
 
+			if ( !app.mouse.isDown ){
 
+				var threeMousePos = getMouseFromClientXY("three", mousex, mousey);
+				globalThree.doMouseInteraction(threeMousePos);
 
-
+			}
 
 		}
 
-		// ThreeD --------
+		// Model --------
 		if ( graph == "model" ){
 
-			//console.log(e);
 		    var deltaMoveX = e.offsetX-globalModel.prevX;
 		    var deltaMoveY = e.offsetY-globalModel.prevY;
-
-		    debug("deltaMoveX", deltaMoveX, "model");
-		    debug("deltaMoveY", deltaMoveY, "model");
-
-		    if ( globalModel.model && app.mouse.isDown && app.mouse.which == 1 ) {
-		            
+		    if ( globalModel.model && app.mouse.isDown && app.mouse.which == 3 ) {
 		        globalModel.model.rotation.y += toRadians(deltaMoveX * 0.5);
-
 		        globalModel.controls.target.y += (deltaMoveY*0.05);
 		        globalModel.controls.update();
-
 		        if ( deltaMoveX < 0 ){
 		        	globalModel.rotationDirection = -1;
 			    } else if ( deltaMoveX > 0 ){
 			    	globalModel.rotationDirection = 1;
 			    }
-
+			    globalModel.controls.update();
+			    globalModel.render();
 		    }
-
 		    globalModel.prevX = e.offsetX;
 		    globalModel.prevY = e.offsetY;
+
+		    if ( globalModel.model && !app.mouse.isDown ){
+				var modelMousePos = getMouseFromClientXY("model", mousex, mousey);
+				globalModel.doMouseInteraction(modelMousePos);
+			}
 
 		}
 
@@ -17389,26 +18445,31 @@ $(document).ready ( function(){
 			
 			} else {
 
-				if ( app.storage.patternPainting ){
+				if ( app.memory.patternPainting ){
 
-					var cleanedPattern = globalPattern[app.storage.patternDrawSet].removeItem("0");
-					globalPattern.set(232, app.storage.patternDrawSet, cleanedPattern);
-					app.storage.patternPainting = false;
-					app.storage.patternDrawCopy = false;
+					var cleanedPattern = globalPattern[app.memory.patternDrawSet].removeItem("0");
+					globalPattern.set(232, app.memory.patternDrawSet, cleanedPattern);
+					app.memory.patternPainting = false;
+					app.memory.patternDrawCopy = false;
 					globalPattern.updateStatusbar();
 
 				}
 
-				if ( app.storage.weavePainting ){
+				if ( app.memory.weavePainting ){
 
 					graphReserve.setPoints(false, true);
-					globalWeave.setGraph2D8("weave");
-					app.storage.weavePainting = false;
+					globalWeave.setGraph(0, "weave");
+					app.memory.weavePainting = false;
 
 				}
 
+				if ( app.memory.fillStripeYarnSet ){
+					globalPattern.removeBlank(app.memory.fillStripeYarnSet);
+					app.memory.fillStripeYarnSet = false;
+				}
 
-				if (app.mouse.isDown && g_graphTool == "selection" && app.mouse.which == 1){
+
+				if (app.mouse.isDown && app.tool == "selection" && app.mouse.which == 1){
 
 					var sc = globalSelection.startCol;
 					var sr = globalSelection.startRow;
@@ -17425,7 +18486,7 @@ $(document).ready ( function(){
 				}
 
 				app.mouse.isDown = false;
-				app.storage.hand = false;
+				app.memory.hand = false;
 
 			}
 
@@ -17458,49 +18519,55 @@ $(document).ready ( function(){
 
 		if (key == "Shift" && type == "keydown"){
 
-			if ( g_graphLineStarted && g_graphTool == "line"){
+			if ( g_graphLineStarted && app.tool == "line"){
 
 				globalWeave.render2D8("11", "weave");
-				[app.storage.lineX1, app.storage.lineY1] = lineSnapToStraightCoordinates(app.storage.lineX0, app.storage.lineY0, app.storage.lineMouseCurrentCol, app.storage.lineMouseCurrentRow);
-				graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineX1, app.storage.lineY1, app.storage.lineState, true, false);
+				[app.memory.lineX1, app.memory.lineY1] = lineSnapToStraightCoordinates(app.memory.lineX0, app.memory.lineY0, app.memory.lineMouseCurrentCol, app.memory.lineMouseCurrentRow);
+				graphLine2D8("weave", app.memory.lineX0, app.memory.lineY0, app.memory.lineX1, app.memory.lineY1, app.memory.lineState, true, false);
 
 			}
 
 		} else if (key == "Shift" && type == "keyup"){
 
-			if ( g_graphLineStarted && g_graphTool == "line"){
+			if ( g_graphLineStarted && app.tool == "line"){
 				globalWeave.render2D8("11", "weave");
-				graphLine2D8("weave", app.storage.lineX0, app.storage.lineY0, app.storage.lineMouseCurrentCol, app.storage.lineMouseCurrentRow, app.storage.lineState, true, false);
+				graphLine2D8("weave", app.memory.lineX0, app.memory.lineY0, app.memory.lineMouseCurrentCol, app.memory.lineMouseCurrentRow, app.memory.lineState, true, false);
 			}
 
 		} else if (key == "Escape" && type == "keydown"){
 
-			if (g_graphLineStarted && g_graphTool == "line"){
+			if (g_graphLineStarted && app.tool == "line"){
 				g_graphLineStarted = false;
 				globalWeave.render2D8("11", "weave");
 			}
 
-			if ( app.storage.patternPainting ){
+			if ( app.memory.patternPainting ){
 
-				globalPattern.set(122, app.storage.patternDrawSet, app.storage.patternDrawCopy, true, 0, false, false);
-				app.storage.patternPainting = false;
+				globalPattern.set(122, app.memory.patternDrawSet, app.memory.patternDrawCopy, true, 0, false, false);
+
+				if ( globalWeave.params.lockWarpToWeft ){
+					var otherYarnSet = app.memory.patternDrawSet == "warp" ? "weft" : "warp";
+					globalPattern.set(43, otherYarnSet, app.memory.patternDrawCopy, true, 0, false, false);
+				}
+
+				app.memory.patternPainting = false;
 				app.mouse.reset();
 
 			}
 
-			if ( app.storage.weavePainting ){
+			if ( app.memory.weavePainting ){
 				app.mouse.reset();
 				graphReserve.clear();
 				globalWeave.render2D8("11", "weave");
-				app.storage.weavePainting = false;
+				app.memory.weavePainting = false;
 
 			}
 
-			if (g_graphTool == "selection" && globalSelection.started && globalSelection.confirmed && globalSelection.paste_action){
+			if (app.tool == "selection" && globalSelection.started && globalSelection.confirmed && globalSelection.paste_action){
 			
 				globalSelection.cancelAction();
 			
-			} else if (g_graphTool == "selection" && globalSelection.started && !globalSelection.paste_action){
+			} else if (app.tool == "selection" && globalSelection.started && !globalSelection.paste_action){
 			
 				globalSelection.clear();
 			
