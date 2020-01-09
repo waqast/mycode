@@ -144,6 +144,13 @@ Array.prototype.countOf = function(item) {
     return count;
 };
 
+Array.prototype.uniquePush = function(item) {
+    if ( this.indexOf(item) === -1 ){
+    	this.push(item);
+    }
+    return this;
+};
+
 // -------------------------------------------------------------
 // Same Arrays with or without same arrangement-----------------
 // -------------------------------------------------------------
@@ -223,7 +230,11 @@ Array.prototype.copy2D8 = function(sx = 0, sy = 0, lx = 0, ly = 0, overflowX = "
 	let result = canvas.clone2D8();
 
 	if ( sx > lx ){
-		[sx, lx] = [sx, lx];
+		[sx, lx] = [lx, sx];
+	}
+
+	if ( sy > ly ){
+		[sy, ly] = [ly, sy];
 	}
 
 	if ( overflowX == "trim" ){
@@ -590,13 +601,6 @@ function unZipWeave2(zipStr){
 function unZipWeave(weaveString){
 	return weaveString.split("x").map(e => unZipPattern(e));
 }
-
-// ----------------------------------------------------------------------------------
-// Search Item in Array
-// ----------------------------------------------------------------------------------
-Array.prototype.contains = function(obj) {
-    return this.indexOf(obj) > -1;
-};
 
 // ----------------------------------------------------------------------------------
 // Download Text As File
@@ -1300,16 +1304,13 @@ function strToArr(item){
 	}
 }
 
-Array.prototype.is2DArray = function(arr) {
-	return arr.length && arr[0].length;
-};
-
 Array.prototype.occurrence = function(val) {
   return this.filter(e => e === val).length;
 };
 
 // Shift 1D array n positive to right, n negative to left
 Array.prototype.shift1D = function(n) {
+	n = n % this.length;	
 	return this.slice(-n, this.length).concat(this.slice(0, -n));
 };
 
@@ -1629,19 +1630,18 @@ function chunk(a, l) {
 // -------------------------------------------------------------
 // Return Context ----------------------------------------------
 // -------------------------------------------------------------
-function getCtx(instanceId, parentId, canvasId, canvasW, canvasH, visible = true){
-
+function getCtx(instanceId, containerId, canvasId, canvasW, canvasH, visible = true){
 	var pixelRatio = 1;
-	var parent = $("#"+parentId);
-	if ( parent.has("#"+canvasId).length == 0 ){
-		$("<canvas/>", {"id":canvasId}).appendTo(parent);
+	var container = $("#"+containerId);
+	if ( $("#"+canvasId).length == 0 ){
+		$("<canvas/>", {"id":canvasId}).appendTo(container);
 	}
 	var canvas = $("#"+canvasId);
 	var ctx = canvas[0].getContext("2d");
 	window[canvasId] = document.getElementById(canvasId);
 	if ( visible ){
-		pixelRatio = wd_getPixelRatio();
-		parent.addClass("graph-container");
+		pixelRatio = window.devicePixelRatio;
+		container.addClass("graph-container");
 		canvas.addClass("graph-canvas");
 		canvas.width = canvasW + "px";
 	    canvas.height = canvasH + "px";
@@ -1738,7 +1738,7 @@ function treadling2D8_treadling1D(treadling2D8){
 	return treadling2D8.rotate2D8("r").flip2D8("y").map(a => a.indexOf(1)+1);
 }
 
-function countPlainPoints(weave2D8){
+function tabbyPercentage(weave2D8){
 	var l, r, b, t, tl, bl, tr, br, state, lx, rx, ty, by;
 	var w = weave2D8.length;
 	var h = weave2D8[0].length;
@@ -1798,10 +1798,6 @@ function getWeaveFromParts(tieup, threading, lifting){
 		});
 	}
 	return weave;
-}
-
-function wd_getPixelRatio(){
-	return window.devicePixelRatio;
 }
 
 function averageHex(hex1, hex2){
@@ -2032,3 +2028,78 @@ function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
+function objectForEach(object, fn) {
+    Object.keys(object).forEach(key => {
+        fn(object[key],key, object)
+    })
+}
+
+function getTimeStamp(){
+	return (new Date()).getTime();
+}
+
+function createElementById(container, type, id){
+	var element = document.getElementById(id);
+	if( typeof(element) != 'undefined' && element != null ) element.parentNode.removeChild(element);
+	element = document.createElement(type);
+    element.id = id;
+	var container = document.getElementById(container);
+    container.appendChild(element);
+	return element;	
+}
+
+function getWeaveProps(weave, shfatLimit = 96){
+
+	var shafts, pegplan2D8, threading1D, threading2D8, tieup2D8, treadling1D, treadling2D8;
+
+	var pd = unique2D(weave, shfatLimit);
+
+	if ( pd.inLimit ){
+
+		var ends = weave.length;
+		var picks = weave[0].length;
+		pegplan2D8 = pd.uniques;
+		threading1D = pd.posIndex.map(a => a+1);
+		shafts = arrayMax(threading1D);
+		threading2D8 = newArray2D8(15, ends, shafts);
+		threading1D.forEach(function(shaft, i) {
+			threading2D8[i][shaft - 1] = 1;
+		});
+		var rotatedpegplan = pegplan2D8.rotate2D8("r");
+		var rotatedFlippedpegplan = rotatedpegplan.flip2D8("y");
+		var tt = unique2D(rotatedFlippedpegplan);
+		tieup2D8 = tt.uniques;
+		treadling1D = tt.posIndex.map(a => a+1);
+		var tieupW = tieup2D8.length;
+		var tieupH = tieup2D8[0].length;
+		treadling2D8 = newArray2D8(15, picks, tieupW);
+		treadling1D.forEach(function(lever, i) {
+			treadling2D8[i][lever - 1] = 1;
+		});
+		treadling2D8 = treadling2D8.flip2D8("y");
+		treadling2D8 = treadling2D8.rotate2D8("l");
+
+	}
+
+	return {
+		inLimit : pd.inLimit,
+		shafts : shafts,
+		pegplan2D8 : pegplan2D8,
+		threading1D : threading1D,
+		threading2D8 : threading2D8,
+		tieup2D8 : tieup2D8,
+		treadling1D : treadling1D,
+		treadling2D8 : treadling2D8
+	};
+
+}
+
+function saveCanvasAsImage(canvas, fileName){
+	canvas.toBlob(function(blob){
+		saveAs(blob, fileName);
+	});
+}
+
+function IsJsonString(str) {
+	try { JSON.parse(str); } catch (e) { return false; } return true;
+}

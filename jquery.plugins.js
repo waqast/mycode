@@ -6,18 +6,20 @@
 	    });
 	};
 
-	$.fn.numVal = function() {
-
-		if( $(this).is( "input[type=text]" ) ){
-
-			return Number($(this).val());
-		
+	// Stepper Numeric Value
+	$.fn.num = function(val) {
+		var input = $(this).is("input[type=text]") ? $(this) : $(this).find("input[type=text]").first();
+		if ( val == undefined ){
+			return Number(input.val());
 		} else {
-
-			return Number($(this).find("input[type=text]").first().val());
-
+			input.val(val);
+			return this;
 		}
+	};
 
+	$.fn.bgcolor = function(hex) {
+		$(this).css("background-color", hex);
+		return this;
 	};
 
 	$.fn.visible = function() {

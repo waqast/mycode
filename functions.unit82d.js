@@ -116,80 +116,6 @@ Uint8Array.prototype.paste1D8 = function(tile, pasteX = 0, overflow = "trim", bl
 
 }
 
-Uint8Array.prototype.copy2D8 = function(sx = 0, sy = 0, lx, ly, overflowX, overlfowY, blank){
-
-	var x, y, ri, si;
-
-	var sw = this.get("w");
-	var sh = this.get("h");
-
-	if (lx === undefined){
-		lx = sw - 1;
-	}
-
-	if (ly === undefined){
-		ly = sh - 1;
-	}
-
-	var copyW = lx - sx + 1;
-	var copyH = ly - sy + 1;
-
-	var res8W = copyW * copyH + 2;
-	var res8 = new Uint8Array(res8W);
-	res8.setWidth(copyW);
-
-	for (x = 0; x < copyW; ++x) {
-		for (y = 0; y < copyH; ++y) {
-			ri = y * copyW + x + 2;
-			si = (y+sy) * sw + (x+sx) + 2;
-			res8[ri] = this[si];
-		}
-	}
-
-	if ( sx > lx ){
-		[sx, lx] = [lx, sx];
-	}
-
-	if ( sy > ly ){
-		[sy, ly] = [ly, sy];
-	}
-
-	/*
-
-	if ( overflowX === "trim" ){
-
-		startX = limitNumber(startX, 0, canvasW);
-		lastX = limitNumber(lastX, 0, canvasW);
-		copyW = lastX + 1;
-		result = canvas.slice(startX, copyW);
-
-	} else if ( overflowX === "loop" ){
-
-		copyW = lastX - startX + 1;
-		canvas = canvas.shift1D(-startX);
-		result = [blank].repeat(copyW);
-		result = paste1D(canvas, result, 0, "repeat");
-
-	} else if ( overflowX === "extend" ){
-
-		var leftIndent = startX < 0 ? -startX : 0;
-		resultW = lastX - startX + 1;
-		startX = limitNumber(startX, 0, canvasW);
-		lastX = limitNumber(lastX, 0, canvasW);
-		copyW = lastX + 1;
-		canvas = canvas.slice(startX, copyW);
-		result = [blank].repeat(resultW);
-
-	}
-
-	result = result.map(a => copy1D(a, startY, lastY, overflowY, blank));
-
-	*/
-
-	return res8;
-
-}
-
 // Set and Get Value of Uint8Array Item with x and y
 Uint8Array.prototype.value8 = function(x, y, val){
 	var sw, sh;
@@ -469,6 +395,27 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 				res[x][y]= this[sx][sy];
 			}
 		}
+	} else if (command === "reversex"){
+
+		res = newArray2D8(42, rw, rh);	
+		for (x = 0; x < rw; ++x) {
+			for (y = 0; y < rh; ++y) {
+				sx = sw - x - 1;
+				sy = y;
+				res[x][y]= 1 - this[sx][sy];
+			}
+		}
+
+	} else if (command === "reversey"){
+
+		res = newArray2D8(43, rw, rh);
+		for (x = 0; x < rw; ++x) {
+			for (y = 0; y < rh; ++y) {
+				sx = x;
+				sy = sh - y - 1;
+				res[x][y]= 1 - this[sx][sy];
+			}
+		}
 
 	} else if (command === "flipx"){
 
@@ -568,6 +515,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 	} else if (command === "shiftx"){
 
 		res = newArray2D8(52, rw, rh);
+
 		for (x = 0; x < sw; ++x) {
 			sx = loopNumber(x-val, sw);
 			for (y = 0; y < sh; ++y) {
@@ -1134,6 +1082,10 @@ function convert_2d8_str(array2D8){
 
 function convert_str_2d8(str){
 	return convert_uint8_2d8(convert_str_uint8(str));
+}
+
+function isArray2D(arr){
+	return arr !== undefined && Array.isArray(arr) && !!arr.length && arr[0] !== undefined && !!arr[0].length;
 }
 
 Array.prototype.is2D8 = function(){
