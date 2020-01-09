@@ -13345,7 +13345,7 @@ $(document).ready ( function(){
 					var _this = this;
 					var timeStamp = getTimeStamp();
 					var configs = {};
-					for ( parent in this.data ) {
+					for ( let parent in this.data ) {
 						if ( this.data.hasOwnProperty(parent) && this.data[parent].length ){
 							this.data[parent].forEach(function(param){
 								_this.collect(configs, parent, param);
@@ -13374,7 +13374,7 @@ $(document).ready ( function(){
 				}
 				if ( configs ){
 					var configs = JSON.parse(configs);
-					for ( parent in this.data ) {
+					for ( let parent in this.data ) {
 						if ( this.data.hasOwnProperty(parent) && this.data[parent].length ){
 							this.data[parent].forEach(function(param){
 								_this.apply(configs, parent, param);
@@ -14563,7 +14563,7 @@ $(document).ready ( function(){
 			for (var x = 0; x < shafts; x++) {
 				tieup2D8[x][x] = 1;
 			}
-			this.set(0, "tieup", tieup2D8, {propagate: false});
+			return tieup2D8;
 
 		},
 
