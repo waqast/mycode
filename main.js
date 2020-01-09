@@ -13234,7 +13234,7 @@ $(document).ready ( function(){
 
 				if ( importWeave ){
 					var liftingMode = getObjProp(stateObj, "lfm", "weave");
-					setLiftingMode(liftingMode, false);
+					setLiftingMode(liftingMode);
 					if ( liftingMode == "weave" ){
 						var weave = getObjProp(stateObj, "wve", false);
 						q.graph.set(1, "weave", convert_str_2d8(weave), {render: false});

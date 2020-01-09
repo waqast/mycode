@@ -434,7 +434,8 @@ function drawFloat(origin, pixels8, pixels32, ctxW, ctxH, patternProfile, positi
 
 function drawWarpFloat(origin, pixels8, pixels32, ctxW, ctxH, patternProfile, positionProfile, thicknessProfile, floatLiftFactor, zoom, floatObj, xNodes, yNodes, floatGradients, drawMethod, paletteColors){
 
-	var i, x, y, code, color, nodeThickness, nodeHT, floatGradient, nodeColor, floatLift, nodeX, nodeY, weftNodeHT, pNodeHT, nNodeHT, pNodeY, nNodeY, sx, sy, ly, floatL, centerNode;
+	var i, x, y, code, color, nodeThickness, nodeHT, floatGradient, nodeColor, floatLift, nodeX, nodeY, warpNodeHT, weftNodeHT, pNodeHT, nNodeHT, pNodeX, pNodeY, nNodeX, nNodeY, sx, sy, lx, ly, floatL, centerNode;
+	var i_prev, i_next;
 
 	var i_step = xNodes;
 	var floatNode = -1;
@@ -525,7 +526,8 @@ function drawWarpFloat(origin, pixels8, pixels32, ctxW, ctxH, patternProfile, po
 
 function drawWeftFloat(origin, pixels8, pixels32, ctxW, ctxH, patternProfile, positionProfile, thicknessProfile, floatLiftFactor, zoom, floatObj, xNodes, yNodes, floatGradients, drawMethod, paletteColors){
 
-	var i, x, y, code, color, nodeThickness, nodeHT, floatGradient, nodeColor, floatLift, nodeX, nodeY, weftNodeHT, pNodeHT, nNodeHT, pNodeY, nNodeY, sx, sy, lx, floatL, centerNode;
+	var i, x, y, code, color, nodeThickness, nodeHT, floatGradient, nodeColor, floatLift, nodeX, nodeY, warpNodeHT, weftNodeHT, pNodeHT, nNodeHT, pNodeX, pNodeY, nNodeX, nNodeY, sx, sy, lx, ly, floatL, centerNode;
+	var i_prev, i_next;
 
 	var i_step = 1;
 	var floatNode = -1;

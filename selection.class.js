@@ -443,7 +443,7 @@ class Selection {
 
     static set ctx(value){
         if ( Selection.isActive ){
-            return Selection.active.ctx = value; 
+            Selection.active.ctx = value; 
         }
     }
 
