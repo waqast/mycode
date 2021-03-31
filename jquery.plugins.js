@@ -7,19 +7,35 @@
 	};
 
 	// Stepper Numeric Value
-	$.fn.num = function(val) {
+	$.fn.num = function(val, precision) {
 		var input = $(this).is("input[type=text]") ? $(this) : $(this).find("input[type=text]").first();
 		if ( val == undefined ){
 			return Number(input.val());
 		} else {
-			input.val(val);
+
+			if ( !isNaN(val) ){
+				if ( precision == undefined ){
+					input.val(val);
+				} else {
+					var p = Math.pow(10, precision);
+					input.val(Math.round(val * p)/p);
+				}
+			}
+			
 			return this;
 		}
 	};
 
-	$.fn.bgcolor = function(hex) {
-		$(this).css("background-color", hex);
-		return this;
+	// Get or Set the Background Color
+	$.fn.bgcolor = function(color) {
+		if ( color == undefined ){
+			color = $(this).css("background-color");
+			color = rgbStringToHex(color);
+			return color;
+		} else {
+			$(this).css("background-color", color);
+			return this;
+		}
 	};
 
 	$.fn.visible = function() {
@@ -45,5 +61,5 @@
 	$.fn.textEquals = function (text) {
 		return $(this).filter(function() { return $(this).text().trim() === text; });
 	};
- 
+
 }( jQuery ));

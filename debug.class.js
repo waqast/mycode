@@ -163,6 +163,12 @@ class Debug {
 
     }
 
+    static log(value){
+        var debugTab = Debug.getTab("log");
+        var debugList = debugTab.find("ul.debug-list");
+        $('<li>').text(value).appendTo(debugList);
+    }
+
     static input(type, title, values, tab = "system", callback){
 
         var directUpdate = !values ? true : false;
@@ -235,10 +241,11 @@ class Debug {
         Debug.timeRecords[ref] = performance.now();
     }
 
-    static timeEnd(ref, tab = "system"){
+    static timeEnd(ref, tab = "system", tip = false){
         var ms = performance.now() - Debug.timeRecords[ref];
         ms = ms < 10 ? Math.round(ms*100)/100 : Math.round(ms);
         Debug.item(ref, ms, tab);
+        if ( tip ) $("#debug-tip").text(~~ms);
         delete Debug.timeRecords[ref];
     }
 

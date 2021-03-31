@@ -28,15 +28,14 @@ function flipIndex(num, height){
 	return height - num - 1;
 }
 
-function lookup(item, itemArr, resultArr, notMatchVal = false){
-
-	var index = itemArr.indexOf(item);
-	if ( index !== -1 && resultArr[index] !== undefined ){
-		return resultArr[index];
+// Lookup item in items and return from results on same index.
+function lookup(item, items, results, noMatchValue = false){
+	var index = items.indexOf(item);
+	if ( index !== -1 && results[index] !== undefined ){
+		return results[index];
 	} else {
-		return notMatchVal;
+		return noMatchValue;
 	}
-
 }
 
 function smallerRatio(a, b){
@@ -145,10 +144,12 @@ Array.prototype.countOf = function(item) {
 };
 
 Array.prototype.uniquePush = function(item) {
-    if ( this.indexOf(item) === -1 ){
-    	this.push(item);
-    }
+    if ( this.indexOf(item) === -1 ) this.push(item);
     return this;
+};
+
+Array.prototype.last = function () {
+    return this[this.length - 1];
 };
 
 // -------------------------------------------------------------
@@ -209,11 +210,23 @@ Array.prototype.rotate2D = function(direction) {
 };
 
 Array.prototype.rotate2D8 = function(dir) {
-	return this.transform2D8(6, "rotate"+dir);
+	var res;
+	if ( !this || !(this.length && this[0].length) ){
+		res = this;
+	} else {
+		res = this.transform2D8(6, "rotate"+dir);
+	}
+	return res;
 };
 
 Array.prototype.flip2D8 = function(dir) {
-	return this.transform2D8(7, "flip"+dir);
+	var res;
+	if ( !this || !(this.length && this[0].length) ){
+		res = this;
+	} else {
+		res = this.transform2D8(7, "flip"+dir);
+	}
+	return res;
 };
 
 // Clone Object or Array
@@ -336,13 +349,13 @@ function removeItem(array, item) {
 }
 
 Array.prototype.random = function(num = false) {
-	if (!num){
-		num = this.length;
-	}
-	var modArray = this.slice(0);
-	modArray = modArray.shuffle();
-	modArray = modArray.slice(0, num);
-	return modArray;
+	if (!num) num = this.length;
+	var original = this.slice(0).shuffle();
+	var additional = original.repeat(Math.ceil(num/this.length)-1).shuffle();
+	var res = original.concat(additional);
+	res = res.slice(0, num);
+	res = res.shuffle();
+	return res;
 };
 
 
@@ -375,7 +388,7 @@ Array.prototype.sum = function(selector) {
 // -------------------------------------------------------------
 Array.prototype.filterInRange = function(min, max) {
 	return this.filter(function(item) {
-		return item >= min && item <= max;
+		return item !== "" && item >= min && item <= max;
 	});
 };
 	
@@ -406,6 +419,17 @@ Array.prototype.shuffle = function() {
 	return newArray;
 };
 
+Array.prototype.shuffleInPlace = function() {
+	var i = this.length, j, temp;
+	if ( i === 0 ) return this;
+	while ( --i ) {
+		j = Math.floor( Math.random() * ( i + 1 ) );
+		temp = this[i];
+		this[i] = this[j];
+		this[j] = temp;
+	}
+};
+
 // -------------------------------------------------------------
 // Repeat 1D Array ---------------------------------------------
 // -------------------------------------------------------------
@@ -415,13 +439,6 @@ Array.prototype.repeat = function(count) {
 		a = a.concat(this);
 	}
 	return a;
-};
-
-// ----------------------------------------------------------------------------------
-// Remove One Array from Other
-// ----------------------------------------------------------------------------------
-Array.prototype.removeArray = function(arr) { 
-  	return this.filter(function(obj) { return arr.indexOf(obj) == -1; });
 };
 
 // ----------------------------------------------------------------------------------
@@ -456,7 +473,13 @@ function goodFileName(fileName, requireExt, AlternateName){
 // Removes All Occurence of an element from array --------------
 // -------------------------------------------------------------
 Array.prototype.remove = function(what) { 
-    return this.filter(e => e !== what);
+
+	what = Array.isArray(what) ? what : [what];
+  	return this.filter( function( el ) {
+	  return !what.includes( el );
+	});
+
+    // return this.filter(e => e !== what);
 };
 
 Array.prototype.removeItem = function(what) { 
@@ -687,16 +710,16 @@ Array.prototype.indicesOf = function(search){
 	return indices;
 };
 
-function mapNumberToRange(num, minIn, maxIn, minOut, maxOut, rounded = true, limit = true){
-	var out, ratio;
+function mapNumberToRange(num, minIn, maxIn, minOut, maxOut, rounded = true, clamp = true){
+	var out;
 	if ( minIn == maxIn ){
-		out = minOut + (maxOut - minOut)/2;
+		out = minOut + (maxOut - minOut) / 2;
 	} else {
-		ratio = (maxOut - minOut) / (maxIn - minIn);
+		var ratio = (maxOut - minOut) / (maxIn - minIn);
 		out = minOut + (num - minIn) * ratio;
 	}
-	out = limit ? limitNumber(out, minOut, maxOut) : out;
-	out = rounded ? Math.round(out) : out;
+	if ( clamp ) out = limitNumber(out, minOut, maxOut);
+	if ( rounded ) out = Math.round(out);
 	return out;
 }
 
@@ -705,17 +728,28 @@ function mapNumber(num, start, end){
 }
 
 // reset to 0 if more than or equat to divisor. MOD operation
+// negative numbers turns to positive on diviser side
 function loopNumber(num, divisor){
-	return ((num % divisor) + divisor) % divisor;
-	//return num & (divisor - 1);
+	return ~~((~~num % divisor) + divisor) % divisor;
+}
+
+// reset to 0 if more than or equat to divisor. MOD operation
+// negative numbers turns to positive on diviser side
+function loopNumberFloating(num, divisor){
+	return (num % divisor) + divisor % divisor;
 }
 
 // gives number between limits.
 function limitNumber(num, min, max){
-	if ( max < min ){
-		[min, max] = [max, min];
-	}
+	if ( max < min ) [min, max] = [max, min];
 	return	num < min ? min : num > max ? max : num;
+}
+
+// If position is at Center then 1, at Edge 0.
+function centerRatio(pos, size, range){
+	let half = (size-1) / 2
+	if ( pos >= range && pos < size-range  ) pos = Math.floor(half);
+	return mapNumberToRange( Math.abs(half-pos), half - Math.floor(half), half, 0.25, -0.25, false, true);
 }
 
 
@@ -741,15 +775,12 @@ function getDate(format){
 		return monthNames[monthIndex].substring(0,3) + " "+ day + ", " + year;
 	} else {
 		return monthNames[monthIndex] + " "+ day + ", " + year;
-	}
-	
-	
+	}	
 }
 
 function removeEmptyEnds(weave){
 	return weave.filter(a => !a.allEqual("D"));
 }
-
 
 function weave2Array(arr){
 	let arr2D = arr;
@@ -820,36 +851,6 @@ function unique2D(array2D, maxLimit = 0){
 		uniques : uniques,
 		posIndex : posIndex
 	};
-}
-
-// Color HSL (degrees, %, %) to HEX 
-function hslToHex(h, s, l) {
-  h /= 360;
-  s /= 100;
-  l /= 100;
-  let r, g, b;
-  if (s === 0) {
-    r = g = b = l; // achromatic
-  } else {
-    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    };
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1 / 3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1 / 3);
-  }
-  const toHex = x => {
-    const hex = Math.round(x * 255).toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
-  };
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
 // -------------------------------------------------------------
@@ -1145,22 +1146,25 @@ function paste2D8(tile, canvas, pasteX = 0, pasteY = 0, xOverflow = "trim", yOve
 
 	let x, result, resultW, pasteW, canvasW, canvasX, tileW, tileX;
 
-	canvas = canvas.clone2D8();
 	canvasW = canvas.length;
 	canvasH = canvas[0].length;
 
-	tile = tile.clone2D8();
+	canvasX = pasteX >= 0 ? 0 : -pasteX;
+	canvasY = pasteY >= 0 ? 0 : -pasteY;
+
 	tileW = tile.length;
 	tileH = tile[0].length;
 
 	resultW = xOverflow == "extend" ? Math.max(canvasW, tileW, canvasW - pasteX, tileW + pasteX) : canvasW;
 	resultH = yOverflow == "extend" ? Math.max(canvasH, tileH, canvasH - pasteY, tileH + pasteY) : canvasH;
 
-	result = newArray2D8(37, resultW, resultH);
-	canvasX = pasteX >= 0 ? 0 : -pasteX;
-	canvasY = pasteY >= 0 ? 0 : -pasteY;
-	for (x = 0; x < canvasW; x++) {
-		result[x+canvasX] = paste1D8(canvas[x], result[x+canvasX], canvasY, "trim", blank);
+	if ( resultW == canvasW && resultH == canvasH && !canvasX && !canvasY ){
+		result = canvas.clone2D8();
+	} else {
+		result = newArray2D8(37, resultW, resultH);
+		for (x = 0; x < canvasW; x++) {
+			result[x+canvasX] = paste1D8(canvas[x], result[x+canvasX], canvasY, "trim", blank);
+		}
 	}
 
 	if ( xOverflow == "trim" ){
@@ -1217,15 +1221,9 @@ function newArray2D(w, h, filler = false){
 }
 
 function newArray2D8(instanceId, w, h){
-
-	// console.log(["newArray2D8", instanceId, w, h]);
-
-	var arr2D8 = [];
-	arr2D8.length = w;
-	for (var x = 0; x < w; ++x) {
-		arr2D8[x] = new Uint8Array(h);
-	}
-	return arr2D8;
+	var res = [], x = w; res.length = w;
+	while (x--) { res[x] = new Uint8Array(h); }
+	return res;
 }
 
 function paste2D_old(tile, canvas, pasteX = 0, pasteY = 0, xOverflow = "trim", yOverflow = "trim", blank = "") {
@@ -1330,6 +1328,10 @@ Array.prototype.allEqual = function(value = this[0]){
 	return this.every((val, i, arr) => val === value);
 };
 
+Array.prototype.contains = function(...args){
+	return args.filter(i => this.indexOf(i) > -1 ).length;
+};
+
 // If All Elements of An Array Are Same
 function allElementsSame(arr, val){
 	var i, res = true;
@@ -1366,142 +1368,6 @@ Uint8Array.prototype.convertToArray2D = function(w, h){
 	return array2D;
 };
 
-function hexToRgb(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
-
-function hexToRgba1(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-        a: 1
-    } : null;
-}
-
-function hexToRgba255(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-        a: 255
-    } : null;
-}
-
-function hexToColor32(hex, alpha = 255) {
-	var color = hexToRgb(hex);
-    return rgbaToColor32(color.r, color.g, color.b, alpha);
-}
-
-function colorHexShade(hex, percent){
-	var rgba = hexToRgb(hex);
-	var R = rgba.r;
-	var G = rgba.g;
-	var B = rgba.b;
-	if ( percent < 0 ){
-		R = parseInt(R - (256 - R) * percent / 100);
-		G = parseInt(G - (256 - G) * percent / 100);
-		B = parseInt(B - (256 - B) * percent / 100);
-	} else if ( percent > 0 ){
-		R = parseInt(R - R * percent / 100);
-		G = parseInt(G - G * percent / 100);
-		B = parseInt(B - B * percent / 100);
-	}
-    R = limitNumber(R, 0, 255);
-    G = limitNumber(G, 0, 255);
-    B = limitNumber(B, 0, 255);
-    return RGBToHex(R, G, B);
-}
-
-function colorShade(rgba, percent){
-	var R = rgba.r;
-	var G = rgba.g;
-	var B = rgba.b;
-	var A = rgba.a;
-	if ( percent < 0 ){
-		R = parseInt(R - (256 - R) * percent / 100);
-		G = parseInt(G - (256 - G) * percent / 100);
-		B = parseInt(B - (256 - B) * percent / 100);
-	} else if ( percent > 0 ){
-		R = parseInt(R - R * percent / 100);
-		G = parseInt(G - G * percent / 100);
-		B = parseInt(B - B * percent / 100);
-	}
-    R = limitNumber(R, 0, 255);
-    G = limitNumber(G, 0, 255);
-    B = limitNumber(B, 0, 255);
-    return { r : R, g : G, b : B, a : A };
-}
-
-function color32Shade(rgb, percent){
-	var R = rgb.r;
-	var G = rgb.g;
-	var B = rgb.b;
-	if ( percent < 0 ){
-		R = parseInt(R - (256 - R) * percent / 100);
-		G = parseInt(G - (256 - G) * percent / 100);
-		B = parseInt(B - (256 - B) * percent / 100);
-	} else if ( percent > 0 ){
-		R = parseInt(R - R * percent / 100);
-		G = parseInt(G - G * percent / 100);
-		B = parseInt(B - B * percent / 100);
-	}
-    R = limitNumber(R, 0, 255);
-    G = limitNumber(G, 0, 255);
-    B = limitNumber(B, 0, 255);
-    return colorRGBTo32BitSolid(R, G, B);
-}
-
-// Color to Gradient Array, start = shading -100~100; -100 lighter, +100 darker in percentage.
-function getGradient(width, rgba, start, end, type = "linear"){
-	let gradient = [], px;
-	if ( type == "linear" || width == 2){
-		for (px = 0; px < width; ++px) {
-			gradient[px] = colorShade(rgba, mapNumberToRange(px, 0, width-1, start, end));
-		}
-	} else if ( type == "3d" ){
-		[start, end] = [end,start];
-		let half = Math.ceil(width/2)-1;
-		let right = width - half;
-		for (px = 0; px < right; ++px) {
-			gradient[width-px-1] = colorShade(rgba, mapNumberToRange(px, 0, right-1, start, end));
-		}
-		for (px = 0; px < half; ++px) {
-			gradient[px] = gradient[width-px-1];
-		}
-	}
-	return gradient;
-}
-
-// Color to Gradient Array, start = shading -100~100; -100 lighter, +100 darker in percentage.
-function getGradient32(width, rgba, start, end, type = "linear"){
-
-	let gradient = [], px;
-	if ( type == "linear" || width == 2){
-		for (px = 0; px < width; ++px) {
-			gradient[px] = color32Shade(rgba, mapNumberToRange(px, 0, width-1, start, end));
-		}
-	} else if ( type == "3d" ){
-		[start, end] = [end,start];
-		let half = Math.ceil(width/2)-1;
-		let right = width - half;
-		for (px = 0; px < right; ++px) {
-			gradient[width-px-1] = color32Shade(rgba, mapNumberToRange(px, 0, right-1, start, end));
-		}
-		for (px = 0; px < half; ++px) {
-			gradient[px] = gradient[width-px-1];
-		}
-	}
-	return gradient;
-}
-
 // String Functions
 String.prototype.in = function (...args) {
     return args.indexOf(this.toString()) > -1;
@@ -1511,36 +1377,6 @@ String.prototype.in = function (...args) {
 Number.prototype.in = function (...args) {
     return args.indexOf(this) > -1;
 };
-
-function rgba32_rgba(uint32){
-
-	var a = uint32 >> 24 & 255;
-	var b = uint32 >> 16 & 255;
-	var g = uint32 >> 8 & 255;
-	var r = uint32 >> 0 & 255;
-	return [r, g, b, a];
-
-}
-
-function rgba32_tinyColor(uint32){
-	var a = uint32 >> 24 & 255;
-	var b = uint32 >> 16 & 255;
-	var g = uint32 >> 8 & 255;
-	var r = uint32 >> 0 & 255;
-	a = mapLimit(a, 0, 255, 0, 100);
-	return tinycolor({ r:r, g:g, b:b}).lighten(100-a);
-}
-
-function rgba_rgba32(arr){
-	var r = arr[0];
-	var g = arr[1];
-	var b = arr[2];
-	var a = arr[3];
-	console.log(arr);
-	console.log(a << 24 | b << 16 | g << 8 | r << 0);
-	console.log(rgba32_rgba(a << 24 | b << 16 | g << 8 | r << 0));
-	return a << 24 | b << 16 | g << 8 | r << 0;
-}
 
 function mapLimit(input, minInput, maxInput, minOutput, maxOutput){
 	if ( input < minInput){
@@ -1554,71 +1390,7 @@ function mapLimit(input, minInput, maxInput, minOutput, maxOutput){
 	return output;
 }
 
-// color brightness 0-255 255 is brightest
-function colorBrightness(r, g, b){
-	return (r * 299 + g * 587 + b * 114) / 1000;
-}
 
-function colorBrightness32(rgba32){
-	var a = rgba32 >> 24 & 255;
-	var b = rgba32 >> 16 & 255;
-	var g = rgba32 >> 8 & 255;
-	var r = rgba32 >> 0 & 255;
-	return (r * 299 + g * 587 + b * 114 ) / 1000 * a / 255;
-}
-
-function color32ToRGB(uint32){
-	var [a,b,g,r] = convertNumberBase([uint32], 32, 256);
-	var amt = a - 255;
-    r = r-amt > 255 ? 255 : r-amt;
-    g = g-amt > 255 ? 255 : g-amt;
-    b = b-amt > 255 ? 255 : b-amt;
-    return [r, g, b];
-}
-
-// RGBA with Alpha 0-255
-function color32ToRGBA(uint32){
-	var [a,b,g,r] = convertNumberBase([uint32], 32, 256);
-    return [r, g, b, a];
-}
-
-// RGBA with Alpha 0-1
-function color32ToRGBA2(uint32){
-	var [a,b,g,r] = convertNumberBase([uint32], 32, 256);
-    return [r, g, b, Math.floor(a/255)];
-}
-
-function colorRGBTo32BitSolid(r, g, b){
-	return Number(convertNumberBase([255,b,g,r], 256, 10).join(""));
-}
-
-function rgbaToColor32(r, g, b, a = 255){
-	return Number(convertNumberBase([a,b,g,r], 256, 10).join(""));
-}
-
-function color32BitAlphaTo32BitSolid(uint32){
-	var [r,g,b] = color32ToRGB(uint32);
-    return Number(convertNumberBase([255,b,g,r], 256, 10).join(""));
-}
-
-function color32ToTinyColor(uint32){
-	var [r,g,b] = color32ToRGB(uint32);
-	return tinycolor({ r:r, g:g, b:b});
-
-}
-
-function RGBToHex(r,g,b) {
-	r = r.toString(16);
-	g = g.toString(16);
-	b = b.toString(16);
-	if (r.length == 1)
-		r = "0" + r;
-	if (g.length == 1)
-		g = "0" + g;
-	if (b.length == 1)
-		b = "0" + b;
-	return "#" + r + g + b;
-}
 
 // divide array to array of chunk arrays of specified lengs
 function chunk(a, l) { 
@@ -1631,14 +1403,18 @@ function chunk(a, l) {
 // Return Context ----------------------------------------------
 // -------------------------------------------------------------
 function getCtx(instanceId, containerId, canvasId, canvasW, canvasH, visible = true){
+
 	var pixelRatio = 1;
 	var container = $("#"+containerId);
 	if ( $("#"+canvasId).length == 0 ){
 		$("<canvas/>", {"id":canvasId}).appendTo(container);
 	}
+
 	var canvas = $("#"+canvasId);
 	var ctx = canvas[0].getContext("2d");
+
 	window[canvasId] = document.getElementById(canvasId);
+
 	if ( visible ){
 		pixelRatio = window.devicePixelRatio;
 		container.addClass("graph-container");
@@ -1646,45 +1422,12 @@ function getCtx(instanceId, containerId, canvasId, canvasW, canvasH, visible = t
 		canvas.width = canvasW + "px";
 	    canvas.height = canvasH + "px";
 	}
+
 	canvas[0].width = Math.floor(canvasW * pixelRatio);
 	canvas[0].height = Math.floor(canvasH * pixelRatio);
+
 	return ctx;
-}
 
-// Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
-function gradient32Arr(w, ...colorStop){
-	var ctx = getCtx(200,"noshow", "g_tempCanvas", w, 1);
-	var gradient = ctx.createLinearGradient(0,0,w,0);
-	if ( w == 2){
-		gradient.addColorStop(0, colorStop[3]);
-		gradient.addColorStop(1, colorStop[1]);
-	} else {
-		for (var i = 0; i < colorStop.length; i += 2) {
-			gradient.addColorStop(colorStop[i], colorStop[i+1]);
-		}
-	}
-	ctx.fillStyle = gradient;
-	ctx.fillRect(0,0,w,1);
-	var imagedata = ctx.getImageData(0, 0, w, 1);
-	return new Uint32Array(imagedata.data.buffer);
-}
-
-// Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
-function getGradientData(w, ...colorStop){
-	var ctx = getCtx(200,"noshow", "g_tempCanvas", w, 1);
-	var gradient = ctx.createLinearGradient(0,0,w,0);
-	if ( w == 2){
-		gradient.addColorStop(0, colorStop[3]);
-		gradient.addColorStop(1, colorStop[1]);
-	} else {
-		for (var i = 0; i < colorStop.length; i += 2) {
-			gradient.addColorStop(colorStop[i], colorStop[i+1]);
-		}
-	}
-	ctx.fillStyle = gradient;
-	ctx.fillRect(0,0,w,1);
-	var imagedata = ctx.getImageData(0, 0, w, 1);
-	return imagedata.data;
 }
 
 //
@@ -1698,34 +1441,41 @@ function getPixelData(data, index){
 	return [data[index], data[index+1], data[index+2], data[index+3]];
 }
 
-// Gradient (20, 0, "#FFF", 0.5, "#000", 1, "#FF0000")
-function gradient32Arr2(w, ...colorStop){
-	console.log(arguments);
-	var ctx = getCtx(200,"noshow", "g_tempCanvas", w, 1);
-	var gradient = ctx.createLinearGradient(0,0,w,0);
-	if ( w == 2){
-		gradient.addColorStop(0, colorStop[3]);
-		gradient.addColorStop(1, colorStop[1]);
-	} else {
-		for (var i = 0; i < colorStop.length; i += 2) {
-			gradient.addColorStop(colorStop[i], colorStop[i+1]);
-		}
-	}
-	ctx.fillStyle = gradient;
-	ctx.fillRect(0,0,w,1);
-	var imagedata = ctx.getImageData(0, 0, w, 1);
-	return new Uint32Array(imagedata.data.buffer);
-}
-
 // -------------------------------------------------------------
 // Weave Functions ---------------------------------------------
 // -------------------------------------------------------------
-function threading1D_threading2D8(threading1D){
-	var ends = threading1D.length;
-	var shafts = Math.max(...threading1D);
+function tieup2D8_tieup2D(tieup2D8){
+	let treadle_array;
+	let tieup2D = [];
+	tieup2D8.forEach(function(col_array){
+		treadle_array = [];
+		col_array.forEach(function(shaft_state, shaft_index){
+			if ( shaft_state ) treadle_array.push(shaft_index);
+		});
+		tieup2D.push(treadle_array);
+	});
+	return tieup2D;
+}
+
+function liftplan2D8_liftplan2D(liftplan2D8){
+	let picks_array;
+	let liftplan2D = [];
+	liftplan2D8.clone2D8().rotate2D8("r").flip2D8("y").forEach(function(col_array){
+		pick_array = [];
+		col_array.forEach(function(shaft_state, shaft_index){
+			if ( shaft_state ) pick_array.push(shaft_index);
+		});
+		liftplan2D.push(pick_array);
+	});
+	return liftplan2D;
+}
+
+function threading1D_threading2D8(threading1D, ends, shafts){
+	ends = ends || threading1D.length;
+	shafts = shafts || Math.max(...threading1D);
 	var threading2D8 = newArray2D8(33, ends, shafts);
-	threading1D.forEach(function(shaft, i) {
-		threading2D8[i][shaft - 1] = 1;
+	threading1D.forEach(function(shaft, end) {
+		if ( shaft > 0 ) threading2D8[end][shaft - 1] = 1;
 	});
 	return threading2D8;
 }
@@ -1735,6 +1485,7 @@ function threading2D8_threading1D(threading2D8){
 }
 
 function treadling2D8_treadling1D(treadling2D8){
+	if ( !treadling2D8 || (treadling2D8.length <= 1 || treadling2D8[0].length <= 1) ) return;
 	return treadling2D8.rotate2D8("r").flip2D8("y").map(a => a.indexOf(1)+1);
 }
 
@@ -1745,13 +1496,11 @@ function tabbyPercentage(weave2D8){
 	var counter = 0;
 	for (var y = 0; y < h; y++) {
 		for (var x = 0; x < w; x++) {
-
 			state = weave2D8[x][y];
 			lx = loopNumber(x-1, w);
 			rx = loopNumber(x+1, w);
 			ty = loopNumber(y+1, h);
 			by = loopNumber(y-1, h);
-
 			l = weave2D8[lx][y];
 			r = weave2D8[rx][y];
 			t = weave2D8[x][ty];
@@ -1760,7 +1509,6 @@ function tabbyPercentage(weave2D8){
 			bl = weave2D8[lx][by];
 			tr = weave2D8[rx][ty];
 			br = weave2D8[rx][by];
-
 			if ( state == tl && state == tr && state == bl && state == br && state !== l && state !== r && state !== b && state !== t){
 				counter++
 			}
@@ -1798,32 +1546,6 @@ function getWeaveFromParts(tieup, threading, lifting){
 		});
 	}
 	return weave;
-}
-
-function averageHex(hex1, hex2){
-
-	// Keep helper stuff in closures
-	var reSegment = /[\da-z]{2}/gi;
-
-	// If speed matters, put these in for loop below
-	function dec2hex(v) {return v.toString(16);}
-	function hex2dec(v) {return parseInt(v,16);}
-
-	// Split into parts
-	var b1 = hex1.match(reSegment);
-	var b2 = hex2.match(reSegment);
-	var t, c = [];
-
-	// Average each set of hex numbers going via dec
-	// always rounds down
-	for (var i=b1.length; i;) {
-	  t = dec2hex( (hex2dec(b1[--i]) + hex2dec(b2[i])) >> 1 );
-
-	  // Add leading zero if only one character
-	  c[i] = t.length == 2? "" + t : "0" + t; 
-	}
-	return  c.join("");
-
 }
 
 Array.prototype.tileFill = function(canvasW, canvasH = false, xOffset = 0, yOffset = 0) {
@@ -1882,6 +1604,7 @@ function getSubGradient(sourceGradient32, width, style = "linear"){
 			resultGradient32[n] = sourceGradient32[shadeIndex];
 		}
 	}
+
 	return resultGradient32;
 
 }
@@ -1925,27 +1648,6 @@ function toDegrees(angle) {
     return angle * (180 / Math.PI);
 }
 
-function rgbToHsl(rgba) {
-  var r = rgba.r/255, g = rgba.g/255, b = rgba.b/255;
-  var max = Math.max(r, g, b), min = Math.min(r, g, b);
-  var h, s, l = (max + min) / 2;
-
-  if(max == min) {
-    h = s = 0; // achromatic
-  } else {
-    var d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch(max){
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  //return new Array(h * 360, s * 100, l * 100);
-  return {h: h*360, s: s*100, l: l*100};
-}
-
 function saveFile( blob, filename ) {
 	var link = document.createElement("a");
 	link.href = URL.createObjectURL( blob );
@@ -1964,10 +1666,13 @@ function getObjProp(obj, key, def = null ){
 	return obj && key && obj.hasOwnProperty(key) ? obj[key] : def;
 }
 
+function gop(obj, key, def = null ){
+	return obj && key && obj.hasOwnProperty(key) ? obj[key] : def;
+}
+
 function normalizeToNearestRotation(radians){
-	
 	var dir = radians >= 0 ? 1 : -1;
-	var val = loopNumber(Math.abs(radians), Math.PI * 2);
+	var val = loopNumberFloating(Math.abs(radians), Math.PI * 2);
 	if ( val > Math.PI ){
 		val = Math.PI * 2 - val;
 		dir *= -1;
@@ -2002,6 +1707,7 @@ function drawImageToCanvas(url, canvas, options, callback){
 
 function ev(input){
 	var v;
+	if ( !input.startsWith("#") ) input = "#"+input;
 	var e = $(input);
 	var t = e.prop("type");
 	if ( t == "checkbox" ){
@@ -2048,9 +1754,12 @@ function createElementById(container, type, id){
 	return element;	
 }
 
-function getWeaveProps(weave, shfatLimit = 96){
+function getWeaveProps(weave, shfatLimit = 256){
 
-	var shafts, pegplan2D8, threading1D, threading2D8, tieup2D8, treadling1D, treadling2D8;
+	var liftplan2D8, threading1D, threading2D8, tieup2D8, treadling1D, treadling2D8;
+
+	var shafts = false;
+	var treadles = false;
 
 	var pd = unique2D(weave, shfatLimit);
 
@@ -2058,18 +1767,19 @@ function getWeaveProps(weave, shfatLimit = 96){
 
 		var ends = weave.length;
 		var picks = weave[0].length;
-		pegplan2D8 = pd.uniques;
+		liftplan2D8 = pd.uniques;
 		threading1D = pd.posIndex.map(a => a+1);
 		shafts = arrayMax(threading1D);
 		threading2D8 = newArray2D8(15, ends, shafts);
 		threading1D.forEach(function(shaft, i) {
 			threading2D8[i][shaft - 1] = 1;
 		});
-		var rotatedpegplan = pegplan2D8.rotate2D8("r");
-		var rotatedFlippedpegplan = rotatedpegplan.flip2D8("y");
-		var tt = unique2D(rotatedFlippedpegplan);
+		var rotatedLiftplan = liftplan2D8.rotate2D8("r");
+		var rotatedFlippedLiftplan = rotatedLiftplan.flip2D8("y");
+		var tt = unique2D(rotatedFlippedLiftplan);
 		tieup2D8 = tt.uniques;
 		treadling1D = tt.posIndex.map(a => a+1);
+		treadles = arrayMax(treadling1D);
 		var tieupW = tieup2D8.length;
 		var tieupH = tieup2D8[0].length;
 		treadling2D8 = newArray2D8(15, picks, tieupW);
@@ -2084,12 +1794,13 @@ function getWeaveProps(weave, shfatLimit = 96){
 	return {
 		inLimit : pd.inLimit,
 		shafts : shafts,
-		pegplan2D8 : pegplan2D8,
 		threading1D : threading1D,
 		threading2D8 : threading2D8,
 		tieup2D8 : tieup2D8,
+		treadles : treadles,
 		treadling1D : treadling1D,
-		treadling2D8 : treadling2D8
+		treadling2D8 : treadling2D8,
+		liftplan2D8 : liftplan2D8
 	};
 
 }
@@ -2102,4 +1813,309 @@ function saveCanvasAsImage(canvas, fileName){
 
 function IsJsonString(str) {
 	try { JSON.parse(str); } catch (e) { return false; } return true;
+}
+
+function convertBase(str, fromBase, toBase) {
+
+    const DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/";
+
+    const add = (x, y, base) => {
+        let z = [];
+        const n = Math.max(x.length, y.length);
+        let carry = 0;
+        let i = 0;
+        while (i < n || carry) {
+            const xi = i < x.length ? x[i] : 0;
+            const yi = i < y.length ? y[i] : 0;
+            const zi = carry + xi + yi;
+            z.push(zi % base);
+            carry = Math.floor(zi / base);
+            i++;
+        }
+        return z;
+    }
+
+    const multiplyByNumber = (num, x, base) => {
+        if (num < 0) return null;
+        if (num == 0) return [];
+
+        let result = [];
+        let power = x;
+        while (true) {
+            num & 1 && (result = add(result, power, base));
+            num = num >> 1;
+            if (num === 0) break;
+            power = add(power, power, base);
+        }
+
+        return result;
+    }
+
+    const parseToDigitsArray = (str, base) => {
+        const digits = str.split('');
+        let arr = [];
+        for (let i = digits.length - 1; i >= 0; i--) {
+            const n = DIGITS.indexOf(digits[i])
+            if (n == -1) return null;
+            arr.push(n);
+        }
+        return arr;
+    }
+
+    const digits = parseToDigitsArray(str, fromBase);
+    if (digits === null) return null;
+
+    let outArray = [];
+    let power = [1];
+    for (let i = 0; i < digits.length; i++) {
+        digits[i] && (outArray = add(outArray, multiplyByNumber(digits[i], power, toBase), toBase));
+        power = multiplyByNumber(fromBase, power, toBase);
+    }
+
+    let out = '';
+    for (let i = outArray.length - 1; i >= 0; i--)
+        out += DIGITS[outArray[i]];
+
+    return out;
+}
+
+
+function arraySum(arr) {
+  if(!arr.length) return;
+  let sum = 0;
+  for (let i=0,l=arr.length; i<l; i++) {sum+=arr[i]};
+  return sum;
+}
+
+function probability(n) {
+  return Math.random() <= n;
+}
+
+function removeFirstStripe(pattern){
+	var res = [];
+	var j = 0;
+	for (var i = 0; i < pattern.length; i++) {
+		if ( pattern[i] !== pattern[0] || j ){
+			res[j] = pattern[i];
+			j++;
+		}
+	}
+	return res;
+}
+
+function shiftPatternToAvoidePartialStripe(pattern){
+	var len = pattern.length;
+	var first = pattern[0];
+	var last = pattern[len-1];
+	var res = [];
+	var partialLen = 0;
+	var readingFirstStripe = true;
+	var j = 0;
+
+	pattern = pattern.reverse();
+	for (var i = 0; i < len; i++) {
+		if ( pattern[i] == first && readingFirstStripe ){
+			partialLen++;
+		} else {
+			readingFirstStripe = false;
+			res[j] = pattern[i];
+			j++;
+		}
+	}
+	pattern = pattern.concat([first].repeat(partialLen));
+	return pattern.reverse();
+}
+
+function removeFirstAndLastStripe(pattern){
+	var first = pattern[0];
+	pattern = removeFirstStripe(pattern).reverse();
+	if ( pattern[0] == first ) pattern = removeFirstStripe(pattern);
+	pattern = removeFirstStripe(pattern).reverse();
+	return pattern;
+}
+
+function isImageURL(str){
+	if ( typeof str !== 'string' ) return false;
+	return !!str.match(/\w+\.(jpg|jpeg|gif|png|tiff|bmp)$/gi);
+}
+
+function isDataURI(str){
+	if ( !str ) return false;
+	return !!str.match(/^\s*data:([a-z]+\/[a-z]+(;[a-z\-]+\=[a-z\-]+)?)?(;base64)?,[a-z0-9\!\$\&\'\,\(\)\*\+\,\;\=\-\.\_\~\:\@\/\?\%\s]*\s*$/i);
+}
+
+function isObject(o) {
+  return o instanceof Object && o.constructor === Object;
+}
+
+function dataurlToImage(dataurl, callback){
+	var image = new Image();
+	image.onload = function() {
+		if (typeof callback === "function") { callback(image); }
+	};
+	image.src = dataurl;
+}
+
+function asyncLoadImage(url){
+    return new Promise( (resolve, reject) => {
+        var image = new Image()
+        image.src = url
+        image.onload = () => resolve(image)
+        image.onerror = () => reject(new Error('could not load image'))
+    })
+}
+
+function imageToDataurl(img, newW = false , newH = false){
+	var canvas = document.createElement('canvas');
+	var ctx = canvas.getContext('2d');
+	canvas.width = newW || img.width;
+	canvas.height = newH || img.height;
+	ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, newW, newH);
+	return canvas.toDataURL("image/png");
+}
+
+function picaResize(ctx_input, ctx_output){
+	return window.pica().resize(ctx_input.canvas, ctx_output.canvas, {
+		quality: 3,
+		alpha: false,
+		unsharpAmount: 100,
+		unsharpRadius: 2,
+		unsharpThreshold: 255,
+		transferable: true
+	}).catch(function (err) {
+		throw err;
+	});
+}
+
+function leftPadNum(num, targetLength) {
+    return num.toString().padStart(targetLength, 0);
+}
+
+function roundTo(num, decimal = 0){
+	var div = Math.pow(10, decimal);
+	return Math.round(num * div)/div;
+}
+
+function isNumber(v){
+	return !isNaN(Number(v));
+}
+
+function isSet(v){
+	return !(v === undefined || typeof v === "undefined" || v === null);
+}
+
+function capitalFirst(str){
+	return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+// -----
+// WIF Functions
+function toBoolean(val){
+    return val.in("true", "yes", "on", "1", );
+}
+
+function csvStringToArray(str){
+	if ( !Array.isArray(str) ){
+		return str.split(",");
+	} else {
+		return str;
+	}
+}
+
+function csvStringToIntArray(str){
+	if ( !Array.isArray(str) ){
+		return str.replace(/[^0-9,]/g, "").split(",").map((i) => Number(i));
+	} else {
+		return str;
+	}
+}
+
+function pixelDistance(x0, y0, x1, y1){
+   let dx = x1 - x0; dx *= dx;
+   let dy = y1 - y0; dy *= dy;
+   return Math.sqrt( dx + dy );
+}
+
+function randomItem(...items){
+	let count = items.length;
+	let randomIndex = getRandomInt(0, count-1);
+	return items[randomIndex];
+}
+
+function randomBinary(){
+	return Math.round(Math.random());
+}
+
+function storageAvailable(type) {
+    var storage;
+    try {
+        storage = window[type];
+        var x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    }
+    catch(e) {
+        return e instanceof DOMException && (
+            // everything except Firefox
+            e.code === 22 ||
+            // Firefox
+            e.code === 1014 ||
+            // test name field too, because code might not be present
+            // everything except Firefox
+            e.name === 'QuotaExceededError' ||
+            // Firefox
+            e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+            // acknowledge QuotaExceededError only if there's something already stored
+            (storage && storage.length !== 0);
+    }
+}
+
+function hash(){
+	var d = (new Date()).valueOf().toString();
+	var r = Math.random().toString();
+	return CryptoJS.SHA1(d + r).toString(CryptoJS.enc.Hex);
+}
+
+function hex_key(){
+	let d = (new Date()).valueOf().toString();
+	let r = Math.random().toString();
+	let g = Math.random().toString(36).substr(2, 6);
+	return d+r;
+}
+
+function spinnerHTML(id, css = false, val, min = null, max = null, step = false, precision = false){
+
+	css = css ? " "+css : "";
+	min = min !== null ? " data-min='"+min+"'" : "";
+	max = max !== null ? " data-max='"+max+"'" : "";
+	step = step ? " data-step='"+step+"'" : "";
+	precision = precision ? " data-precision='"+precision+"'" : "";
+	
+	var html = "";
+	html += "<div id='"+id+"' data-trigger='spinner' class='"+css+"'>";
+		html += "<a data-spin='down' class='spinner-down'></a>";
+		html += "<input type='text' value='"+val+"'"+ min + max + step + precision +">";
+		html += "<a data-spin='up' class='spinner-up'></a>";
+	html += "</div>";
+	return html;
+
+}
+
+function getPossibleSatinMoveNumbers(weaveH){
+	let i, n;
+	let satinPossibleMoves = [];
+	for (i = 1; i < weaveH; i++) {
+		satinPossibleMoves.push(i);
+	}
+	for (i = 2; i < weaveH-1; i++) {
+		if ( weaveH % i === 0){
+			n = i;
+			while(n < weaveH-1){
+				satinPossibleMoves = satinPossibleMoves.remove(n);
+				n = n+i;
+			}	
+		}
+	}
+	return satinPossibleMoves;
 }

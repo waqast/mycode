@@ -168,7 +168,7 @@ class Draw {
         Draw.line(origin, ctx, x, y, x, y+len-1, thick, color);
     }
 
-    static grid(origin, ctx, sx, sy, pointW, pointH, xPoints, yPoints, gridThick, minorColor, majorColor){
+    static grid(origin, ctx, sx, sy, pointW, pointH, xPoints, yPoints, gridThick, minorColor, majorColor, majorEvery = 8){
         var x, y, lineColor;
         var gridW = xPoints * pointW + gridThick;
         var gridH = yPoints * pointH + gridThick;
@@ -178,15 +178,15 @@ class Draw {
         for (y = 0; y <= yPoints; y++) {
             Draw.hLine(origin, ctx, sx, sy + y * pointH, gridW, gridThick, minorColor);
         }
-        for (x = 0; x <= xPoints; x += 8) {
+        for (x = 0; x <= xPoints; x += majorEvery) {
             Draw.vLine(origin, ctx, sx + x * pointW, sy, gridH, gridThick, majorColor);
         }
-        for (y = 0; y <= yPoints; y += 8) {
+        for (y = 0; y <= yPoints; y += majorEvery) {
             Draw.hLine(origin, ctx, sx, sy + y * pointH, gridW, gridThick, majorColor);
         }
     }
 
-    static rular(origin, ctx, dir, sx, sy, majorL, minorL, unit, points, hairThick, minorColor, majorColor){
+    static rular(origin, ctx, dir, sx, sy, majorL, minorL, unit, points, hairThick, minorColor, majorColor, majorEvery){
         var x, y, lineColor;
         var rularL = points * unit + hairThick;
 
@@ -194,18 +194,18 @@ class Draw {
             for (x = 0; x <= points; x++) {
                 Draw.vLine(origin, ctx, sx + x * unit, sy + majorL - minorL, minorL, hairThick, minorColor);
             }
-            for (x = 0; x <= points; x += 8) {
+            for (x = 0; x <= points; x += majorEvery) {
                 Draw.vLine(origin, ctx, sx + x * unit, sy , majorL, hairThick, majorColor);
-                Draw.text(origin, ctx, 0, x, sx + x * unit - 2, sy+1, "black", "right");
+                if (x ) Draw.text(origin, ctx, 0, x, sx + x * unit - 2, sy+1, "black", "right");
             }
             Draw.hLine(origin, ctx, sx, sy + majorL - 2, rularL, 2, majorColor);
         } else if ( dir == "l" ){
             for (y = 0; y <= points; y++) {
                 Draw.hLine(origin, ctx, sx + majorL - minorL, sy + y * unit, minorL, hairThick, minorColor);
             }
-            for (y = 0; y <= points; y += 8) {
+            for (y = 0; y <= points; y += majorEvery) {
                 Draw.hLine(origin, ctx, sx , sy + y * unit, majorL, hairThick, majorColor);
-                Draw.text(origin, ctx, 90, y, sx+1, sy + y * unit - 2, "black", "right");
+                if ( y ) Draw.text(origin, ctx, 90, y, sx+1, sy + y * unit - 2, "black", "right");
             }
             Draw.vLine(origin, ctx, sx + majorL - 2, sy, rularL, 2, majorColor);
         }

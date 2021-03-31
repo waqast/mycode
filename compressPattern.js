@@ -1,6 +1,6 @@
 function compress1D(str){
 
-	var res, mid, multiples, replacement;
+	var res, mid, multiples, replacement, match;
 
 	//logTime("Compress");
 	str = Array.isArray(str) ? str.join("") : str;
@@ -74,6 +74,27 @@ function countMatches(string, search){
 }
 
 // Remove all except a-zA-Z0-9()
-function cleanPattern(string){
-	return string.replace(/[^a-zA-Z0-9\(\)]/g, "");
+function cleanPattern(str){
+	return str.replace(/[^a-zA-Z0-9\(\)]/g, "");
+}
+
+function decodePattern(str){
+
+	var match, num, alpha;
+	str = Array.isArray(str) ? str.join("") : str;
+	str = cleanPattern(str);
+	str = decompress1D(str);
+	var res = { nums: [], alphas: [], count: {}, sum: 0, open: str };
+	var multiplesRegex = /([a-zA-Z])\1*/g;
+	while ( match = multiplesRegex.exec(str) ) {
+		num = match[0].length;
+		alpha = match[1];
+		if ( res.count[alpha] == undefined ) res.count[alpha] = 0;
+		res.nums.push(num);
+		res.alphas.push(alpha);
+		res.count[alpha] += num;
+		res.sum += num; 
+	}
+
+	return res;
 }

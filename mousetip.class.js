@@ -1,15 +1,13 @@
 class MouseTip {
     
     constructor() {
-
-        this._dom = $('<div/>', { id: 'mousetip', class: 'bottom-right' });
-        this._dom.appendTo('body');
+        this.dom = $('<div/>', { id: 'mousetip', class: 'bottom-right' });
+        this.dom.appendTo('body');
         MouseTip.object = this;
     }
 
     static text(target, value){
-
-        var dom = MouseTip.object._dom;
+        var dom = MouseTip.object.dom;
         if ( dom.find("div").length <= target ){
             $('<div/>').appendTo(dom);
         }
@@ -20,7 +18,7 @@ class MouseTip {
 
         var xOffset, yOffset;
 
-        var dom = MouseTip.object._dom;
+        var dom = MouseTip.object.dom;
 
         var windowW = $(window).width();
         var windowH = $(window).height();
@@ -55,20 +53,15 @@ class MouseTip {
     }
 
     static remove(target){
-
-        var dom = MouseTip.object._dom;
-        dom.find('div').eq(target).remove();
-
+        MouseTip.object.dom.find('div').eq(target).remove();
     }
 
     static show(){
-        var dom = MouseTip.object._dom;
-        dom.show();
+        MouseTip.object.dom.show();
     }
 
     static hide(){
-        var dom = MouseTip.object._dom;
-        dom.hide();
+        MouseTip.object.dom.hide();
     }
 
 }

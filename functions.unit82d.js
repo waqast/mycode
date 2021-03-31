@@ -344,22 +344,41 @@ Uint8Array.prototype.transform8 = function(dir){
 	return res;
 }
 
-Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
+Array.prototype.transform2D8 = function(instanceId = 0, command, ...v){
 
 	//logTime("transform2D8 ("+instanceId+"): " + command);
+	//console.log(["transform2D8", instanceId, command]);
 
 	var i, x, y, sx, sy, rx, ry, res, ri, ni, srci, dup;
 
-	val = Number(val);
+	v = v.map( x => isNaN(Number(x)) ? x : Number(x) );
 
 	var sw = this.length;
 	var sh = this[0].length;
 	var [rw, rh] = [sw, sh];
-	var res;
+	var res = this;
 
-	if (command === "clear"){
+	if (command === "new"){
 
-		res = newArray2D8(38, rw, rh);
+		res = newArray2D8(44, 2, 2);
+
+	} else if (command === "clear"){
+
+		res = newArray2D8(45, rw, rh);
+
+	} else if (command === "resize"){
+
+		rw = v[0];
+		rh = v[1];
+		res = newArray2D8(45, rw, rh);
+
+		for (y = 0; y < rh; y++) {
+			for (x = 0; x < rw; x++) {
+				sx = Math.floor(sw/rw*x);
+				sy = Math.floor(sh/rh*y);
+	    		res[x][y] = this[sx][sy];
+			}
+		}
 
 	} else if (command === "rotater"){
 
@@ -382,6 +401,14 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 				sx = y;
 				sy = sh - x - 1;
 	    		res[x][y] = this[sx][sy];
+			}
+		}
+
+	} else if (command === "transpose"){
+		res = newArray2D8(39, sh, sw);
+		for (y = sw-1; y >= 0; --y) {
+			for (x = sh-1; x >= 0; --x) {
+				res[x][y] = this[y][x];
 			}
 		}
 
@@ -439,20 +466,40 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command === "new"){
-
-		res = newArray2D8(44, 2, 2);
-
-	} else if (command === "clear"){
-
-		res = newArray2D8(45, rw, rh);
-
 	} else if (command === "inverse"){
 
 		res = newArray2D8(46, rw, rh);
 		for (x = 0; x < rw; ++x) {
 			for (y = 0; y < rh; ++y) {
 	    		res[x][y] = this[x][y] ? 0 : 1;
+			}
+		}
+
+	} else if (command === "tilexy"){
+
+		rw = sw * v[0];
+		rh = sh * v[1];
+		res = newArray2D8(47, rw, rh);
+		for (x = 0; x < rw; ++x) {
+			sx = loopNumber(x, sw);
+			for (y = 0; y < rh; ++y) {
+				sy = loopNumber(y, sh);
+				res[x][y]= this[sx][sy];
+			}
+		}
+
+	} else if (command === "crop"){
+
+		let startX = v[0];
+		let startY = v[1];
+		rw = v[2];
+		rh = v[3];
+		res = newArray2D8(47, rw, rh);
+		for (x = 0; x < rw; ++x) {
+			sx = loopNumber(x-startX, sw);
+			for (y = 0; y < rh; ++y) {
+				sy = loopNumber(y-startY, sh);
+				res[x][y]= this[sx][sy];
 			}
 		}
 
@@ -500,7 +547,30 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
-	} else if (command === "addplainbase"){
+	} else if (command === "addwarptabby"){
+
+		rw = sw * 2;
+		res = newArray2D8(51, rw, rh);
+
+		for (y = 0; y < sh; ++y) {
+			for (x = 0; x < sw; ++x) {
+				res[x*2][y]= (x+y) % 2 ? 0 : 1;
+				res[x*2+1][y]= this[x][y];
+			}
+		}
+
+	} else if (command === "removewarptabby"){
+
+		rw = Math.floor(sw/2);
+		res = newArray2D8(51, rw, rh);
+
+		for (y = 0; y < rh; ++y) {
+			for (x = 0; x < rw; ++x) {
+				res[x][y] = this[x*2+1][y];
+			}
+		}
+
+	} else if (command === "addwefttabby"){
 
 		rh = sh * 2;
 		res = newArray2D8(51, rw, rh);
@@ -512,12 +582,57 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 			}
 		}
 
+	} else if (command === "castout"){
+
+		var sx = 0;
+		var decoded = decodePattern(v[0]);
+		var patternHooks = decoded.sum;
+		var patternActive = decoded.count["A"];
+		var patternInactive = patternHooks - patternInactive;
+
+		var castoutGroups = Math.floor(sw / patternActive);
+		var harnessHooks = castoutGroups * patternHooks;
+
+		var castoutArray = [];
+		var openPattern = decoded.open;
+		for (var i = 0; i < castoutGroups; i++) {
+			for (var j = 0; j < patternHooks; j++) {
+				var alpha = openPattern[j];
+				if ( alpha == "U" ){
+					castoutArray.push("U");
+				} else if ( alpha == "D" ){
+					castoutArray.push("D");
+				} else if ( alpha == "A" ){
+					castoutArray.push(sx);
+					sx++;
+				}
+			}
+		}
+		rw = castoutGroups * patternHooks;
+		res = newArray2D8(51, rw, rh);
+		for (x = 0; x < rw; ++x) {
+			for (y = 0; y < rh; ++y) {
+				res[x][y] = castoutArray[x] == "U" ? 1 : castoutArray[x] == "D" ? 0 : this[castoutArray[x]][y];
+			}
+		}
+
+	} else if (command === "removewefttabby"){
+
+		rh = Math.floor(sh/2);
+		res = newArray2D8(51, rw, rh);
+
+		for (x = 0; x < rw; ++x) {
+			for (y = 0; y < rh; ++y) {
+				res[x][y]= this[x][y*2+1];
+			}
+		}
+
 	} else if (command === "shiftx"){
 
 		res = newArray2D8(52, rw, rh);
 
 		for (x = 0; x < sw; ++x) {
-			sx = loopNumber(x-val, sw);
+			sx = loopNumber(x-v[0], sw);
 			for (y = 0; y < sh; ++y) {
 				res[x][y] = this[sx][y];
 			}
@@ -528,36 +643,19 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 		res = newArray2D8(53, rw, rh);
 		for (x = 0; x < sw; ++x) {
 			for (y = 0; y < sh; ++y) {
-				sy = loopNumber(y-val, sh);
+				sy = loopNumber(y-v[0], sh);
 				res[x][y]= this[x][sy];
 			}
 		}
 
-	} else if (command === "shiftx2"){
-
-		res = this.clone2D8();
-
-		if ( val < 0 ){
-
-			val = Math.abs(val);
-			for (i = 0; i < val; ++i) {
-				res.push(res.shift());
-			}
-
-		} else if ( val > 0 ){
-
-			val = Math.abs(val);
-			for (i = 0; i < val; ++i) {
-				res.unshift(res.pop());
-			}
-
-		}
-
-	} else if (command === "shifty2"){
-
-		res = this.clone2D8();
+	} else if (command === "shiftxy"){
+		res = newArray2D8(52, rw, rh);
 		for (x = 0; x < sw; ++x) {
-			res[x] = res[x].shift1D8(val);
+			sx = loopNumber(x-v[0], sw);
+			for (y = 0; y < sh; ++y) {
+				sy = loopNumber(y-v[1], sh);
+				res[x][y] = this[sx][sy];
+			}
 		}
 		
 	} else if (command === "shuffle_ends"){
@@ -609,10 +707,29 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, val = 0){
 		}
 
 	} else if (command === "mirror_stitch_cross"){
-
 		var rightPart = this.transform2D8(0, "mirror_stitch_right");
 		res = rightPart.transform2D8(0, "mirror_stitch_up");
 
+	} else if (command === "drop"){
+		rw = sw * v[0];
+		if ( v[0] > 1 ){
+			var motif = this.clone2D8();
+			for (var i = 0; i < (v[0]-1); i++) {
+				motif = motif.transform2D8(0, "shiftxy", 0, v[1]);
+				res = res.concat(motif);
+			}
+		}
+
+	} else if (command === "brick"){
+		rw = sw * v[0];
+		if ( v[0] > 1 ){
+			var motif = this.clone2D8();
+			for (var i = 0; i < (v[0]-1); i++) {
+				motif = motif.transform2D8(0, "shiftxy", v[1], 0);
+				res = paste2D8(motif, res, 0, res[0].length, "extend", "extend", 0);
+			}
+		}
+		
 	}
 
 	//logTimeEnd("transform2D8 ("+instanceId+"): " + command);
@@ -799,7 +916,7 @@ Uint8Array.prototype.convertToArray2D = function(w, h){
 	return array2D;
 }
 
-// Pegplan from Weave
+// Liftplan from Weave
 Uint8Array.prototype.unique8 = function(weave8){
 
 	/*
@@ -930,8 +1047,15 @@ function weaveTextToWeave2D8(weaveText){
 	return weave2D8;
 }
 
-function patternTextTo1D8(patternText){
+function Array1D8ToPatternText(arr){
+	var pattern = "";
+	for (var i = 0; i < arr.length; i++) {
+		pattern += arr[i] ? "u" : "d";
+	}
+	return compress1D(pattern);
+}
 
+function patternTextTo1D8(patternText){
 	var pattern1D = decompress1D(patternText);
 	var threadS = pattern1D.length;
 	var thread1D8 = new Uint8Array(threadS);
@@ -940,9 +1064,6 @@ function patternTextTo1D8(patternText){
 	}
 	return thread1D8;
 }
-
-
-
 
 function weave8ToWeave2D8(weave8){
 	var i, x, y
@@ -969,28 +1090,39 @@ function weave2D8ToWeave2D(weave2D8){
 	return weave2D;
 }
 
-function weave2D8ToWeave8(weave2D){
+function weave2D8ToWeave8(weave){
 	var i, x, y;
-	var w = weave2D.length;
-	var h = weave2D[0].length;
-	var weave8 = new Uint8Array(w*h+2);
-	for (x = 0; x < w; ++x) {
-		for (y = 0; y < h; ++y) {
-			i = y * w + x + 2;
-			weave8[i] = weave2D[x][y];
+	var w = weave.length;
+	var h = weave[0].length;
+	var weave8 = new Uint8Array(w*h);
+	for (y = 0; y < h; ++y) {
+		for (x = 0; x < w; ++x) {
+			i = y * w + x;
+			weave8[i] = weave[x][y];
 		}	
 	}
-	weave8.setWidth(w);
 	return weave8;
 }
 
+function arr2D8_arr8(a2D8){
+	let w = a2D8.length;
+	let h = a2D8[0].length;
+	let a8 = new Uint8Array(w*h);
+	for (let x = 0; x < w; x++) {
+		for (let y = 0; y < h; y++) {
+			a8[y * w + x] = a2D8[x][y];
+		}	
+	}
+	return a8;
+}
+
 function convert_2d8_uint8(array2D8){
-	var i, x, y;
+	var i;
 	var w = array2D8.length;
 	var h = array2D8[0].length;
 	var array8 = new Uint8Array(w*h+2);
-	for (x = 0; x < w; ++x) {
-		for (y = 0; y < h; ++y) {
+	for (let x = 0; x < w; ++x) {
+		for (let y = 0; y < h; ++y) {
 			i = y * w + x + 2;
 			array8[i] = array2D8[x][y];
 		}	
@@ -1026,19 +1158,10 @@ function weave2DToWeave2D8(weave){
 }
 
 Array.prototype.clone2D8 = function(){
-	var x;
-	var w = this.length;
-	var h = this[0].length;
-	var res = newArray2D8(61, w, h);
-	if (isTypedArray(res[0])){
-		for (x = 0; x < w; ++x) {
-			res[x] = this[x].slice();
-		}
-	} else {
-		for (x = 0; x < w; ++x) {
-			res[x] = new Uint8Array(this[x]);
-		}
-	}
+	var w = this.length, res = []; res.length = w;
+	var typed = isTypedArray(this[0]);
+	if (typed) while (w--) { res[w] = this[w].slice(); }
+	if (!typed) while (w--) { res[w] = new Uint8Array(this[w]); }
 	return res;
 }
 
@@ -1066,8 +1189,35 @@ function arrayBinary(operation, a1, a2){
 	return r;
 }
 
+function compressArray2D8(arr){
+	if (!arr) return false;
+	let w = arr.length;
+	let h = arr[0].length;
+	var buff = array2D8ToBuffer(arr);
+	var compressed = SnappyJS.compress(buff);
+	var gzipped = pako.gzip(compressed, { to: "string" });
+	gzipped = w + "," + h + "," + gzipped;
+	return gzipped;
+}
+
+function decompressArray2D8(str){
+	if ( !str ) return;
+	// String may contain linefeeds as compressed content. /s tag is for regex to consider whole string as a single line.
+	const regex = /^\s*(\d+)\s*,\s*(\d+)\s*,(.+)/s;
+	let m = regex.exec(str)
+	let w = Number(m[1]);
+	let h = Number(m[2]);
+	str = m[3];
+	var ungzipped = pako.ungzip(str);
+	var uncompressed = SnappyJS.uncompress(ungzipped);
+	var arr = bufferToArray2D8(uncompressed, w, h);
+	return arr;
+}
+
 function convert_uint8_str(uint8){
+	Debug.time("SnappyJS", "graph");
 	var c8 = SnappyJS.compress(uint8);
+	Debug.timeEnd("SnappyJS", "graph");
 	return pako.gzip(c8, { to: "string" });
 }
 
@@ -1092,7 +1242,42 @@ Array.prototype.is2D8 = function(){
 	return this !== undefined && this.length && this[0] !== undefined && this[0].length;
 }
 
+function is2D8(a){
+	return a !== undefined && a.length && a[0] !== undefined && a[0].length;
+}
+
 function compress2D8(weave2D8){
 	var weave2D = weave2D8ToWeave2D(weave2D8);
 	return compress2D(weave2D);
+}
+
+function array2D8ToBuffer(arr){
+	var x, y;
+	var w = arr.length;
+	var h = arr[0].length;
+	var buffer = new ArrayBuffer(w*h);
+	var view = new Uint8Array(buffer);
+	x = w;
+	while (x--) { y = h; while (y--) { view[x*h+y] = arr[x][y]; } }
+	return buffer;
+}
+
+function bufferToArray2D8(buffer, w, h){
+	var x, y;
+	var arr = newArray2D8(1, w, h);
+	var view = new Uint8Array(buffer);
+	x = w;
+	while (x--) { y = h; while (y--) { arr[x][y] = view[x*h+y]; } }
+	return arr;
+}
+
+function weaveWarpProjection(buffer){
+	var view = new Uint8Array(buffer);
+	var w = view.length;
+	var x = w;
+	var p = 0;
+	while (x--) {
+		if ( view[x] ) p++;
+	}
+	return p/w;
 }

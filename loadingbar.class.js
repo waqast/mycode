@@ -1,10 +1,19 @@
+var processCount = 0;
+
+var favicon = new Favico({
+    animation:"none",
+    bgColor: "#ff0000",
+    textColor: "#fff",
+    position: 'up'
+});
+
 var loadingbars = {
     list: []
 }
 
 class Loadingbar {
 
-    constructor(id, title, cancelable, sticky) {
+    constructor(id, title, cancelable = true, sticky = false) {
 
         if ( Loadingbar.get(id) ){
             var existingObject = Loadingbar.get(id);
@@ -34,7 +43,7 @@ class Loadingbar {
         this._dom.append( $("<div>", {"class": Loadingbar.prefix + "-stripe"}).html('<div class="'+ Loadingbar.prefix + '-fill"></div>') );
         $("#"+ Loadingbar.prefix + "-overlay").append(this._dom);
         
-        this._dom.append( $("<div>", {"class": Loadingbar.prefix + "-cancel"}).html("&#10005;") );
+        this._dom.append( $("<div>", {"class": Loadingbar.prefix + "-cancel"}) );
         this._dom.find("."+ Loadingbar.prefix + "-cancel").on("click", function(e) {
             if (e.which === 1) { _this.remove(); }
             return false;
@@ -45,7 +54,7 @@ class Loadingbar {
         loadingbars.list.push(this._id);
         var count = loadingbars.list.length;
         favicon.badge(loadingbars.list.length);
-        this._dom.css({bottom: ((count-1) * 35) + 87});
+        this._dom.css({bottom: ((count-1) * (Loadingbar.barHeight+Loadingbar.barMargin) ) + Loadingbar.bottomMargin});
 
         this._dom.find("."+ Loadingbar.prefix + "-title").text(this._title);
         if ( this._cancelable ){
@@ -78,9 +87,8 @@ class Loadingbar {
         }
     }
 
-    get progress(){
-        return this._progress;
-    }
+    get progress(){ return this._progress; }
+    set sticky(value){ this._sticky = value; }
 
     set cancelable(value){
         this._cancelable = value;
@@ -91,27 +99,19 @@ class Loadingbar {
         }
     }
 
-    set sticky(value){
-        this._sticky = value;
-    }
-
     static get(id){
-
-        if ( loadingbars !== undefined && loadingbars[id] !== undefined ){
-            return loadingbars[id];
-        } else {
-            return false;
-        }
-
+        if ( loadingbars !== undefined && loadingbars[id] !== undefined ) return loadingbars[id];
+        return false;
     }
 
-    static get prefix(){
-        return "loadingbar";
-    }
+    static get prefix(){ return "loadingbar"; }
+    static get barHeight(){ return 22; }
+    static get barMargin(){ return 10; }
+    static get bottomMargin(){ return 85; }
 
     static restack(){
         loadingbars.list.forEach( (id, i) => {
-            loadingbars[id]._dom.css({bottom: (i * 35) + 87});
+            loadingbars[id]._dom.css({bottom: (i * (Loadingbar.barHeight+Loadingbar.barMargin)) + Loadingbar.bottomMargin});
         });
         favicon.badge(loadingbars.list.length);
         if ( !loadingbars.list.length ){

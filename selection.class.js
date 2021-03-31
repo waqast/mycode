@@ -2,151 +2,181 @@ class Selection {
 
     constructor(id, maxW, maxH) {
 
-        this._id = id;
-        this._pointW = 0;
-        this._pointH = 0;
+        this.id = id;
 
-        this.show = false;
-        this._points = [];
-        this._moved = false;
+        this.mouseColIndex = 0;
+        this.mouseRowIndex = 0;
 
-        this._inProgress = false;
-        this._confirmed = false;
+        this.crosshairX = 0;
+        this.crosshairY = 0;
+
+        this.prevCrosshairX = 0;
+        this.prevCrosshairY = 0;
+
+        this._scrollX = 0;
+        this._scrollY = 0;
+
+        this._pointW = 1;
+        this._pointH = 1;
+
+        this.showBoundary = false;
+        this.boundaryPoints = [];
+        this.moved = false;
+        this.isSquare = false;
+
+        this.grabbed = false;
+
+        this.isClean = true;
+
+        this.isFocused = false;
+        this.inProgress = false;
+        this.isCompleted = false;
         this.isMouseOver = false;
 
         this.maxW = maxW;
         this.maxH = maxH;
-        Selection.selections[id] = this;
 
         this.origin = "bl";
 
-    }
+        this.anchorCol = 0;
+        this.anchorRow = 0;
 
-    set ctx(value){
-        this._ctx = value;
-    }
+        Selection.selections[id] = this;
 
-    setProps(pointW, pointH, scrollX = false, scrollY = false){
-        this._pointW = pointW;
-        this._pointH = pointH;
-        if ( scrollX && scrollY ){
-            this._scrollX = scrollX;
-            this._scrollY = scrollY;
-        }
-        this.render();
-    }
-
-    get minX(){ return Math.min(this._sx, this._lx); }
-    get minY(){ return Math.min(this._sy, this._ly); }
-    get maxX(){ return Math.max(this._sx, this._lx); }
-    get maxY(){ return Math.max(this._sy, this._ly); }
-
-    get grabbed(){
-        return this._grabbed;
-    }
-
-    set grabbed(value){
-        this._grabbed = value;
-    }
-
-
-    set scrollX(value){
-        this._scrollX = value;
-        this.render();
-    }
-
-    set scrollY(value){
-        this._scrollY = value;
-        this.render();
-    }
-
-    set type(value){
-        this.clear();
-        this._type = value;
-    }
-
-    get visible(){
-        return this._points.length;
     }
 
     get pointW(){
         return this._pointW;
     }
 
-    set pointW(value){
-        this._pointW = value;
-        this.render();
+    set pointW(val){
+        this._pointW = val;
+        this.needsUpdate = true;
     }
 
     get pointH(){
         return this._pointH;
     }
 
-    set pointH(value){
-        this._pointH = value;
-        this.render();
+    set pointH(val){
+        this._pointH = val;
+        this.needsUpdate = true;
     }
 
-    get confirmed(){
-        return this._confirmed;
+    get scrollX(){
+        return this._scrollX;
     }
 
-    set confirmed(value){
-        this._confirmed = value;
+    set scrollX(val){
+        this._scrollX = val;
+        this.needsUpdate = true;
     }
 
-    get inProgress(){
-        return this._inProgress;
+    get scrollY(){
+        return this._scrollY;
     }
 
-    set inProgress(value){
-        this._inProgress = value;
+    set scrollY(val){
+        this._scrollY = val;
+        this.needsUpdate = true;
     }
 
-    get moved(){
-        return this._moved;
+    get isActive(){
+        return this.boundaryPoints.length;
     }
 
-    set moved(value){
-        this._moved = value;
+    get ctx(){
+        return this._ctx;
+    }
+
+    set ctx(context){
+        this._ctx = context;
+        this.ctxW = Math.floor(this.ctx.canvas.clientWidth * Selection.pixelRatio);
+        this.ctxH = Math.floor(this.ctx.canvas.clientHeight * Selection.pixelRatio);
+        this.clearContext();
+    }
+
+    clearContext(){
+        this.ctx.clearRect(0, 0, this.ctxW, this.ctxH);
+        this.pixels = this.ctx.createImageData(this.ctxW, this.ctxH);
+        this.pixels8 = this.pixels.data;
+        this.pixels32 = new Uint32Array(this.pixels8.buffer);
+        this.isClean = true;
+    }
+
+    setProps(pointW, pointH, scrollX = 0, scrollY = 0){
+        this.pointW = pointW;
+        this.pointH = pointH;
+        this.scrollX = scrollX;
+        this.scrollY = scrollY;
+    }
+
+    get minX(){ return Math.min(this.sx, this.lx); }
+    get minY(){ return Math.min(this.sy, this.ly); }
+    get maxX(){ return Math.max(this.sx, this.lx); }
+    get maxY(){ return Math.max(this.sy, this.ly); }
+
+    set type(value){
+        this.clear();
+        this.type = value;
+    }
+
+    get visible(){
+        return this.boundaryPoints.length;
     }
 
     get width(){
-        return Math.abs(this._lx - this._sx) + 1;
+        return Math.abs(this.lx - this.sx) + 1;
+    }
+
+    set width(val){
+        this.lx = this.sx > this.lx ? this.sx - val + 1 : this.sx + val - 1;
     }
 
     get height(){
-        return Math.abs(this._ly - this._sy) + 1;
+        return Math.abs(this.ly - this.sy) + 1;
     }
 
-    move(direction){
+    set height(val){
+        this.ly = this.sy > this.ly ? this.sy - val + 1 : this.sy + val - 1;
+    }
+
+    scroll(x, y){
+        this.scrollX = x;
+        this.scrollY = y;
+    }
+
+    shift(direction){
         switch(direction){
-            case "left": if ( this.minX > 0 ) { this._sx--; this._lx--; } break;
-            case "up": if ( this.maxY < this.maxH-1 ) {this._sy++; this._ly++;} break;
-            case "right": if ( this.maxX < this.maxW-1 ) {this._sx++; this._lx++;} break;
-            case "down": if ( this.minY > 0 ) { this._sy--; this._ly--; } break;
+            case "left": if ( this.minX > 0 ) { this.sx--; this.lx--; } break;
+            case "up": if ( this.maxY < this.maxH-1 ) {this.sy++; this.ly++;} break;
+            case "right": if ( this.maxX < this.maxW-1 ) {this.sx++; this.lx++;} break;
+            case "down": if ( this.minY > 0 ) { this.sy--; this.ly--; } break;
         }
     }
 
     resize(prop, amount){
         if ( prop == "width" ){
-            this._lx = limitNumber(this._lx+amount, 0, this.maxW-1);
+            this.lx = limitNumber(this.lx+amount, 0, this.maxW-1);
         } else if ( prop == "height" ){
-            this._ly = limitNumber(this._ly+amount, 0, this.maxH-1);
+            this.ly = limitNumber(this.ly+amount, 0, this.maxH-1);
         }
     }
 
     onMouseDown(x, y){
 
-        if ( Selection.content && Selection.postAction == "paste" ){
-            this.render();
+        if ( Selection.pasting ){
+
+        } else if ( Selection.cloning ){
+            Selection.anchorX = x;
+            Selection.anchorY = y;
         
-        } else if ( Selection.confirmed && Selection.isMouseOver ){
+        } else if ( Selection.isCompleted && Selection.isMouseOver ){
             Selection.grabbed = true
             Selection.grabDiff = { x: x - Selection.minX, y: y - Selection.minY };
 
         } else {
-            this.addPoint(x, y);
+            this.addBoundaryPoint(x, y);
         }
 
     }
@@ -155,15 +185,24 @@ class Selection {
 
         Selection.grabbed = false;
 
-        if ( Selection.content && Selection.postAction == "paste" ){
+        if ( Selection.pasting ){
+
+        } else if ( Selection.cloning ){
+            Selection.anchorX = 0;
+            Selection.anchorY = 0;
 
         } else if ( this.inProgress && this.moved ){
-            this.addPoint(x, y);
+            this.addBoundaryPoint(x, y);
         }
 
     }
 
-    addPoint(x, y){
+    addBoundaryPoint(x, y){
+
+        if ( this.inProgress && this.isSquare ){
+            x = this.lx;
+            y = this.ly;
+        }
 
         x = limitNumber(x, 0, this.maxW-1);
         y = limitNumber(y, 0, this.maxH-1);
@@ -172,84 +211,107 @@ class Selection {
             Selection.clear();
         }
 
-        Selection.animate();
-        this.show = true;
-        this._points.push([x, y]);
+        this.showBoundary = true;
+        this.boundaryPoints.push([x, y]);
 
         if ( this.inProgress ){
-            this.confirmed = true;
+            this.isCompleted = true;
             this.inProgress = false;
         } else {
-            this.confirmed = false;
+            this.isCompleted = false;
             this.inProgress = true;
-            this._sx = x;
-            this._sy = y;
+            this.sx = x;
+            this.sy = y;
         }
-        this._lx = x;
-        this._ly = y;
-        this.render();
+        this.lx = x;
+        this.ly = y;
 
     }
 
-    onMouseMove(x, y){
+    onMouseOut(graph){
+        if ( this.isCompleted || this.inProgress ){
+            Selection.doDraw = true;
+        } else {
+            Selection.doDraw = false;
+        }
+    }
 
-        if ( Selection.confirmed && Selection.grabbed ){
-            var selectionX = limitNumber( x - Selection.grabDiff.x, 0, this.maxW - this.width);
-            var selectionY = limitNumber( y - Selection.grabDiff.y, 0, this.maxH - this.height);
+    onMouseMove(mx, my){
+
+        if ( mx == undefined ) mx = this.mouseColIndex;
+        if ( my == undefined ) my = this.mouseRowIndex;
+
+        this.mouseColIndex = mx;
+        this.mouseRowIndex = my;
+
+        if ( Selection.isCompleted && Selection.grabbed ){
+            var selectionX = limitNumber( mx - Selection.grabDiff.x, 0, this.maxW - this.width);
+            var selectionY = limitNumber( my - Selection.grabDiff.y, 0, this.maxH - this.height);
             Selection.position = { x: selectionX, y: selectionY }
 
-        } else if ( Selection.content && Selection.postAction == "paste" ){
-            this.show = true;
-            var pasteX = limitNumber(x, 0, this.maxW - Selection.content.length);
-            var pasteY = limitNumber(y, 0, this.maxH - Selection.content[0].length);
-            this._sx = pasteX;
-            this._sy = pasteY;
-            this._lx = pasteX + Selection.content.length - 1;
-            this._ly = pasteY + Selection.content[0].length - 1;
-            this.render();
+        } else if ( Selection.pasting || Selection.stamping ){
+            this.showBoundary = true;
+            var pasteX = limitNumber(mx, 0, this.maxW - Selection.content.length);
+            var pasteY = limitNumber(my, 0, this.maxH - Selection.content[0].length);
+            this.sx = pasteX;
+            this.sy = pasteY;
+            this.lx = pasteX + Selection.content.length - 1;
+            this.ly = pasteY + Selection.content[0].length - 1;
+
+        } else if ( Selection.cloning ){
+            this.showBoundary = false;
 
         } else if ( Selection.content && Selection.postAction == "fillStarted" ){
-            this.show = true;
-            this._lx = limitNumber(x, 0, this.maxW - 1);
-            this._ly = limitNumber(y, 0, this.maxH - 1);
-            this.render();
+            this.showBoundary = true;
+            this.lx = limitNumber(mx, 0, this.maxW - 1);
+            this.ly = limitNumber(my, 0, this.maxH - 1);
 
         } else if ( this.inProgress ){
-            this.show = true;
-            var movedX = this._points[0][0] !== x;
-            var movedY = this._points[0][1] !== y;
+            this.showBoundary = true;
+            var movedX = this.boundaryPoints[0][0] !== mx;
+            var movedY = this.boundaryPoints[0][1] !== my;
             if ( movedX || movedY ){
                 this.moved = true;
             }
-            this._lx = limitNumber(x, 0, this.maxW - 1);
-            this._ly = limitNumber(y, 0, this.maxH - 1);
 
-            this.render();
+            this.lx = limitNumber(mx, 0, this.maxW - 1);
+            this.ly = limitNumber(my, 0, this.maxH - 1);
+
+            if ( this.isSquare ){
+                var maxSide = Math.max(this.width, this.height);
+                this.width = maxSide;
+                this.height = maxSide;
+                mx = this.lx;
+                my = this.ly;
+            }
+
+            this.lx = limitNumber(mx, 0, this.maxW - 1);
+            this.ly = limitNumber(my, 0, this.maxH - 1);
 
         }
 
-        this.isMouseOver = Selection.isActive && Selection.confirmed && x >= Selection.minX && x <= Selection.maxX && y >= Selection.minY &&  y <= Selection.maxY;
-
+        this.isMouseOver = Selection.isActive && Selection.isCompleted && mx >= Selection.minX && mx <= Selection.maxX && my >= Selection.minY &&  my <= Selection.maxY;
+        // console.log([this.isMouseOver, Selection.isCompleted]);
     }
 
     clear(){
         this.isMouseOver = false;
         Selection.grabbed = false;
-        this._points = [];
-        this.show = false;
+        this.boundaryPoints = [];
+        this.showBoundary = false;
         this.inProgress = false;
-        this.confirmed = false;
+        this.isCompleted = false;
         this.moved = false;
-        if ( this._ctx == undefined || !this._ctx.canvas.clientWidth || !this._ctx.canvas.clientHeight){
-            return ;
-        }
-        var ctxW = Math.floor(this._ctx.canvas.clientWidth * Selection.pixelRatio);
-        var ctxH = Math.floor(this._ctx.canvas.clientHeight * Selection.pixelRatio);
-        this._ctx.clearRect(0, 0, ctxW, ctxH);
+        if ( this.ctx == undefined || !this.ctxW || !this.ctxH ) return ;
+        this.clearContext();
     }
 
-    drawAnchorCross(origin, pixels8, pixels32, ctxW, ctxH, x, y, thick){
+    drawAnchorCross(){
 
+        var thick = Math.floor(Selection.pixelRatio);
+        let x = this.sx * this.pointW + Math.ceil(this.pointW/2) - 1 + this.scrollX;
+        let y = this.sy * this.pointH + Math.ceil(this.pointH/2) - 1 + this.scrollY;
+        
         var bth = thick * 3;
         var bln = bth * 3;
         var bsx = x - Math.round(bln/2)+1;
@@ -267,71 +329,192 @@ class Selection {
         var baseColor = { r:255, g:255, b:255 };
         var crossColor = { r:0, g:0, b:0 };
 
-        buffLineSolid(origin, pixels8, pixels32, ctxW, ctxH, bsx+bth, bsy, bsx+bth, bly, bth, baseColor);
-        buffLineSolid(origin, pixels8, pixels32, ctxW, ctxH, bsx, bsy+bth, blx, bsy+bth, bth, baseColor);
+        buffLineSolid(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, bsx+bth, bsy, bsx+bth, bly, bth, baseColor);
+        buffLineSolid(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, bsx, bsy+bth, blx, bsy+bth, bth, baseColor);
 
-        buffLineSolid(origin, pixels8, pixels32, ctxW, ctxH, csx+bth, csy, csx+bth, cly, cth, crossColor);
-        buffLineSolid(origin, pixels8, pixels32, ctxW, ctxH, csx, csy+bth, clx, csy+bth, cth, crossColor);
+        buffLineSolid(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, csx+bth, csy, csx+bth, cly, cth, crossColor);
+        buffLineSolid(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, csx, csy+bth, clx, csy+bth, cth, crossColor);
 
     }
+
+    drawSelectionContent(origin, pixels8, pixels32, ctxW, ctxH){
+
+        let x = this.scrollX + this.minX * this.pointW;
+        let y = this.scrollY + this.minY * this.pointH;
+        
+        var up = { r:0, g:0, b:0 };
+        var down = { r:127, g:127, b:127 };
+        
+        let content_ends = Selection.content.length;
+        let content_picks = Selection.content[0].length;
+
+        for (let ax = 0; ax < this.width; ax++) {
+            for (let ay = 0; ay < this.height; ay++) {
+                let sx = loopNumber(ax, content_ends);
+                let sy = loopNumber(ay, content_picks);
+                let color = Selection.content[sx][sy] ? up : down;
+                bufferSolidRect(origin, pixels8, pixels32, ctxW, ctxH, x + ax * this.pointW, y + ay * this.pointH, this.pointW - 1, this.pointH - 1, color);
+            }
+        }
+
+    }
+
+    static areConnected(a, b){
+
+        let list = {
+            weave: ["threading", "lifting", "warp", "weft"],
+            tieup: ["threading", "lifting"],
+            warp: ["weave", "threading"],
+            weft: ["weave", "lifting"],
+            threading: ["warp", "weave"],
+            lifting: ["weft", "weave"]
+        }
+
+        return a === b || list[a].includes(b);
+
+    }
+
+    static crosshair(graph, x, y){
+
+        Selection.doDraw = true;
+
+        // if ( graph == Selection.focused && x == this.prevCrosshairX && y == this.prevCrosshairY ) return;
+        // this.prevCrosshairX = x;
+        // this.prevCrosshairY = y;
+
+        Selection.focused = graph;
+        for ( let id in Selection.selections ) {
+            let layer = Selection.get(id);
+            layer.crosshairX = x;
+            layer.crosshairY = y;
+            layer.needsUpdate = true;
+            layer.isFocused = true;
+        }
+    }
+
+    drawCrosshair(){
+
+        let color = { r:0, g:0, b:0, a: 0.2 };
+        let x = this.scrollX + this.crosshairX * this.pointW;
+        let y = this.scrollY + this.crosshairY * this.pointH;
+        let w = this.pointW;
+        let h = this.pointH;
+        let f = Selection.focused;
+        let i = this.id;
+        let wv = ["warp", "threading", "weave"];
+        let tv = ["tieup", "lifting"];
+        let wh = ["weft", "lifting", "weave"];
+        let th = ["tieup", "threading"];
+
+        let dv = (wh.includes(f) && wh.includes(i)) || (th.includes(f) && th.includes(i));
+        let dh = (wv.includes(f) && wv.includes(i)) || (tv.includes(f) && tv.includes(i));
+        
+        if ( dh ) bufferSolidRect(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, x, 0, w, this.ctxH, color);
+        if ( dv ) bufferSolidRect(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, 0, y, this.ctxW, h, color);
+
+    }
+
+    drawSelectionRect(){
+
+        let thick = Math.floor(Selection.pixelRatio);
+        let dashStart = Selection.dashStart;
+
+        let xUnits = this.width;
+        let yUnits = this.height;
+
+        let selectionW = this.pointW * xUnits;
+        let selectionH = this.pointH * yUnits;
+
+        let xOffset = this.scrollX + this.minX * this.pointW;
+        let yOffset = this.scrollY + this.minY * this.pointH;
+
+        let sx = xOffset;
+        let sy = yOffset;
+        let lx = sx + selectionW - 1;
+        let ly = sy + selectionH - 1;
+
+        buffDashLine(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, sx, sy, lx, sy, thick, dashStart);
+        buffDashLine(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, sx, ly - thick + 1, lx, ly - thick + 1, thick, dashStart);
+        buffDashLine(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, sx, sy, sx, ly, thick, dashStart);
+        buffDashLine(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH, lx - thick + 1, sy, lx - thick + 1, ly, thick, dashStart);
+
+    }
+
+    update(){
+
+        if ( Selection.doDraw ){
+
+            if ( this.inProgress || this.isCompleted || Selection.pasting || Selection.filling || Selection.cloning ){
+                this.render();
+
+            } else if ( this.needsUpdate && this.ctx && this.ctxW && this.ctxH && Selection.doDraw ){
+                this.render();
+                this.needsUpdate = false;
+            }
+
+        } else {
+
+            this.clean();
+
+        }
+
+    }
+
+    clean(){
+        if ( this.isClean ) return;
+        this.clearContext();
+        this.ctx.putImageData(this.pixels, 0, 0);
+    }
+
 
     render(){
 
-        var ctx = this._ctx;
+        // console.log("Selection."+this.id+".render");
 
-        if ( ctx == undefined || !ctx.canvas.clientWidth || !ctx.canvas.clientHeight) return ;
+        this.clearContext();
 
-        var ctxW = Math.floor(ctx.canvas.clientWidth * Selection.pixelRatio);
-        var ctxH = Math.floor(ctx.canvas.clientHeight * Selection.pixelRatio);
-
-        var pixels = ctx.createImageData(ctxW, ctxH);
-        var pixels8 = pixels.data;
-        var pixels32 = new Uint32Array(pixels8.buffer);
-
-        if ( this.show ){
-            MouseTip.text(1, this.width+" \xD7 "+this.height);
-        } else {
-            MouseTip.remove(1);
-            return ;
+        if ( this.isCompleted ){
+            Selection.dashStart += 0.5;
         }
 
-        var xUnits = this.width;
-        var yUnits = this.height;
+        if ( Selection.isActive ){
+            MouseTip.text(1, Selection.active.width+" \xD7 "+Selection.active.height);
+        } else {
+            MouseTip.remove(1);
+        }
 
-        var xOffset = this._scrollX + this.minX * this._pointW;
-        var yOffset = this._scrollY + this.minY * this._pointH;
+        if ( Selection.showCrosshair ){
+            this.drawCrosshair();
+        }
 
-        var lineThickness = Math.floor(Selection.pixelRatio);
-        buffSelectionRect(this.origin, pixels8, pixels32, ctxW, ctxH, this._pointW, this._pointH, xUnits, yUnits, xOffset, yOffset, lineThickness, Selection.dashStart);
+        if ( Selection.pasting || Selection.stamping || Selection.filling ){
+            this.drawSelectionContent(this.origin, this.pixels8, this.pixels32, this.ctxW, this.ctxH);
+        }
 
-        var anchorX = this._sx * this._pointW + Math.ceil(this._pointW/2) - 1 + this._scrollX;
-        var anchorY = this._sy * this._pointH + Math.ceil(this._pointW/2) - 1 + this._scrollY;
-        this.drawAnchorCross(this.origin, pixels8, pixels32, ctxW, ctxH, anchorX, anchorY, lineThickness);
+        if ( this.isActive ){
+            this.drawSelectionRect();
+            this.drawAnchorCross(); 
+        }
 
-        ctx.putImageData(pixels, 0, 0);
+        this.isClean = false;
+        
+        this.ctx.putImageData(this.pixels, 0, 0);
 
     }
 
-    static get confirmed(){
-        if ( Selection.isActive ){
-            return Selection.active.confirmed; 
-        } else {
-            return false;
-        }
+    static get isCompleted(){
+        return Selection.isActive && Selection.active.isCompleted;
     }
 
     static clear(){
-        var selections = Selection.selections;
-        for ( var graph in selections ) {
-            if ( selections.hasOwnProperty(graph) ){
-                Selection.get(graph).clear();
-            }
+        for ( let layer in Selection.selections ) {
+            Selection.get(layer).clear();
         }
     }
 
     static clearInactive(){
         var selections = Selection.selections;
-        var active = Selection.active ? Selection.active._id : false;
+        var active = Selection.active ? Selection.active.id : false;
         for ( var graph in selections ) {
             if ( selections.hasOwnProperty(graph) && graph !== active){
                 Selection.get(graph).clear();
@@ -343,8 +526,8 @@ class Selection {
         Selection.active.resize(prop, amount);
     }
 
-    static move(direction){
-        Selection.active.move(direction);
+    static shift(direction){
+        Selection.active.shift(direction);
     }
 
     // Events -----
@@ -353,6 +536,13 @@ class Selection {
             Selection.active.onMouseMove(x, y); 
         }
     }
+
+    static onMouseOut(graph){
+        for ( let id in Selection.selections ) {
+            Selection.get(id).onMouseOut(graph);
+        }
+    }
+
     static onMouseUp(x, y){
         if ( Selection.isActive ){
             Selection.active.onMouseUp(x, y); 
@@ -364,16 +554,16 @@ class Selection {
         }
     }
 
-    static clearIfNotConfirmed(){
-        if ( !Selection.confirmed ){
+    static clearIfNotCompleted(){
+        if ( !Selection.isCompleted ){
             Selection.clear();
         }
     }
 
-    static get sx(){ return Selection.active._sx; }
-    static get sy(){ return Selection.active._sy; }
-    static get lx(){ return Selection.active._lx; }
-    static get ly(){ return Selection.active._ly; }
+    static get sx(){ return Selection.active.sx; }
+    static get sy(){ return Selection.active.sy; }
+    static get lx(){ return Selection.active.lx; }
+    static get ly(){ return Selection.active.ly; }
 
     static get minX(){ return Selection.active.minX; }
     static get minY(){ return Selection.active.minY; }
@@ -381,11 +571,11 @@ class Selection {
     static get maxY(){ return Selection.active.maxY; }
 
     static get width(){
-        return Math.abs(Selection.active._lx - Selection.active._sx)+1;
+        return Math.abs(Selection.active.lx - Selection.active.sx)+1;
     }
 
     static get height(){
-        return Math.abs(Selection.active._ly - Selection.active._sy)+1;
+        return Math.abs(Selection.active.ly - Selection.active.sy)+1;
     }
 
     static set pointW(value){
@@ -400,10 +590,34 @@ class Selection {
         }
     }
 
-    static render(){
-        if ( Selection.isActive ){
-            Selection.active.render(); 
+    static update(){
+        for ( let layer in Selection.selections ) {
+            Selection.get(layer).update();
         }
+    }
+
+    static needsUpdate(){
+        for ( let layer in Selection.selections ) {
+            Selection.get(layer).needsUpdate = true;
+        }
+    }
+
+    static clear(){
+        for ( let layer in Selection.selections ) {
+            Selection.get(layer).clear();
+        }
+    }
+
+    static setPointSize(pointW, pointH){
+        for ( let layer in Selection.selections ) {
+            Selection.get(layer).pointW = pointW;
+            Selection.get(layer).pointH = pointH;
+        }
+    }
+
+    setPointSize(pointW, pointH){
+        this.pointW = pointW;
+        this.pointH = pointH;   
     }
 
     static setActive(id){
@@ -418,26 +632,18 @@ class Selection {
     }
 
     static get(id){
-        if ( Selection.selections !== undefined && Selection.selections[id] !== undefined ){
-            return Selection.selections[id];
-        }
+        return Selection.selections[id];
     }
 
-    static set scrollX(value){
-        if ( Selection.isActive ){
-            Selection.active.scrollX = value; 
-        }
-    }
-
-    static set scrollY(value){
-        if ( Selection.isActive ){
-            Selection.active.scrollY = value; 
-        }
+    static set(prop, value, ...ids){
+        ids.forEach( function(id){
+            Selection.get(id)[prop] = value;
+        });
     }
 
     static get id(){
         if ( Selection.isActive ){
-            return Selection.active._id; 
+            return Selection.active.id; 
         }
     }
 
@@ -449,13 +655,13 @@ class Selection {
 
     static get graph(){
         if ( Selection.isActive ){
-            return Selection.active._id;
+            return Selection.active.id;
         }
     }
 
     static get moved(){
         if ( Selection.isActive ){
-            return Selection.active._moved;
+            return Selection.active.moved;
         }
     }
 
@@ -469,26 +675,8 @@ class Selection {
         return Selection.active !== undefined;
     }
 
-    static animate(state = true){
-        if ( state ){
-            if ( !Selection.animation ){
-                $.doTimeout("selectionAnimation", 60, function(){
-                    Selection.dashStart++;
-                    Selection.render();
-                    return true;
-                });
-                Selection.animation = true;
-            }
-        } else {
-            $.doTimeout("selectionAnimation");
-            Selection.animation = false;
-        }
-    }
-
     static get isMouseOver(){
-        if ( Selection.isActive ){
-            return Selection.active.isMouseOver;
-        }
+        return Selection.isActive && Selection.active.isMouseOver;
     }
 
     static get grabbed(){
@@ -501,24 +689,49 @@ class Selection {
         }
     }
 
+    static set square(value){
+        if ( Selection.isActive ){
+            Selection.active.isSquare = value;
+            Selection.active.onMouseMove();
+        }
+    }
+
     static get position(){
         return {x: Selection.minX, y: Selection.minY};
     }
 
     static set position(pos){
-        if ( Selection.isActive && Selection.confirmed ){
+        if ( Selection.isActive && Selection.isCompleted ){
             var xDiff = pos.x - Selection.minX;
             var yDiff = pos.y - Selection.minY;
-            Selection.active._sx += xDiff;
-            Selection.active._sy += yDiff;
-            Selection.active._lx += xDiff;
-            Selection.active._ly += yDiff;
+            Selection.active.sx += xDiff;
+            Selection.active.sy += yDiff;
+            Selection.active.lx += xDiff;
+            Selection.active.ly += yDiff;
         }
+    }
+
+    static get pasting(){
+        return Selection.postAction === "paste" && Selection.content;
+    }
+
+    static get stamping(){
+        return Selection.postAction === "stamp" && Selection.content;
+    }
+
+    static get filling(){
+        return Selection.postAction === "fill" && Selection.content && ( Selection.isCompleted || Selection.moved );
+    }
+
+    static get cloning(){
+        return Selection.postAction === "clone" && Selection.content;
     }
 
 }
 
+Selection.focused = "";
 Selection.selections = {};
 Selection.pixelRatio = 1;
 Selection.dashStart = 0;
-Selection.animation = false;
+Selection.showCrosshair = true;
+Selection.doDraw = false;
