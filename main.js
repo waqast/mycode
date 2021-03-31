@@ -312,7 +312,7 @@ $(document).ready ( function(){
     
     	var newTreadling, newThreading, newTieup, arr;
 
-		globalSelection.clear_old(3);
+		// globalSelection.clear_old(3);
 
 		if ( id == "view-graph"){
 
@@ -1214,7 +1214,7 @@ $(document).ready ( function(){
 
 					} else {
 
-						for ( var key in this.files ) {
+						for ( let key in this.files ) {
 							if ( this.files.hasOwnProperty(key) ){
 								file = this.files[key];
 								if ( file.type.match(valid) || type.in("wif", "wve") ){
@@ -1920,7 +1920,7 @@ $(document).ready ( function(){
 
 		} else {
 		
-			globalSelection.clear_old(5);
+			// globalSelection.clear_old(5);
 			selectedWeave = gWeave;
 			sEnd = 1;
 			sPick = 1;
@@ -1947,7 +1947,7 @@ $(document).ready ( function(){
 
 		} else if (action == "crop") {
 
-			globalSelection.clear_old(6);
+			// globalSelection.clear_old(6);
 
 		} else if (action == "rotate_clockwise") {
 
@@ -2761,7 +2761,7 @@ $(document).ready ( function(){
 
 		var mouse = getGraphMouse(graph, app.mouse.x, app.mouse.y);
 
-		if ( graph != null && graph ){
+		if ( graph ){
 			if ( graph.in("warp", "weft") ){
 				var pos = graph == "warp" ? mouse.col : mouse.row;
 				MouseTip.text(0, pos);
@@ -4160,7 +4160,7 @@ $(document).ready ( function(){
 			};
 
 			// Update material Props from direct props
-			for ( var key in newProps ) {
+			for ( let key in newProps ) {
 				if ( newProps[key] == "undefined" && _material[key] !== undefined ) {
 					_material[key] = undefined;
 				} else {
@@ -4171,7 +4171,7 @@ $(document).ready ( function(){
 			// get old props from exisiting materisl
 			if ( newProps.needsUpdate ){
 				// newProps = {};
-				for ( var key in _material ) newProps[key] = _material[key];
+				for ( let key in _material ) newProps[key] = _material[key];
 				_material.needsUpdate = undefined;
 			}
 
@@ -5097,7 +5097,7 @@ $(document).ready ( function(){
 						Debug.item("FPS", globalModel.fps.length, "model");
 						if ( globalModel.model && mp.autoRotate && mp.allowAutoRotate ){
 					    	globalModel.model.rotation.y += mp.rotationSpeed * mp.rotationDirection;
-					    	globalModel.params.viewPresets.update("user");
+					    	mp.viewPresets.update("user");
 					    }
 						q.model.render();
 					}
@@ -5528,16 +5528,16 @@ $(document).ready ( function(){
 
 			let _this = this;
 
-			_this.params.modelMaterialLoadPending = 0;
+			mp.modelMaterialLoadPending = 0;
 
 			var nodei = 0;
 			_this.model.traverse( function ( node ) {
 				if ( node.isMesh ){
 					if ( materialList[node.name] == undefined ){
 
-						_this.params.modelMaterialLoadPending++;
+						mp.modelMaterialLoadPending++;
 						_this.setMaterial("white", {}, function(){
-							_this.params.modelMaterialLoadPending--;
+							mp.modelMaterialLoadPending--;
 							node.material = _this.materials.white.val;
 						});
 						Debug.item("OBJ Node-"+nodei, node.name+" - Material Not Set", "model");
@@ -5545,12 +5545,12 @@ $(document).ready ( function(){
 					} else {
 
 						var n = materialList[node.name];
-						_this.params.modelMaterialLoadPending++;
+						mp.modelMaterialLoadPending++;
 						_this.setMaterial(n, {
 							uv_width_mm: mp.modelUVMapWmm,
 							uv_height_mm: mp.modelUVMapHmm
 						}, function(){
-							_this.params.modelMaterialLoadPending--;
+							mp.modelMaterialLoadPending--;
 							node.material =  _this.materials[n].val;
 						});
 						Debug.item("OBJ Node-"+nodei, node.name + " : " + n, "model");
@@ -5561,7 +5561,7 @@ $(document).ready ( function(){
 			});
 
 			$.doTimeout(10, function(){					
-				if ( !_this.params.modelMaterialLoadPending ){
+				if ( !mp.modelMaterialLoadPending ){
 					if (typeof callback === "function" ) callback();
 					return false;
 				}
@@ -5670,14 +5670,14 @@ $(document).ready ( function(){
 			} else if ( type == "mousedown" && which == 1 && !isModelUnderMouse ){
 				mp.rotateModelWithMouse = false;
 				_this.controls.enabled = true;
-				globalModel.params.viewPresets.update("user");
+				mp.viewPresets.update("user");
 
 			} else if ( type == "mousedown" && which == 3 ){
 				mp.moveControlsTargetWithMouse = true;
 				mp.modelStartControlsTargetX = globalModel.controls.target.x;
 				mp.modelStartControlsTargetY = globalModel.controls.target.y;
 				_this.controls.enabled = true;
-				globalModel.params.viewPresets.update("user");
+				mp.viewPresets.update("user");
 
 			} else if ( type == "mouseup" ){
 				mp.rotateModelWithMouse = false;
@@ -5731,10 +5731,10 @@ $(document).ready ( function(){
 			}
 
 			if ( mp.moveControlsTargetWithMouse ){
-				var objectPos = new THREE.Vector3( 0, 0, 0 );
-				var distance = this.camera.position.distanceTo( objectPos );
-				var deltaMoveX = app.mouse.x - app.mouse.down.x;
-			    var deltaMoveY = app.mouse.down.y - app.mouse.y;
+				let objectPos = new THREE.Vector3( 0, 0, 0 );
+				let distance = this.camera.position.distanceTo( objectPos );
+				let deltaMoveX = app.mouse.x - app.mouse.down.x;
+			    let deltaMoveY = app.mouse.down.y - app.mouse.y;
 			    if ( globalModel.model && app.mouse.isDown ) {
 			        globalModel.controls.target.x = mp.modelStartControlsTargetX - toRadians(deltaMoveX * distance / 18.15);
 			        globalModel.controls.target.y = mp.modelStartControlsTargetY - toRadians(deltaMoveY * distance / 18.15);
@@ -5744,8 +5744,8 @@ $(document).ready ( function(){
 			}
 
 			if ( mp.rotateModelWithMouse ){
-				var deltaMoveX = app.mouse.x - app.mouse.down.x;
-			    var deltaMoveY = app.mouse.down.y - app.mouse.y;
+				let deltaMoveX = app.mouse.x - app.mouse.down.x;
+			    let deltaMoveY = app.mouse.down.y - app.mouse.y;
 			    if ( globalModel.model && app.mouse.isDown ) {
 			        globalModel.model.rotation.y = mp.modelStartRotation + toRadians(deltaMoveX * 0.5);
 			        if ( deltaMoveX < 0 ){
@@ -5754,7 +5754,7 @@ $(document).ready ( function(){
 				    	mp.rotationDirection = 1;
 				    }
 				    globalModel.render();
-				    globalModel.params.viewPresets.update("user");
+				    mp.viewPresets.update("user");
 			    }
 			}
 
@@ -6116,7 +6116,7 @@ $(document).ready ( function(){
 
 			var loadingbar = new Loadingbar("exportGLTF", "Exporting 3D Model", false);
 			globalThree.resetPosition(function(){
-				globalThree.params.showAxes = false;
+				tp.showAxes = false;
 				globalThree.axes.visible = false;
 				globalThree.render();
 
@@ -6147,12 +6147,12 @@ $(document).ready ( function(){
 			let _this = this;
 
 			q.three.createScene(function(){
-				_this.lights.directional0.castShadow = _this.params.castShadow;
+				_this.lights.directional0.castShadow = tp.castShadow;
 				var threads = _this.fabric.children;
 				for (var i = threads.length-1; i >= 0; --i) {
 					if ( threads[i].name == "thread" ){
-						threads[i].castShadow = _this.params.castShadow;
-						threads[i].receiveShadow = _this.params.castShadow;
+						threads[i].castShadow = tp.castShadow;
+						threads[i].receiveShadow = tp.castShadow;
 					}
 				}
 				_this.render();
@@ -6163,7 +6163,7 @@ $(document).ready ( function(){
 		resetPosition: function(callback){
 
 			this.currentPreset = 0;
-			this.animateThreeSceneTo(this.modelParams.initRotation, this.params.initCameraPos, this.params.initControlsTarget, callback);
+			this.animateThreeSceneTo(this.modelParams.initRotation, tp.initCameraPos, tp.initControlsTarget, callback);
 
 		},
 
@@ -6402,7 +6402,7 @@ $(document).ready ( function(){
 				_lights.directional1.color.setHex( lh );
 			}
 
-			_this.lights.directional0.castShadow = _this.params.castShadow;
+			_this.lights.directional0.castShadow = tp.castShadow;
 
 			q.three.render();
 
@@ -6548,7 +6548,7 @@ $(document).ready ( function(){
 				var loadingbar = new Loadingbar("threeloadingtextures", "Loading Textures");
 				var loader = new THREE.TextureLoader();
 
-				for ( var key in _this.textures ) {
+				for ( let key in _this.textures ) {
 				
 					if ( _this.textures.hasOwnProperty(key) && _this.textures[key].url !== undefined ){
 
@@ -6641,7 +6641,7 @@ $(document).ready ( function(){
 					                transparent: true,
 					                opacity: _this.defaultOpacity,
 					                depthWrite: true,
-					                wireframe: _this.params.showWireframe,
+					                wireframe: tp.showWireframe,
 					                name: set+"-"+colorCode
 								});
 
@@ -7294,8 +7294,8 @@ $(document).ready ( function(){
 				var controlsTarget = this.controls.target.clone();
 
 				this.rotationAxisLine.position.copy(controlsTarget);
-				this.params.cameraPos.copy(cameraPos);
-				this.params.controlsTarget.copy(controlsTarget);
+				tp.cameraPos.copy(cameraPos);
+				tp.controlsTarget.copy(controlsTarget);
 				var objectPos = new THREE.Vector3( 0, 0, 0 );
 				var distance = cameraPos.distanceTo( objectPos );  
 
@@ -7482,6 +7482,8 @@ $(document).ready ( function(){
 		// q.three.doMouseInteraction
 		doMouseInteraction: function(type, which, canvasMouse){
 
+			console.log(canvasMouse);
+
 			let _this = this;
 			var mx = ( canvasMouse.x / app.frame.width ) * 2 - 1;
 			var my = ( canvasMouse.y / app.frame.height ) * 2 - 1;
@@ -7603,7 +7605,7 @@ $(document).ready ( function(){
 
 	$(document).on("mousedown mouseup", q.ids("three"), function(e) {
 		app.mouse.event("three", e, function(type, which, x, y){
-			var canavsMouse = getCanvasMouseFromClientMouse("three", x, y);
+			var canavsMouse = getGraphMouse("three", x, y);
 			q.three.doMouseInteraction(type, which, canavsMouse);
 		});
 	});
@@ -7651,37 +7653,10 @@ $(document).ready ( function(){
 
 	$(document).on("mousedown mouseup", q.ids("model"), function(e) {
 		app.mouse.event("model", e, function(type, which, x, y){
-			var canavsMouse = getCanvasMouseFromClientMouse("model", x, y);
+			var canavsMouse = getGraphMouse("model", x, y);
 			q.model.doMouseInteraction(type, which, canavsMouse);
 		});
 	});
-
-	// $(document).on("mouseup", q.ids("model"), function(evt) {
-	// 	var which = lookup(evt.which, [1, 2, 3], ["click", "middle", "right"]);
-	// 	var movex = Math.abs(app.mouse.down.x - app.mouse.x);
-	// 	var movey = Math.abs(app.mouse.down.y - app.mouse.y);
-	// 	if ( movex > 3 || movey > 3 ){
-	// 		app.mouse.isDrag = true;
-	// 	}
-	// 	if ( !app.mouse.isDrag ){
-	// 		var modelMousePos = getCanvasMouseFromClientMouse("model", app.mouse.x, app.mouse.y);
-	// 		globalModel.doMouseInteraction(modelMousePos, which);
-	// 	}
-	// 	mp.allowAutoRotate = true;
-	// 	app.mouse.reset();
-	// });
-
-	// $(document).on("mousedown", q.ids("model"), function(evt) {
-	// 	var which = lookup(evt.which, [1, 2, 3], ["click", "middle", "right"]);
-	// 	app.mouse.down.x = app.mouse.x;
-	// 	app.mouse.down.y = app.mouse.y;
-	// 	app.mouse.isDrag = false;
-	// 	$.doTimeout("mouedragcheck", 600, function(){
-	// 		app.mouse.isDrag = true;
-	// 	});
-	// 	mp.allowAutoRotate = false;
-	// 	app.mouse.set("model", 0, 0, true, evt.which);
-	// });
 
 	function getThreadUpDownArray(arr2D8, threadSet, threadi){
 
@@ -8001,7 +7976,7 @@ $(document).ready ( function(){
 			var isWeft = !isWarp;
 
 			let offset = isWarp ? q.graph.scroll.x : q.graph.scroll.y;
-			let seamless = isWarp ? q.graph.params.seamlessWarp : q.graph.params.seamlessWeft;
+			let seamless = isWarp ? gp.seamlessWarp : gp.seamlessWeft;
 
 			// Background Stripes
 			var light32 = app.ui.check.light;
@@ -8241,13 +8216,13 @@ $(document).ready ( function(){
 				var py = "-";
 
 				if ( var1 ){
-					tx = var1 + globalThree.params.warpStart - 1;
+					tx = var1 + tp.warpStart - 1;
 					wx = loopNumber(tx-1, ww)+1;
 					px = loopNumber(tx-1, pw)+1;
 				}
 
 				if ( var2 ){
-					ty = var2 + globalThree.params.weftStart - 1;
+					ty = var2 + tp.weftStart - 1;
 					wy = loopNumber(ty-1, wh)+1;
 					py = loopNumber(ty-1, ph)+1;
 				}
@@ -8694,7 +8669,7 @@ $(document).ready ( function(){
         set: function(arr2D8, colors32 = false, render = true){
             if ( arr2D8 ){
                 this.artwork2D8 = arr2D8;
-                q.graph.params.autoTrim = false;
+                gp.autoTrim = false;
                 q.graph.new(this.width, this.height);
             }
             if ( colors32 ){
@@ -8817,8 +8792,8 @@ $(document).ready ( function(){
 
             var scrollX = this.scroll.x;
             var scrollY = this.scroll.y;
-            var seamlessX = this.params.seamlessX;
-            var seamlessY = this.params.seamlessY;
+            var seamlessX = ap.seamlessX;
+            var seamlessY = ap.seamlessY;
             var pixelW = this.scroll.point.w;
             var pixelH = this.scroll.point.h;
 
@@ -9416,7 +9391,7 @@ $(document).ready ( function(){
 			},
 			onApply: function(){
 				var hiddenColors = $("#threeHiddenColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
-				q.three.params.hiddenColors = hiddenColors;
+				ap.hiddenColors = hiddenColors;
 				$("#threeHiddenColors").val(hiddenColors);
 				globalThree.buildFabric();
 			},
@@ -10063,7 +10038,7 @@ $(document).ready ( function(){
 			},
 			onApply: function(){
 				var lockedColors = $("#graphAutoPatternLockedColors").val().replace(/[^A-Za-z]/g, "").split("").unique().join("");
-				q.graph.params.autoPatternLockedColors = lockedColors;
+				gp.autoPatternLockedColors = lockedColors;
 				$("#graphAutoPatternLockedColors").val(lockedColors);
 				app.history.off();
 				autoPattern();
@@ -10331,7 +10306,7 @@ $(document).ready ( function(){
 		                el.closest(".xrow").hide();
 		            }
 		        } else if ( dom == "graphAutoColorwayShareColors" ){
-		            q.graph.params.autoColorwayLinkColors = value;
+		            gp.autoColorwayLinkColors = value;
 		            el = $("#graphAutoColorwayLinkColors");
 		            el.prop("checked", value);
 		        }
@@ -10607,7 +10582,7 @@ $(document).ready ( function(){
 	        globalSelection.startfor("copy");
 
 	    } else if (id == "cancel") {
-	        globalSelection.clear_old(4);
+	        // globalSelection.clear_old(4);
 
 	    } else if (id == "crop") {
 	        globalSelection.startfor("crop");
@@ -11199,7 +11174,7 @@ $(document).ready ( function(){
 						onload: function() {
 							app[view].menu.attachEvent("onClick", menuClick);
 							menuLoaded = true;
-							if ( menuLoaded && toolbarLoaded ) {
+							if ( toolbarLoaded ) {
 								if ( typeof _this[view].onload === "function" ) _this[view].onload();
 								resolve();
 							};
@@ -11213,7 +11188,7 @@ $(document).ready ( function(){
 							app[view].toolbar.attachEvent("onStateChange", toolbarStateChange);
 							app[view].toolbar.attachEvent("onClick", toolbarClick);
 							toolbarLoaded = true;
-							if ( menuLoaded && toolbarLoaded ) {
+							if ( menuLoaded ) {
 								if ( typeof _this[view].onload === "function" ) _this[view].onload();
 								resolve();
 							}	
@@ -11835,7 +11810,7 @@ $(document).ready ( function(){
 					var v = {};
 					var is = {};
 
-					for ( var key in i ){
+					for ( let key in i ){
 						if ( i.hasOwnProperty(key) ){
 							e[key] = $("#"+i[key]);
 							v[key] = e[key].num();
@@ -12220,7 +12195,7 @@ $(document).ready ( function(){
         					_this[name].tabbar.setArrowsMode("auto");
 						}
 
-						for ( var tab in _this[name].tabs ) {
+						for ( let tab in _this[name].tabs ) {
 							if ( _this[name].tabs.hasOwnProperty(tab) ){
 					           	_this.addTab(name, tab);
 					        }				
@@ -12422,7 +12397,7 @@ $(document).ready ( function(){
 						});
 					}
 
-					for ( var id in q.graph.weaves ) {
+					for ( let id in q.graph.weaves ) {
 						if ( q.graph.weaves.hasOwnProperty(id) ){
 
 							item = q.graph.weaves[id];
@@ -12481,7 +12456,7 @@ $(document).ready ( function(){
 						});
 					}
 					thumb_dir = "model/objects/";
-					for ( var id in q.model.models ) {
+					for ( let id in q.model.models ) {
 						if ( q.model.models.hasOwnProperty(id) ){
 							item = q.model.models[id];
 							showInLibrary = gop(item, "show", true);
@@ -12562,7 +12537,7 @@ $(document).ready ( function(){
 					var _tab = tabName !== undefined ? _win[tabName] : _win["system"];
 					var _tabs = _win.tabs;
 
-					for ( var tabNameKey in _tabs ) app.wins.render("onShow", winName, tabNameKey);
+					for ( let tabNameKey in _tabs ) app.wins.render("onShow", winName, tabNameKey);
 
 					if ( firstShow && tabName == undefined ){
 						_win.tabbar.tabs("system").setActive();
@@ -12897,14 +12872,14 @@ $(document).ready ( function(){
 					codeA = code;
 					codeB = this.marked;
 
-					if (!q.graph.params.lockWarp){
+					if (!gp.lockWarp){
 						newPattern = q.pattern.warp.replaceAll(codeA, "FLAG");
 						newPattern = newPattern.replaceAll(codeB, codeA);
 						newPattern = newPattern.replaceAll("FLAG", codeB);
 						q.pattern.set(19, "warp", newPattern, false);
 					}
 
-					if (!q.graph.params.lockWeft){
+					if (!gp.lockWeft){
 						newPattern = q.pattern.weft.replaceAll(codeA, "FLAG");
 						newPattern = newPattern.replaceAll(codeB, codeA);
 						newPattern = newPattern.replaceAll("FLAG", codeB);
@@ -13424,13 +13399,13 @@ $(document).ready ( function(){
 				// Create initial Storage
 				if ( h.storage == undefined ){
 					h.storage = {};
-					for ( var param in s.params ) h.storage[param] = [];
+					for ( let param in s.params ) h.storage[param] = [];
 				}
 
 				// Current state
 				var state = {};
 				if ( !h.states.length ){
-					for ( var param in s.params ) state[param] = 0;
+					for ( let param in s.params ) state[param] = 0;
 				} else {
 					state = JSON.parse(JSON.stringify(h.states[h.statei]));
 				}
@@ -13550,7 +13525,7 @@ $(document).ready ( function(){
 				var oldState = h.states[oldStatei];
 				var newState = h.states[newStatei];
 				var state = {};
-				for ( var param in s.params ) {
+				for ( let param in s.params ) {
 					if ( oldState[param] !== newState[param] ){
 						state[param] = h.stateParamValue(param, newStatei);
 					}
@@ -13938,8 +13913,8 @@ $(document).ready ( function(){
 				new_tieupW = Math.ceil(new_tieupW / ppg) * ppg;
 				new_tieupH = Math.ceil(new_tieupH / ppg) * ppg;
 				if ( new_tieupW !== gp.tieupBoxW || new_tieupH !== gp.tieupBoxH ){
-					q.graph.params.tieupBoxW = Math.ceil(new_tieupW / ppg) * ppg;
-					q.graph.params.tieupBoxH = Math.ceil(new_tieupH / ppg) * ppg;
+					gp.tieupBoxW = Math.ceil(new_tieupW / ppg) * ppg;
+					gp.tieupBoxH = Math.ceil(new_tieupH / ppg) * ppg;
 					app.graph.interface.fix("onTieupResizerButton");
 					app.config.save();
 				}
@@ -14322,7 +14297,7 @@ $(document).ready ( function(){
 
 			if ( this.weaveNeedsUpdate ){
 				Selection.get("weave").scroll(q.graph.scroll.x, q.graph.scroll.y);
-				this.render("weave", this.weave2D8, "bl", q.graph.scroll.x, q.graph.scroll.y, q.graph.params.seamlessWeave, q.graph.params.seamlessWeave, q.graph.params.drawStyle);
+				this.render("weave", this.weave2D8, "bl", q.graph.scroll.x, q.graph.scroll.y, gp.seamlessWeave, gp.seamlessWeave, gp.drawStyle);
 				this.weaveNeedsUpdate = false;
 			}
 
@@ -14330,13 +14305,13 @@ $(document).ready ( function(){
 
 			if ( this.threadingNeedsUpdate ){
 				Selection.get("threading").scroll(q.graph.scroll.x, q.tieup.scroll.y);
-				this.render("threading", this.threading2D8, "bl", q.graph.scroll.x, q.tieup.scroll.y, q.graph.params.seamlessThreading, false);
+				this.render("threading", this.threading2D8, "bl", q.graph.scroll.x, q.tieup.scroll.y, gp.seamlessThreading, false);
 				this.threadingNeedsUpdate = false;
 			}
 
 			if ( this.liftingNeedsUpdate ){
 				Selection.get("lifting").scroll(q.tieup.scroll.x, q.graph.scroll.y);
-				this.render("lifting", this.lifting2D8, "bl", q.tieup.scroll.x, q.graph.scroll.y, false, q.graph.params.seamlessLifting);
+				this.render("lifting", this.lifting2D8, "bl", q.tieup.scroll.x, q.graph.scroll.y, false, gp.seamlessLifting);
 				this.liftingNeedsUpdate = false;
 			}
 
@@ -14387,7 +14362,7 @@ $(document).ready ( function(){
 
 			var warpPatternL = q.pattern.warp.length;
 			var weftPatternL = q.pattern.weft.length;
-			var repeatCalc = q.graph.params.repeatCalc;
+			var repeatCalc = gp.repeatCalc;
 			if ( repeatCalc == "weave" || drawStyle == "graph" ){
 				fabricRepeatW = arrW;
 				fabricRepeatH = arrH;
@@ -14768,7 +14743,7 @@ $(document).ready ( function(){
 
 			} 
 
-			if ( q.graph.params.autoTrim && doAutoTrim){
+			if ( gp.autoTrim && doAutoTrim){
 				var trimR = !seamlessX ? "r" : "";
 				var trimT = !seamlessY ? "t" : "";
 				var trimSides = trimR + trimT;
@@ -14797,12 +14772,12 @@ $(document).ready ( function(){
 
 				Debug.time("propagate", "graph");
 
-				if ( graph == "lifting" && q.graph.liftingMode == "treadling" && q.graph.params.lockShaftsToTreadles){
+				if ( graph == "lifting" && q.graph.liftingMode == "treadling" && gp.lockShaftsToTreadles){
 					var newThreading = this.lifting2D8.clone2D8().rotate2D8("r").flip2D8("y");
 					q.graph.set(0, "threading", newThreading, {propagate: false});
 					this.setWeaveFromParts();
 
-				} else if ( graph == "threading" && q.graph.liftingMode == "treadling" && q.graph.params.lockShaftsToTreadles){
+				} else if ( graph == "threading" && q.graph.liftingMode == "treadling" && gp.lockShaftsToTreadles){
 					var newTreadling = this.threading2D8.clone2D8().rotate2D8("l").flip2D8("x");
 					q.graph.set(0, "lifting", newTreadling, {propagate: false});
 					this.setWeaveFromParts();
@@ -14863,9 +14838,9 @@ $(document).ready ( function(){
 			if ( colNum && rowNum ){
 				if ( q.graph.liftingMode == "treadling"){
 					var emptyWeave = newArray2D(liftingW, data[0].length, 1);
-					lifting2D8 = paste2D_old(emptyWeave, lifting2D8, 0, rowNum-1, false, q.graph.params.seamlessLifting, 1);
+					lifting2D8 = paste2D_old(emptyWeave, lifting2D8, 0, rowNum-1, false, gp.seamlessLifting, 1);
 				}
-				lifting2D8 = paste2D_old(data, lifting2D8, colNum-1, rowNum-1, false, q.graph.params.seamlessLifting, 1);
+				lifting2D8 = paste2D_old(data, lifting2D8, colNum-1, rowNum-1, false, gp.seamlessLifting, 1);
 			} else {
 				lifting2D8 = data;
 			}
@@ -14970,7 +14945,7 @@ $(document).ready ( function(){
 
 
 		setShaft : function ( shaftNum, endArray, render = true){
-			for ( var x = 0; x < this.ends; x++) {
+			for ( let x = 0; x < this.ends; x++) {
 				if(this.threading2D8[x][shaftNum-1] == 1){
 					this.setEnd(x+1, endArray, render);
 				}
@@ -16674,37 +16649,6 @@ $(document).ready ( function(){
 
 	};
 
-	// Intersetion of two Rect a and b with x1, x2 top left, a Canvas, b rectangle
-	function rectIntersection(ax1,ay1, ax2, ay2, bx1, by1, bx2, by2){
-
-		[ax1, ax2] = ax1 > ax2 ? [ax2, ax1] : [ax1, ax2];
-		[ay1, ay2] = ay1 > ay2 ? [ay2, ay1] : [ay1, ay2];
-
-		[bx1, bx2] = bx1 > bx2 ? [bx2, bx1] : [bx1, bx2];
-		[by1, by2] = by1 > by2 ? [by2, by1] : [by1, by2];
-
-		var cx1 = Math.max(ax1, bx1);
-		var cy1 = Math.max(ay1, by1);
-		var cx2 = Math.min(ax2, bx2);
-		var cy2 = Math.min(ay2, by2);
-		
-		var cW = cx2 - cx1;
-		var cH = cy2 - cy1;
-
-		var isIntersecting = cW && cH;
-
-		return {
-			"valid" : isIntersecting,
-			"x1" : cx1,
-			"y1" : cy1,
-			"x2" : cx2,
-			"y2" : cy2,
-			"w" : cW,
-			"h" : cH
-		};
-
-	}
-
 	var globalFloats = {
 
 		warp: undefined,
@@ -16732,7 +16676,7 @@ $(document).ready ( function(){
 
 			Debug.time("globalFloats.find");
 
-			var x, y, floatSize, startX, startY, currentState, nextState, loopingFloat, loopingFloatSize, nextPos, fabricSide, fabric;
+			var x, y, floatSize, currentState, nextState, loopingFloat, loopingFloatSize, nextPos, fabricSide;
 
 			var weaveW = weave.length;
 			var weaveH = weave[0].length;
@@ -17011,84 +16955,50 @@ $(document).ready ( function(){
 
 	}
 
-	function getCanvasMouseFromClientMouse(element, clientx, clienty, pointw = 1, pointh = 1, offsetx = 0, offsety = 0, columnLimit = 0, rowLimit = 0, origin = "bl"){
-
-		var [w, h, t, l, b, r] = q.position[element];
-
-		var ex = origin == "tr" || origin == "br" ? w - clientx + l - 1 - offsetx : clientx - l - offsetx;
-    	var ey = origin == "bl" || origin == "br" ? h - clienty + t - 1 - offsety : clienty - t - offsety;
-
-		Debug.item("getCanvasMouseFromClientMouse.element", element, "system");
-		Debug.item("getCanvasMouseFromClientMouse.clientxy", clientx+", "+clienty, "system");
-		Debug.item("getCanvasMouseFromClientMouse.exy", ex+", "+ey, "system");
-		Debug.item("getCanvasMouseFromClientMouse.wh", w+" x "+h, "system");
-		Debug.item("getCanvasMouseFromClientMouse.pos", t+" "+l+" "+b+" "+r, "system");
-
-    	var col = Math.ceil((ex + 1)/pointw * q.pixelRatio);
-    	var row = Math.ceil((ey + 1)/pointh * q.pixelRatio);
-    	var end = columnLimit ? loopNumber(col-1, columnLimit)+1 : col;
-    	var pick = rowLimit ? loopNumber(row-1, rowLimit)+1 : row;
-
-        return {
-        	x : ex,
-        	y : ey,
-        	col : col,
-        	row : row,
-        	end : end,
-        	pick : pick,
-        	cx : clientx,
-        	cy : clienty,
-        	graphpos : element +"-"+ col +"-"+ row 
-        };
-
-	}
-
 	function getGraphMouse(graph, clientx, clienty){
 
-		var mouse, pointw, pointh, offsetx, offsety, colLimit, rowLimit, seamlessX, seamlessY;
+		let mouse = false;
 
 		if ( graph && graph.in("weave", "threading", "lifting", "tieup", "warp", "weft", "artwork", "three", "model", "simulation" ) ){
 
 			mouse = {};
 
-			var origin = app.origin;
+			let origin = app.origin;
+			let pointw = 1;
+			let pointh = 1;
+			let offsetx = 0;
+			let offsety = 0;
+			let rowLimit = 0;
+			let colLimit = 0;
 
 			if ( app.view.active == "graph" ){
 				pointw = q.graph.scroll.point.w;
 				pointh = q.graph.scroll.point.h;
 				offsetx = q.graph.scroll.x;
 				offsety = q.graph.scroll.y;
-				rowLimit = 0;
-				colLimit = 0;
 			}
 
 			if ( graph == "weave" ){
-
-				colLimit = q.graph.params.seamlessWeave ? q.graph.weave2D8.length : 0;
-				rowLimit = q.graph.params.seamlessWeave ? q.graph.weave2D8[0].length : 0;
+				colLimit = gp.seamlessWeave ? q.graph.weave2D8.length : 0;
+				rowLimit = gp.seamlessWeave ? q.graph.weave2D8[0].length : 0;
 
 			} else if ( graph == "threading" ){
-
 				offsety = q.tieup.scroll.y;
-				colLimit = q.graph.params.seamlessThreading ? q.graph.threading2D8.length : 0;
+				colLimit = gp.seamlessThreading ? q.graph.threading2D8.length : 0;
 
 			} else if ( graph == "lifting" ){
-
 				offsetx = q.tieup.scroll.x;
-				rowLimit = q.graph.params.seamlessLifting ? q.graph.lifting2D8.length : 0;
+				rowLimit = gp.seamlessLifting ? q.graph.lifting2D8.length : 0;
 
 			} else if ( graph == "tieup" ){
-
 				offsetx = q.tieup.scroll.x;
 				offsety = q.tieup.scroll.y;
 
 			} else if ( graph.in("warp", "weft") ){
-
-				colLimit = q.graph.params.seamlessWarp ? q.pattern.warp.length : 0;
-				rowLimit = q.graph.params.seamlessWeft ? q.pattern.weft.length : 0;
+				colLimit = gp.seamlessWarp ? q.pattern.warp.length : 0;
+				rowLimit = gp.seamlessWeft ? q.pattern.weft.length : 0;
 			
 			} else if ( graph == "artwork" ){
-
 				pointw = q.artwork.scroll.point.w;
 				pointh = q.artwork.scroll.point.h;
 				offsetx = q.artwork.scroll.x;
@@ -17099,12 +17009,9 @@ $(document).ready ( function(){
 
 			} else if ( graph == "simulation" ){
 
-				pointw = 1;
-				pointh = 1;
-				offsetx = 0;
-				offsety = 0;
-				rowLimit = 0;
-				colLimit = 0;
+			} else if ( graph == "three" ){
+
+			} else if ( graph == "modal" ){
 
 			}
 
@@ -17127,10 +17034,6 @@ $(document).ready ( function(){
 	    	mouse.r = r - clientx - 1;
 
 	    	mouse.withinGraph = mouse.col > 0 && mouse.row > 0;
-
-		} else {
-
-			mouse = false;
 
 		}
 
@@ -17253,14 +17156,14 @@ $(document).ready ( function(){
 
 			} else if ( q.graph.tool == "pointer" ){
 
-                if ( graph == "weave" && q.graph.liftingMode == "treadling" && q.graph.params.lockTreadling && q.graph.params.lockThreading){
+                if ( graph == "weave" && q.graph.liftingMode == "treadling" && gp.lockTreadling && gp.lockThreading){
                     var shaftNum = q.graph.threading1D[mouse.end-1];
                     var treadleNum = q.graph.treadling1D[mouse.pick-1];
                     if ( shaftNum !== undefined && shaftNum && treadleNum !== undefined && treadleNum){
                     	q.graph.set(6, "tieup", "toggle", {col: treadleNum, row: shaftNum});
                     }
                 
-                } else if ( graph == "weave" && q.graph.liftingMode == "liftplan" && q.graph.params.lockThreading){
+                } else if ( graph == "weave" && q.graph.liftingMode == "liftplan" && gp.lockThreading){
                     var shaftNum = q.graph.threading1D[mouse.end-1];
                     if ( shaftNum !== undefined && shaftNum){
                     	q.graph.set(6, "lifting", "toggle", {col: shaftNum, row: mouse.pick});
@@ -17496,13 +17399,11 @@ $(document).ready ( function(){
 			
 		} else if ( graph && graph == "artwork" && mousePointChanged ) {
 			MouseTip.text(0, mouse.col+", "+mouse.row);
-			if ( graph == "artwork" ){
-				let pci = q.artwork.pointColorIndex(mouse);
-				if ( isSet(pci) ) {
-					MouseTip.text( 1, pci );
-				} else {
-					MouseTip.remove(1);
-				}
+			let pci = q.artwork.pointColorIndex(mouse);
+			if ( isSet(pci) ) {
+				MouseTip.text( 1, pci );
+			} else {
+				MouseTip.remove(1);
 			}
 			
 		}
@@ -17572,25 +17473,6 @@ $(document).ready ( function(){
 
 		if ( graph && graph.in("weave", "tieup", "threading", "lifting") ){
 
-			// globalStatusbar.set("graph-icon", "weave-36.png");
-			// globalStatusbar.set("graphIntersection", mouse.col, mouse.row);
-			// globalStatusbar.set("graphSize", q.graph.ends, q.graph.picks);
-			// globalStatusbar.set("shafts");
-
-			// if (q.graph.tool == "selection" && globalSelection.moveTargetBox && globalSelection.paste_action_step == 0){
-			// 	console.log(["more", globalSelection.paste_action_step]);
-			
-			// 	globalSelection.pasteStartCol = mouse.col;
-			// 	globalSelection.pasteStartRow = mouse.row;
-			
-			// } else if ( q.graph.tool == "selection" && globalSelection.moveTargetBox && globalSelection.paste_action_step == 1){
-			// 	console.log(["more", globalSelection.paste_action_step]);
-
-			// 	globalSelection.pasteLastCol = mouse.col;
-			// 	globalSelection.pasteLastRow = mouse.row;
-
-			// }
-
 			if ( app.weavePainting ){
 				graphDraw.state = app.mouse.which === 1 ? 1 : 0;
 				let paintMouse = getGraphMouse(app.mouse.down.graph, mousex, mousey);
@@ -17618,7 +17500,7 @@ $(document).ready ( function(){
 			var isWeft = yarnSet == "weft";
 
 			var pattern = q.pattern[yarnSet];
-			var seamless = isWarp ? q.graph.params.seamlessWarp : q.graph.params.seamlessWeft;
+			var seamless = isWarp ? gp.seamlessWarp : gp.seamlessWeft;
 
 			var colNum = mouse.col;
 			var rowNum = mouse.row;
@@ -17664,7 +17546,7 @@ $(document).ready ( function(){
 				Debug.item("newPattern", newPattern);
 				q.pattern.set(43, yarnSet, newPattern);
 
-				if ( q.graph.params.lockWarpToWeft ){
+				if ( gp.lockWarpToWeft ){
 					var otherYarnSet = yarnSet == "warp" ? "weft" : "warp";
 					q.pattern.set(43, otherYarnSet, newPattern);
 				}
@@ -17711,12 +17593,9 @@ $(document).ready ( function(){
 		// 	globalStatusbar.set("artworkColor", "-", "-");
 		// }
 
-		if ( graph == "artwork" ){
-
-			//mouse = getCanvasMouseFromClientMouse(graph, mousex, mousey, q.artwork.scroll.point.w, q.artwork.scroll.point.h, q.artwork.scroll.x, q.artwork.scroll.y, q.artwork.width, q.artwork.height);
-			
-			var aX = q.artwork.params.seamlessX ? mouse.end-1 : mouse.col-1;
-			var aY = q.artwork.params.seamlessY ? mouse.pick-1 : mouse.row-1;
+		if ( graph == "artwork" ){			
+			var aX = ap.seamlessX ? mouse.end-1 : mouse.col-1;
+			var aY = ap.seamlessY ? mouse.pick-1 : mouse.row-1;
 			[aX, aY] = isBetween(aX, 0, q.artwork.width-1) && isBetween(aY, 0, q.artwork.height-1) ? [aX, aY] : ["-", "-"];
 
 			if ( !isNaN(aX) && !isNaN(aY) ){
@@ -17727,7 +17606,6 @@ $(document).ready ( function(){
 			} else {
 				globalStatusbar.set("artworkColor", "-", "-");
 			}
-
 		}
 
 		// Simulation --------
@@ -17741,17 +17619,14 @@ $(document).ready ( function(){
 		if ( graph == "three" ){
 
 			if ( app.mouse.isUp ){
-				var threeMousePos = getCanvasMouseFromClientMouse("three", mousex, mousey);
-				q.three.doMouseInteraction("mousemove", 0, threeMousePos);
+				q.three.doMouseInteraction("mousemove", 0, mouse);
 			}
 
 		}
 
 		// Model --------
 		if ( graph == "model" ){
-
-			var modelCanvasMouse = getCanvasMouseFromClientMouse("model", mousex, mousey);
-			globalModel.doMouseInteraction("mousemove", 0, modelCanvasMouse);
+			globalModel.doMouseInteraction("mousemove", 0, mouse);
 
 		}
 
