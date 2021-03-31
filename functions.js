@@ -736,7 +736,7 @@ function loopNumber(num, divisor){
 // reset to 0 if more than or equat to divisor. MOD operation
 // negative numbers turns to positive on diviser side
 function loopNumberFloating(num, divisor){
-	return (num % divisor) + divisor % divisor;
+	return ((num % divisor) + divisor) % divisor;
 }
 
 // gives number between limits.
@@ -2001,7 +2001,7 @@ function isNumber(v){
 }
 
 function isSet(v){
-	return !(v === undefined || typeof v === "undefined" || v === null);
+	return (v !== undefined && v !== null);
 }
 
 function capitalFirst(str){

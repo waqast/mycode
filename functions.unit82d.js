@@ -588,7 +588,7 @@ Array.prototype.transform2D8 = function(instanceId = 0, command, ...v){
 		var decoded = decodePattern(v[0]);
 		var patternHooks = decoded.sum;
 		var patternActive = decoded.count["A"];
-		var patternInactive = patternHooks - patternInactive;
+		var patternInactive = patternHooks - patternActive;
 
 		var castoutGroups = Math.floor(sw / patternActive);
 		var harnessHooks = castoutGroups * patternHooks;

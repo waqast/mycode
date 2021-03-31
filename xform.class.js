@@ -479,7 +479,7 @@ class XForm {
             } else if ( type == "select"){
                 html += "<select class='xselect"+css+"' id='"+domId+"'>";
                     if ( Array.isArray(defaultValue) ){
-                        for (var value of defaultValue) {
+                        for (let value of defaultValue) {
                           html += "<option value='"+value[0]+"'>"+value[1]+"</option>";
                         }
                     }
@@ -495,7 +495,7 @@ class XForm {
                 html += "<input class='xtext"+css+"' id='"+domId+"' type='text' "+attributes+"/>";
 
             } else if ( type == "range" ){
-                html += "<input class='xrange"+css+"' id='"+domId+"' type='range' min='"+min+"' max='"+max+"' step='"+step+"' value='"+value+"' />";
+                html += "<input class='xrange"+css+"' id='"+domId+"' type='range' min='"+min+"' max='"+max+"' step='"+step+"' value='"+defaultValue+"' />";
 
             } else if ( type == "button" ){
                 html += "<div class='xbutton xsingle"+css+"' id='"+domId+"'>"+defaultValue+"</div>";

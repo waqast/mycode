@@ -15666,7 +15666,7 @@ $(document).ready ( function(){
 		            		console.log(float);
 		            		// leftWarpFloatSize = globalFloats.sizeProfile.warp[sx-1][y];
 		            		// rightWarpFloatSize = globalFloats.sizeProfile.warp[lx+1][y];
-		            		for ( m = 0; m < floatSize; ++m ){
+		            		for ( let m = 0; m < floatSize; ++m ){
 		            			i = y * xNodes + sx + m;
 		            			_p.deflection.weft[i] += mapNumberToRange(m, 0, floatSize-1, 1, -1, false, false);
 		            		}
@@ -17187,7 +17187,7 @@ $(document).ready ( function(){
 		app.mouse.down.graph = graph;
 		app.mouse.set(graph, mouse.col, mouse.row, true, e.which);
 
-		let withinGraph = mouse.withinGraph && typeof e.which !== undefined;
+		let withinGraph = mouse.withinGraph && e.which !== undefined;
 
 		// Undefined Mouse Key
 		if ( !withinGraph ) {
