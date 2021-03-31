@@ -43,13 +43,6 @@ $(document).ready ( function(){
 		downColor32 : hex_rgba32("#FFFFFF"),
 		upColor32_disable : hex_rgba32("#7F7F7F"),
 
-		weave: {},
-		threading: {},
-		lifting: {},
-		tieup: {},
-		warp: {},
-		weft: {},
-
 		canvas:{},
 		context:{},
 		pixels:{},
@@ -1800,7 +1793,7 @@ $(document).ready ( function(){
 				weaveArray = weaveArray.insertArrayAt(endNum, emptyRightEndArray);
 				weaveArray = weaveArray.insertArrayAt(endNum-1, emptyLeftEndArray);
 				q.graph.set(3, weaveArray);
-				weaveHighlight.clear();
+				// weaveHighlight.clear();
 				hideModalWindow();
 				return false;
 
@@ -1852,7 +1845,7 @@ $(document).ready ( function(){
 				}
 
 				q.graph.set(4, weaveArray);
-				weaveHighlight.clear();
+				// weaveHighlight.clear();
 				hideModalWindow();
 				return false;
 
@@ -2811,9 +2804,9 @@ $(document).ready ( function(){
         var threadNum = isWarp ? mouse.end : mouse.pick;
         var posNum = isWarp ? mouse.col : mouse.row;
 
-        if ( typeof e.which == undefined ) {
+        if ( e.which == undefined ) {
 
-        } else if (e.which == 1) {
+        } else if ( e.which == 1 ) {
 
             var code = app.palette.selected;
             app.mouse.graph = yarnSet;
@@ -3365,7 +3358,7 @@ $(document).ready ( function(){
 			if ( weaveWidth > q.limits.maxWeaveSize ) errors.push("Can't insert end. Maximum limit of weave size is " + q.limits.maxWeaveSize + " Ends.");
 			if ( weaveWidth < q.limits.minWeaveSize ) errors.push("Can't delete end. Minimum limit of weave size reached.");
 
-			if ( typeof obj[0] !== undefined  ){
+			if ( obj[0] !== undefined  ){
 				var weaveHeight = obj[0].length;
 				if ( weaveHeight > q.limits.maxWeaveSize ) errors.push("Can't insert pick. Maximum limit of weave size is " + q.limits.maxWeaveSize + " Picks.");
 				if ( weaveHeight < q.limits.minWeaveSize ) errors.push("Can't delete pick. Minimum limit of weave size reached.");
@@ -4309,7 +4302,7 @@ $(document).ready ( function(){
 				}
 
 				if ( loading ){
-					_textures[id] == "initiated";
+					_textures[id] = "initiated";
 					_this.textureLoader.load( data, function (texture) {
 						_textures[id] = texture;
 						resolve(texture);
@@ -15095,78 +15088,6 @@ $(document).ready ( function(){
 
 	};
 
-	var g_weaveHighlightCanvas, g_weaveHighlightContext;
-
-	var weaveHighlight = {
-		"status" : false,
-		clear : function(){
-			if ( this.status ){
-				this.status = false;
-				g_weaveHighlightContext.clearRect(0, 0, g_weaveHighlightCanvas.width, g_weaveHighlightCanvas.height);
-				$("#weave-highlight-layer").css({
-					"background-image": "url(" + g_weaveHighlightCanvas.toDataURL() + ")"
-				});
-			}
-		},
-		"show" : {
-
-			box : function(se, sp, le, lp, c, clearHighlight = true){
-
-				var startX, startY, rectW, rectH;
-
-				if (clearHighlight) {
-					weaveHighlight.clear();
-				}
-				
-				weaveHighlight.status = true;
-
-				if ( se > le ){
-					[se, le] = [le, se];
-				}
-
-				if ( sp > lp ){
-					[sp, lp] = [lp, sp];
-				}
-
-				startX = gp.pointPlusGrid * (se - 1);
-				startY = gp.pointPlusGrid * (q.graph.picks - lp);
-				rectW = (le - se + 1) * gp.pointPlusGrid;
-				rectH = (lp - sp + 1) * gp.pointPlusGrid;
-
-				drawRect(g_weaveHighlightContext, startX, startY, rectW, rectH, c, true);
-
-				$("#weave-highlight-layer").css({
-					"background-image": "url(" + g_weaveHighlightCanvas.toDataURL() + ")"
-				});
-			},
-
-			line : function(se, sp, le, lp, c, clearHighlight){
-
-				weaveHighlight.clear();
-				weaveHighlight.status = true;
-				
-				var dx = Math.abs(le - se);
-				var sx = se < le ? 1 : -1;
-				var dy = Math.abs(lp - sp);
-				var sy = sp < lp ? 1 : -1; 
-				var err = ( dx > dy ? dx : -dy ) / 2;
-				while (true) {
-					weaveHighlight.show.box(se, sp, se, sp, c, false);
-					if (se === le && sp === lp) break;
-					var e2 = err;
-					if (e2 > -dx) {
-						err -= dy; se += sx;
-					}
-					if (e2 < dy) {
-						err += dx; sp += sy;
-					}
-				}
-
-			}
-
-		}
-	};
-
 	var globalTieup = {
 
 		gridT: 0,
@@ -16468,42 +16389,6 @@ $(document).ready ( function(){
 		});
     }
 
-	var patternHighlight = {
-		"status" : false,
-		"set" : "",
-		"start" : 0,
-		"end" : 0,
-		"color" : 0,
-		clear : function(){
-			if ( this.status ){
-				this.status = false;
-				$("#"+this.set+"-pattern .marker").hide();
-			}
-		},
-		show : function(set, start, end, color){
-			this.clear();
-			this.status = true;
-			this.set = set;
-			this.start = start;
-			this.end = end;
-			this.color = color;
-
-			var startIndex = Math.min(start, end);
-			var endIndex = Math.max(start, end);
-
-			if ( set == "weft"){
-				startIndex = Math.max(start, end);
-				endIndex = Math.min(start, end);
-				startIndex = q.limits.maxPatternSize - startIndex - 1;
-				endIndex = q.limits.maxPatternSize - endIndex - 1;
-			}
-			
-			for (var n = startIndex; n <= endIndex; n++) {
-				$("#"+set+"-pattern .marker").eq(n).show();
-			}
-		}
-	};
-
 	var weaveBoxClicked = {
 		"endNum" : 0,
 		"pickNum" : 0,
@@ -16643,18 +16528,6 @@ $(document).ready ( function(){
 			let selectedWeave = q.graph.get(Selection.graph, Selection.sx+1, Selection.sy+1, Selection.lx+1, Selection.ly+1);
 			let inverse = inverseWeave(selectedWeave);
 			q.graph.set(0, Selection.graph, inverse, {col: Selection.minX+1, row: Selection.minY+1});
-		},
-
-		clear_old : function(id){
-			// weaveHighlight.clear();
-			// this.step = 0;
-			//this.status = false;
-			//this.graph = false;
-			//this.stopSelectionAnimation();
-			//var ctx = g_weaveLayer1Context;
-			//var ctxW = ctx.canvas.clientWidth * q.pixelRatio;
-			//var ctxH = ctx.canvas.clientHeight * q.pixelRatio;
-			//ctx.clearRect(0, 0, ctxW, ctxH);
 		},
 
 		cancelAction : function(){
@@ -17137,36 +17010,6 @@ $(document).ready ( function(){
 		}
 
 	}
-
-	// ----------------------------------------------------------------------------------
-	// Pattern Clipboard
-	// ----------------------------------------------------------------------------------
-	var patternSelection = {
-		status : false,
-		step : 0,
-		action : "",
-		set : "",
-		startThread : 0,
-		endThread : 0,
-		array : [],
-		clear : function(){
-			patternHighlight.clear();
-			this.step = 0;
-			this.status = false;
-		},
-		startfor : function(action){
-			patternHighlight.clear();
-			this.status = true;
-			this.step = 1;
-			this.action = action;
-		},
-		setArray : function(){
-			var startIndex = Math.min(this.startThread, this.endThread);
-			var endIndex = Math.max(this.startThread, this.endThread);
-			this.array = q.pattern[this.set].slice(startIndex, endIndex+1);
-			patternHighlight.show(this.set, startIndex, endIndex, "red");
-		}
-	};
 
 	function getCanvasMouseFromClientMouse(element, clientx, clienty, pointw = 1, pointh = 1, offsetx = 0, offsety = 0, columnLimit = 0, rowLimit = 0, origin = "bl"){
 

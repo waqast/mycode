@@ -116,11 +116,6 @@ class Selection {
     get maxX(){ return Math.max(this.sx, this.lx); }
     get maxY(){ return Math.max(this.sy, this.ly); }
 
-    set type(value){
-        this.clear();
-        this.type = value;
-    }
-
     get visible(){
         return this.boundaryPoints.length;
     }
