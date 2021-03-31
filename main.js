@@ -2761,7 +2761,7 @@ $(document).ready ( function(){
 
 		var mouse = getGraphMouse(graph, app.mouse.x, app.mouse.y);
 
-		if ( graph ){
+		if ( graph != null && graph ){
 			if ( graph.in("warp", "weft") ){
 				var pos = graph == "warp" ? mouse.col : mouse.row;
 				MouseTip.text(0, pos);

@@ -16,21 +16,21 @@ class Pdf{
 
     static draftImage(params, putInDocContent = false){
 
-        var logo = getObjProp(params, "logo");
+        var logo = gop(params, "logo", false);
 
-        var downloadAsImage = getObjProp(params, "downloadAsImage");
-        var weave = getObjProp(params, "weave");
-        var threading = getObjProp(params, "threading");
-        var lifting = getObjProp(params, "lifting");
-        var tieup = getObjProp(params, "tieup");
-        var warp = getObjProp(params, "warp");
-        var weft = getObjProp(params, "weft");
-        var palette = getObjProp(params, "palette");
-        var origin = getObjProp(params, "origin", "bl");
-        var drawStyle = getObjProp(params, "drawStyle", "graph");
-        var liftingMode = getObjProp(params, "liftingMode", "graph");
+        var downloadAsImage = gop(params, "downloadAsImage", false);
+        var weave = gop(params, "weave", false);
+        var threading = gop(params, "threading", false);
+        var lifting = gop(params, "lifting", false);
+        var tieup = gop(params, "tieup", false);
+        var warp = gop(params, "warp", false);
+        var weft = gop(params, "weft", false);
+        var palette = gop(params, "palette", false);
+        var origin = gop(params, "origin", "bl", false);
+        var drawStyle = gop(params, "drawStyle", "graph", false);
+        var liftingMode = gop(params, "liftingMode", "graph", false);
 
-        let majorEvery = getObjProp(params, "majorEvery", 8);
+        let majorEvery = gop(params, "majorEvery", 8);
 
         if ( liftingMode == "weave" ){
             threading = false;
@@ -416,18 +416,18 @@ class Pdf{
     static make(params){
 
         var printId = Date.now().toString(16);
-        var weave = getObjProp(params, "weave");
+        var weave = gop(params, "weave", false);
 
-        var threading = getObjProp(params, "threading");
-        var lifting = getObjProp(params, "lifting");
-        var tieup = getObjProp(params, "tieup");
+        var threading = gop(params, "threading", false);
+        var lifting = gop(params, "lifting", false);
+        var tieup = gop(params, "tieup", false);
 
-        var warp = getObjProp(params, "warp");
-        var weft = getObjProp(params, "weft");
-        var palette = getObjProp(params, "palette");
-        var origin = getObjProp(params, "origin", "bl");
-        var drawStyle = getObjProp(params, "drawStyle", "graph");
-        var liftingMode = getObjProp(params, "liftingMode", "graph");
+        var warp = gop(params, "warp", false);
+        var weft = gop(params, "weft", false);
+        var palette = gop(params, "palette", false);
+        var origin = gop(params, "origin", "bl", false);
+        var drawStyle = gop(params, "drawStyle", "graph", false);
+        var liftingMode = gop(params, "liftingMode", "graph", false);
 
         // var weaveCode = zipWeave(g.graph.weave2D8);
         // var colorPalette = getPaletteHexString();

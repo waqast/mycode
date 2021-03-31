@@ -1662,10 +1662,7 @@ function saveArrayBufferAsFile( buffer, filename ) {
 	saveFile( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
 }
 
-function getObjProp(obj, key, def = null ){
-	return obj && key && obj.hasOwnProperty(key) ? obj[key] : def;
-}
-
+// get Object Property
 function gop(obj, key, def = null ){
 	return obj && key && obj.hasOwnProperty(key) ? obj[key] : def;
 }
@@ -1686,7 +1683,7 @@ function drawImageToCanvas(url, canvas, options, callback){
 	var cw = canvas.width;
 	var ch = canvas.height;
 
-	options.repeat = getObjProp(options, "repeat", "no-repeat");
+	options.repeat = gop(options, "repeat", "no-repeat");
 
 	var img = new Image();
 	img.onload = function() {
